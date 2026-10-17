@@ -34,9 +34,9 @@
 **Key art (seed 41, 832×1216):**
 `masterpiece, best quality, anime key visual, full body samurai girl with long pink hair, white and red outfit, katana, standing on a stone path in a sakura shrine at night, glowing lanterns, falling petals, cinematic lighting, detailed background, no text`
 
-## AI-иконки умений
+## AI-иконки умений (концепт)
 
-10 эмблем для умений сгенерированы Illustrious XL (1024×1024, 26 шагов, CFG 6.5) по промптам вида «anime magical emblem, a circle of glowing [стихия], dark background, no text», затем обрезаны в круг 96×96 и сохранены как WebP (`src/img/skills/*.webp`, ~32 КБ на все). Стихии: ветер (лепестки), вода (луна, лёд), огонь (пламя, дух, метеор), земля (цветение, землетряс), ветер (гром, буря).
+10 эмблем были сгенерированы Illustrious XL как концепт, но в игре они выбивались из плоского стиля. В финальную версию (3.7) пошли рисованные иконки в стиле игры: тёмный круглый бейдж, простой силуэт, толстый контур. AI-эмблемы остаются в `promo/raw/skills` как референс и не входят в билд.
 
 ## Лицензия и ограничения
 

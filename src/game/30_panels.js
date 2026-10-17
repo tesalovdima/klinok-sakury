@@ -75,7 +75,7 @@ function renderGrowth() {
 function growthRow(g) {
   const l = S.growth[g.id], maxed = l >= g.max, b = growthBatch(g);
   return `<li class="row" data-row="${g.id}">
-    <img src="${A.miscIcon(GROWTH_ICON[g.id], 64)}" alt="">
+    <img class="ico-badge" src="${A.miscIcon(GROWTH_ICON[g.id], 64)}" alt="">
     <div class="row-main"><b>${g.name}</b><span class="meta" data-f="lv">Ур. ${l}${maxed ? ' · максимум' : ''}</span>
     <span class="val" data-f="val">${growthVal(g, l)}${maxed ? '' : ` → <em>${growthVal(g, l + b.n)}</em>`}</span></div>
     <button class="buy ${b.cost > S.gold ? 'poor' : ''}" data-grow="${g.id}" data-cost="${b.cost}" ${maxed ? 'disabled' : ''}>
@@ -271,7 +271,7 @@ function enchantHTML(it, st) {
       : `<p class="note">При неудаче заточка откатится до +${B.ENCH.fallback}, предмет уцелеет. Каждая неудача даёт искру: +6% к следующей попытке.</p>`}
     ${have ? `<div class="btn-row">
         <button class="buy pink" data-act="do-enchant" ${st.autoRun ? 'disabled' : ''}>Заточить</button>
-        <button class="buy ghost" data-act="auto-enchant" ${st.autoRun ? 'disabled' : ''}>Авто до +${st.autoStop}</button>
+        ${st.autoRun ? '<button class="buy ghost" data-act="auto-stop-run">Стоп</button>' : `<button class="buy ghost" data-act="auto-enchant">Авто до +${st.autoStop}</button>`}
       </div>
       <div class="auto-row" role="group" aria-label="Авто-заточка до">
         <span>Авто до</span>
@@ -285,7 +285,7 @@ function openEnchant(id) {
   const prev = modalState && modalState.enchant ? modalState : null;
   const st = {
     enchant: true, item: id, kind: prev ? prev.kind : 'n', busy: false, power: 0, parts: [], t: 0, color: '#ff8fc1',
-    autoRun: false, autoStop: S.settings.autoEnchantTo || 7,
+    autoRun: false, autoStop: S.settings.autoEnchantTo || 7, breaks: 0,
   };
   openModal(enchantHTML(it, st), st);
   startForge(st);
@@ -403,6 +403,7 @@ async function autoEnchant() {
   if (!st || !st.enchant || st.autoRun) return;
   const it0 = itemById(st.item); if (!it0) return;
   st.autoRun = true;
+  st.resumeAuto = true;
   modal.querySelectorAll('button').forEach(b => b.disabled = true);
   let steps = 0;
   while (modalState === st && st.autoRun) {
@@ -415,6 +416,11 @@ async function autoEnchant() {
       if (S.scrolls[alt][it.g] > 0) key = alt; else break;
     }
     st.busy = true; st.power = 0;
+    const rampT0 = performance.now(), rampD = RM ? 60 : 220;
+    while (performance.now() - rampT0 < rampD && modalState === st) {
+      st.power = Math.min(1, (performance.now() - rampT0) / rampD);
+      await new Promise(r => setTimeout(r, 25));
+    }
     const out = enchantOnce(it, key);
     steps++;
     showEnchantResult(st, out, it);
@@ -422,11 +428,18 @@ async function autoEnchant() {
     const label = $('autoStatus');
     if (label) label.textContent = `${cur ? '+' + cur.e : '—'} · шаг ${steps} · свитков ${cur ? S.scrolls[(st.kind === 'b' ? 'b' : '') + scrollKind(cur.slot)][cur.g] : 0}`;
     saveLocal();
-    await new Promise(r => setTimeout(r, RM ? 120 : 280));
-    if (out.r === 'destroyed') { st.autoRun = false; handleBreak(st, out); return; }
+    await new Promise(r => setTimeout(r, RM ? 100 : 260));
+    if (out.r === 'destroyed') {
+      st.autoRun = false;
+      st.breaks = (st.breaks || 0) + 1;
+      st.resumeAuto = !!S.settings.autoBuyBreak && st.breaks < 2;
+      handleBreak(st, out);
+      return;
+    }
   }
   st.autoRun = false;
   st.busy = false;
+  st.resumeAuto = false;
   saveLocal();
   if (modalState === st) {
     const it = itemById(st.item);
@@ -445,7 +458,7 @@ function handleBreak(st, out) {
   const autoBuy = on && S.gold >= price;
   sh.querySelectorAll('.ench-line,.chance,.compare,.scroll-pick,.note,.wide,.auto-row,.btn-row,.forge-result,.auto-status').forEach(n => n.remove());
   sh.insertAdjacentHTML('beforeend', `
-    <p class="note warn">${out.nm} разрушен и превратился в ${fmt(out.cry)} ${plural(out.cry, CRY_W)}.</p>
+    <p class="note warn">${out.nm} разрушен и превратился в ${fmt(out.cry)} ${plural(out.cry, CRY_W)}.${(st.breaks || 0) >= 2 ? ' Авто остановлено после двух поломок.' : ''}</p>
     <label class="check-row"><input type="checkbox" id="autoBuyBox" ${on ? 'checked' : ''}><span>Покупать заново при сломе</span></label>
     <p class="note">Новый ${B.NAMES[out.slot][out.g]} стоит ${fmt(price)} золота. У вас ${fmt(S.gold)}.</p>
     <div class="btn-row">
@@ -460,8 +473,9 @@ function handleBreak(st, out) {
       const bought = buyItem(out.slot, out.g, { silent: true });
       if (bought) {
         toast(`Куплено заново: ${itemName(bought)}`);
-        closeModal();
-        if (R.tab === 'gear') renderPanel();
+        st.item = bought.id; st.busy = false; st.autoRun = false;
+        rerenderEnchant(st);
+        if (st.resumeAuto && modalState === st) setTimeout(() => autoEnchant(), RM ? 150 : 350);
       }
     }, RM ? 400 : 1100);
   }
@@ -472,10 +486,14 @@ function rerenderEnchant(st) {
   const tmp = document.createElement('div'); tmp.innerHTML = enchantHTML(it, st);
   const fresh = tmp.firstElementChild;
   const oldForge = sh.querySelector('.forge');
-  fresh.querySelector('.forge').replaceWith(oldForge);
+  const freshForge = fresh.querySelector('.forge');
+  const freshRes = freshForge.querySelector('.forge-result');
+  freshForge.replaceWith(oldForge);
   const nt = document.createElement('div'); nt.innerHTML = tileHTML(it, 'id="forgeTile" tabindex="-1"');
   oldForge.querySelector('.tile').replaceWith(nt.firstElementChild);
-  const res = oldForge.querySelector('.forge-result'); res.className = 'forge-result'; res.innerHTML = '';
+  let res = oldForge.querySelector('.forge-result');
+  if (!res && freshRes) { oldForge.appendChild(freshRes); res = freshRes; }
+  if (res) { res.className = 'forge-result'; res.innerHTML = ''; }
   sh.replaceWith(fresh);
 }
 
@@ -589,5 +607,5 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.6</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.7</p>`));
 }

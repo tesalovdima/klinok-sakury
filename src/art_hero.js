@@ -74,6 +74,11 @@
     const hurtX = an.hurt > 0 ? Math.sin(an.hurt * 60) * 8 * an.hurt : 0;
     ctx.translate(hurtX, bob);
     ctx.rotate(lean);
+    if (an.swing >= 0) {
+      const s = Math.sin(Math.min(1, an.swing * 1.3) * Math.PI);
+      ctx.translate(s * 3, -s * 1.2);
+      ctx.transform(1, 0, -.1 * s, 1, 0, 0);
+    }
     if (an.cast > 0) {
       const q = 1 - Math.min(1, an.cast / .4), s = Math.sin(q * Math.PI);
       if (an.castType === 'meteor') ctx.translate(0, -7 * s);

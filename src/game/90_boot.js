@@ -125,9 +125,22 @@ document.addEventListener('click', async e => {
       }
       break;
     }
+    case 'auto-stop-run': {
+      const st = modalState;
+      if (st && st.enchant) { st.autoRun = false; st.resumeAuto = false; toast('Авто остановлено'); }
+      break;
+    }
     case 'buy-again': {
+      const st = modalState;
       const it = buyItem(b.dataset.slot, +b.dataset.g, { silent: true });
-      if (it) { toast(`Куплено заново: ${itemName(it)}`); closeModal(); renderPanel(); }
+      if (it) {
+        toast(`Куплено заново: ${itemName(it)}`);
+        if (st && st.enchant) {
+          st.item = it.id; st.busy = false; st.autoRun = false;
+          rerenderEnchant(st);
+          if (st.resumeAuto) setTimeout(() => autoEnchant(), 250);
+        } else { closeModal(); renderPanel(); }
+      }
       break;
     }
     case 'buy-scrolls': R.shopTab = 'scrolls'; R.scrollGrade = +b.dataset.g; closeModal(); setTab('shop'); break;

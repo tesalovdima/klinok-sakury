@@ -110,7 +110,7 @@ const SKILLS = [
 const SKILL_ORDER = SKILLS.slice().sort((a, b) => a.prio - b.prio);
 const SK = Object.fromEntries(SKILLS.map(s => [s.id, s]));
 const SKILL_MAX = 20;
-const skillIcon = (id, size = 64) => (typeof SKILL_ICONS !== 'undefined' && SKILL_ICONS[String(id).replace(/^sk_/, '')]) || A.miscIcon(id, size);
+const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 
 /* ---------- состояние ---------- */
 const SAVE_KEY = 'klinok-sakury-v1';
@@ -282,7 +282,7 @@ const R = {
   hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
-  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null,
+  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0,
   st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
   imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', socialSeg: 'chat', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),

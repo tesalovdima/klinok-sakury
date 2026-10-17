@@ -748,3 +748,4 @@ input { -webkit-user-select: text; user-select: text; }
 .skill-el { font: 800 10px/1 var(--font-ui); }
 .sk img { filter: saturate(1.15) brightness(1.12); }
 .row-main b .el { font: 800 10px/1 var(--font-ui); margin-left: 4px; opacity: .95; }
+.row > img.ico-badge { background: radial-gradient(circle at 50% 40%, #3a2a5a, #241a3a); border-radius: 50%; padding: 3px; box-sizing: content-box; }

@@ -661,11 +661,19 @@ const ART = (() => {
     // навыки
     sk_petal(ctx) {
       ctx.fillStyle = '#3a1f5c'; ell(ctx, 32, 32, 28, 28); ctx.fill();
-      for (let i = 0; i < 6; i++) { ctx.save(); ctx.translate(32, 32); ctx.rotate(i * TAU / 6); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(14, -6, 18, -18); ctx.quadraticCurveTo(4, -16, 0, 0); fillStroke(ctx, i % 2 ? '#ffb3d6' : '#ff7eb6', OUT, 1.6); ctx.restore(); }
+      for (let i = 0; i < 5; i++) {
+        ctx.save(); ctx.translate(32, 32); ctx.rotate(i * TAU / 5);
+        ctx.beginPath(); ctx.moveTo(0, -2); ctx.quadraticCurveTo(-11, -14, 0, -24); ctx.quadraticCurveTo(11, -14, 0, -2); ctx.closePath();
+        fillStroke(ctx, i % 2 ? '#ffb3d6' : '#ff7eb6', OUT, 1.8); ctx.restore();
+      }
+      ell(ctx, 32, 32, 7, 7); fillStroke(ctx, '#ffd760', OUT, 1.8);
     },
     sk_moon(ctx) {
       ctx.fillStyle = '#1b2350'; ell(ctx, 32, 32, 28, 28); ctx.fill();
-      ctx.beginPath(); ctx.arc(30, 32, 20, -1.2, 1.9); ctx.arc(38, 30, 16, 1.7, -1.1, true); ctx.closePath(); fillStroke(ctx, '#cfeaff', OUT, 2);
+      ctx.beginPath(); ctx.arc(30, 31, 18, -1.3, 1.7); ctx.arc(39, 28, 16, 1.9, -1.0, true); ctx.closePath();
+      fillStroke(ctx, '#cfeaff', OUT, 2.2);
+      ell(ctx, 46, 18, 2.4, 2.4); ctx.fillStyle = '#ffe55c'; ctx.fill();
+      ell(ctx, 18, 46, 1.8, 1.8); ctx.fill();
     },
     sk_spirit(ctx) {
       ctx.fillStyle = '#4a1620'; ell(ctx, 32, 32, 28, 28); ctx.fill();
@@ -681,6 +689,34 @@ const ART = (() => {
       ctx.fillStyle = '#183a2c'; ell(ctx, 32, 32, 28, 28); ctx.fill();
       for (let i = 0; i < 5; i++) { ctx.save(); ctx.translate(32, 32); ctx.rotate(i * TAU / 5); ell(ctx, 0, -11, 7, 11); fillStroke(ctx, '#ffd0e4', OUT, 1.6); ctx.restore(); }
       ell(ctx, 32, 32, 6, 6); fillStroke(ctx, '#74e0a8', OUT, 1.6);
+    },
+    sk_flame(ctx) {
+      ctx.fillStyle = '#451a1a'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(32, 54); ctx.bezierCurveTo(14, 50, 16, 30, 26, 18); ctx.quadraticCurveTo(28, 30, 33, 28); ctx.quadraticCurveTo(31, 14, 40, 7); ctx.quadraticCurveTo(40, 22, 47, 26); ctx.bezierCurveTo(55, 36, 50, 52, 32, 54); ctx.closePath();
+      fillStroke(ctx, '#ff7a3c', OUT, 2); ctx.fillStyle = '#ffd25c'; ell(ctx, 32, 41, 7, 10); ctx.fill();
+    },
+    sk_frost(ctx) {
+      ctx.fillStyle = '#152a48'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      for (let i = 0; i < 3; i++) { ctx.save(); ctx.translate(32 + (i - 1) * 13, 30 + (i === 1 ? -4 : 6)); ctx.rotate((i - 1) * .35); ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(8, 0); ctx.lineTo(0, 18); ctx.lineTo(-8, 0); ctx.closePath(); fillStroke(ctx, i === 1 ? '#eaf8ff' : '#8fd8ff', OUT, 1.6); ctx.restore(); }
+    },
+    sk_quake(ctx) {
+      ctx.fillStyle = '#3b2a18'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(12, 48); ctx.lineTo(22, 34); ctx.lineTo(28, 40); ctx.lineTo(36, 24); ctx.lineTo(44, 34); ctx.lineTo(52, 46); ctx.closePath();
+      fillStroke(ctx, '#c9a15c', OUT, 2); ctx.strokeStyle = '#ffd760'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(22, 34); ctx.lineTo(28, 44); ctx.lineTo(34, 38); ctx.stroke();
+    },
+    sk_storm(ctx) {
+      ctx.fillStyle = '#173a38'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      for (let i = 0; i < 3; i++) { ctx.save(); ctx.translate(32, 32); ctx.rotate(-.5 + i * .55); ctx.beginPath(); ctx.arc(0, 0, 20 - i * 4, -1.2, 1.3); ctx.strokeStyle = i === 1 ? '#eafff6' : '#8fe0c0'; ctx.lineWidth = 4 - i; ctx.stroke(); ctx.restore(); }
+      ctx.strokeStyle = OUT; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(20, 46); ctx.lineTo(44, 18); ctx.stroke();
+    },
+    sk_meteor(ctx) {
+      ctx.fillStyle = '#2a1738'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      ctx.strokeStyle = '#ff7a3c'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(14, 50); ctx.lineTo(30, 34); ctx.stroke();
+      ell(ctx, 38, 26, 13, 13); fillStroke(ctx, '#ffcf5a', OUT, 2.2);
+      ctx.fillStyle = '#ff7a3c'; ell(ctx, 43, 30, 5, 5); ctx.fill();
+      ell(ctx, 10, 54, 2, 2); ctx.fillStyle = '#ffd760'; ctx.fill();
+      ell(ctx, 20, 40, 1.6, 1.6); ctx.fill();
     },
     lock(ctx) {
       ctx.strokeStyle = OUT; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(32, 26, 11, Math.PI, 0); ctx.stroke();

@@ -199,6 +199,7 @@ function heroStrike() {
   const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1);
   const sx = tgt.x - 6 * R.k, sy = R.gy - 34 * R.k * Math.min(1.6, tgt.scale);
   R.fx.push({ type: 'slash', x: sx, y: sy, r: (heavy ? 46 : 34) * R.k * Math.max(1, tgt.scale * .8), a: (heavy ? -1.25 : -.9) + rnd() * .3, life: .2, t: 0, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', w: crit ? 8 : heavy ? 7 : 5 });
+  R.fx.push({ type: 'impact', x: sx, y: sy, t: 0, life: .2, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', big: crit || heavy });
   hitDamage(tgt, dmg, crit);
   AU.sfx(crit ? 'crit' : 'hit');
   if (crit && !RM) R.shake = Math.max(R.shake, .12);
@@ -317,6 +318,7 @@ function cast(id) {
   R.cd[id] = s.cd; R.castLock = s.type === 'buff' || s.type === 'heal' ? .35 : .5;
   h.cast = .4; h.castType = s.type; h.castEl = ELEMENTS[s.el].color;
   if (!R.cut && ['flame', 'quake', 'storm', 'meteor'].includes(id)) R.cut = { id, t: 0, life: .7 };
+  if (['flame', 'quake', 'storm', 'meteor'].includes(id)) R.zoom = .3;
   if (s.type === 'single') { h.dashT = .28; }
   const atk = R.st.atk * (1 + spiritBonus());
   const k = R.k, gy = R.gy;
@@ -564,6 +566,7 @@ function update(dtRaw) {
   let dt = dtRaw;
   if (R.hitStop > 0) { R.hitStop = Math.max(0, R.hitStop - dtRaw); dt = dtRaw * .12; }
   if (R.cut) { R.cut.t += dtRaw; if (R.cut.t >= R.cut.life) R.cut = null; }
+  if (R.zoom > 0) R.zoom = Math.max(0, R.zoom - dtRaw);
   if (R.slow > 0) { R.slow = Math.max(0, R.slow - dtRaw); dt = dtRaw * .3; }
   R.t += dt;
   const h = R.hero, st = R.st, k = R.k;
@@ -674,6 +677,10 @@ function render() {
   let sx = 0, sy = 0;
   if (R.shake > 0) { sx = (rnd() - .5) * 10 * k; sy = (rnd() - .5) * 7 * k; }
   c.save(); c.translate(sx, sy);
+  if (R.zoom > 0) {
+    const z = 1 + .035 * Math.sin((1 - R.zoom / .3) * Math.PI);
+    c.translate(R.W / 2, R.H / 2); c.scale(z, z); c.translate(-R.W / 2, -R.H / 2);
+  }
   A.drawBackground(c, R.W, R.H, R.gy, z, R.scroll, R.t);
   if (z.loop) { c.fillStyle = `rgba(80,0,60,${Math.min(.25, z.loop * .08)})`; c.fillRect(0, 0, R.W, R.H); }
   drawGroundFx(c);
@@ -746,7 +753,7 @@ function drawCutIn(c) {
   c.fillStyle = 'rgba(8,4,20,.66)'; c.fillRect(0, y, W, band);
   c.fillStyle = col; c.fillRect(0, y, W * e, 2.5 * k); c.fillRect(0, y + band - 2.5 * k, W * e, 2.5 * k);
   let img = CUT_IMG[f.id];
-  if (!img) { img = CUT_IMG[f.id] = new Image(); img.src = SKILL_ICONS[String(s.icon).replace(/^sk_/, '')] || ''; }
+  if (img === undefined || !img) { img = CUT_IMG[f.id] = new Image(); img.src = skillIcon(s.icon, 96); }
   if (img.complete && img.naturalWidth) { c.save(); c.beginPath(); c.arc(9 * k + (band - 8 * k) / 2, y + band / 2, (band - 8 * k) / 2, 0, 6.29); c.clip(); c.drawImage(img, 9 * k, y + 4 * k, band - 8 * k, band - 8 * k); c.restore(); }
   txt(c, s.name.toUpperCase(), W * .5 + 12 * k, y + band * .56, 14 * Math.sqrt(k), '#ffffff');
   c.restore();
@@ -871,6 +878,19 @@ function drawFx(c) {
         c.fillStyle = mg; A.ell(c, f.x, y, 38 * k, 38 * k); c.fill();
         c.strokeStyle = 'rgba(255,207,90,.7)'; c.lineWidth = 9 * k; c.lineCap = 'round';
         c.beginPath(); c.moveTo(f.x - 10 * k, y - 46 * k); c.lineTo(f.x, y); c.stroke();
+        c.restore(); break;
+      }
+      case 'impact': {
+        const r = (f.big ? 36 : 26) * k * (.55 + p * 1.5);
+        c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = Math.max(0, 1 - p);
+        const g = c.createRadialGradient(f.x, f.y, 1, f.x, f.y, r);
+        g.addColorStop(0, '#ffffff'); g.addColorStop(.35, f.c); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; A.ell(c, f.x, f.y, r, r * .82); c.fill();
+        c.strokeStyle = '#ffffff'; c.lineWidth = 2 * k;
+        for (let i = 0; i < 6; i++) {
+          const a = i * Math.PI / 3 + p * .8;
+          c.beginPath(); c.moveTo(f.x + Math.cos(a) * r * .25, f.y + Math.sin(a) * r * .25); c.lineTo(f.x + Math.cos(a) * r * .95, f.y + Math.sin(a) * r * .95); c.stroke();
+        }
         c.restore(); break;
       }
       case 'coin': {
