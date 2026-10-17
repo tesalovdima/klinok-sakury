@@ -6276,7 +6276,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.8</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.9</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -7778,8 +7778,10 @@ function questsWeek() {
       ${got ? '<button class="buy" disabled>Получено</button>' : done ? `<button class="buy pink" data-act="wclaim" data-id="${w.id}">Забрать</button>` : '<button class="buy" disabled>В процессе</button>'}</li>`;
   }).join('');
   const all = B.WEEKLY.every(w => q.claimed[w.id]);
+  const ready = weeklyReady();
   return `<p class="sub">До конца недели ${left(msToWeekEnd())}. Прогресс считается вместе с ежедневными заданиями.</p>
     <ul class="rows">${rows}</ul>
+    ${ready > 1 ? `<button class="buy pink ev-all" data-act="wclaim-all">Забрать всё · ${ready}</button>` : ''}
     <section class="card chest-card"><img src="${A.miscIcon('chest', 64)}" alt=""><div class="row-main">
       <b>Сундук недели</b><span class="meta">Все недельные задания: ${rewardText(B.WEEKLY_CHEST)}</span></div>
       ${q.chest ? '<button class="buy" disabled>Открыт</button>' : `<button class="buy ${all ? 'pink' : ''}" data-act="wchest" ${all ? '' : 'disabled'}>Открыть</button>`}</section>`;
@@ -8365,6 +8367,15 @@ document.addEventListener('click', async e => {
       S.weekly.claimed[w.id] = true; grant(w.rw); openQuests('week'); break;
     }
     case 'wchest': if (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id])) { S.weekly.chest = true; grant(B.WEEKLY_CHEST); openQuests('week'); } break;
+    case 'wclaim-all': {
+      const got = [];
+      for (const w of B.WEEKLY) {
+        if (S.weekly.claimed[w.id] || (S.weekly.prog[w.id] || 0) < w.goal) continue;
+        S.weekly.claimed[w.id] = true; grant(w.rw); got.push(rewardText(w.rw));
+      }
+      if (got.length) { toast('Неделя: ' + got.join(', ')); openQuests('week'); }
+      break;
+    }
     case 'ach-claim': {
       const a = B.ACH.find(x => x.id === b.dataset.id), i = S.ach[a.id] || 0;
       if (i < a.tiers.length && statValue(a.stat) >= a.tiers[i]) { S.ach[a.id] = i + 1; grant({ gems: a.gems[i] }); openQuests(); }

@@ -228,6 +228,15 @@ document.addEventListener('click', async e => {
       S.weekly.claimed[w.id] = true; grant(w.rw); openQuests('week'); break;
     }
     case 'wchest': if (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id])) { S.weekly.chest = true; grant(B.WEEKLY_CHEST); openQuests('week'); } break;
+    case 'wclaim-all': {
+      const got = [];
+      for (const w of B.WEEKLY) {
+        if (S.weekly.claimed[w.id] || (S.weekly.prog[w.id] || 0) < w.goal) continue;
+        S.weekly.claimed[w.id] = true; grant(w.rw); got.push(rewardText(w.rw));
+      }
+      if (got.length) { toast('Неделя: ' + got.join(', ')); openQuests('week'); }
+      break;
+    }
     case 'ach-claim': {
       const a = B.ACH.find(x => x.id === b.dataset.id), i = S.ach[a.id] || 0;
       if (i < a.tiers.length && statValue(a.stat) >= a.tiers[i]) { S.ach[a.id] = i + 1; grant({ gems: a.gems[i] }); openQuests(); }

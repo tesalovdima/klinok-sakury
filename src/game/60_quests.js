@@ -149,8 +149,10 @@ function questsWeek() {
       ${got ? '<button class="buy" disabled>Получено</button>' : done ? `<button class="buy pink" data-act="wclaim" data-id="${w.id}">Забрать</button>` : '<button class="buy" disabled>В процессе</button>'}</li>`;
   }).join('');
   const all = B.WEEKLY.every(w => q.claimed[w.id]);
+  const ready = weeklyReady();
   return `<p class="sub">До конца недели ${left(msToWeekEnd())}. Прогресс считается вместе с ежедневными заданиями.</p>
     <ul class="rows">${rows}</ul>
+    ${ready > 1 ? `<button class="buy pink ev-all" data-act="wclaim-all">Забрать всё · ${ready}</button>` : ''}
     <section class="card chest-card"><img src="${A.miscIcon('chest', 64)}" alt=""><div class="row-main">
       <b>Сундук недели</b><span class="meta">Все недельные задания: ${rewardText(B.WEEKLY_CHEST)}</span></div>
       ${q.chest ? '<button class="buy" disabled>Открыт</button>' : `<button class="buy ${all ? 'pink' : ''}" data-act="wchest" ${all ? '' : 'disabled'}>Открыть</button>`}</section>`;
