@@ -74,6 +74,12 @@
     const hurtX = an.hurt > 0 ? Math.sin(an.hurt * 60) * 8 * an.hurt : 0;
     ctx.translate(hurtX, bob);
     ctx.rotate(lean);
+    if (an.cast > 0) {
+      const q = 1 - Math.min(1, an.cast / .4), s = Math.sin(q * Math.PI);
+      if (an.castType === 'meteor') ctx.translate(0, -7 * s);
+      else if (an.castType === 'cone' || an.castType === 'storm') ctx.rotate(-.07 * s);
+      else if (an.castType === 'aoe') ctx.rotate(.06 * s);
+    }
 
     const ug = look.upper, lg = look.lower;
     const U = ug >= 0 ? GEAR[ug].up : BASE.up, L = lg >= 0 ? GEAR[lg].lo : BASE.lo;
@@ -734,10 +740,12 @@
     let sa;
     const idle = -1.25 + Math.sin(t * 2.4) * .05;
     if (an.swing >= 0) {
-      const p = an.swing;
-      if (p < .28) sa = idle + (-2.75 - idle) * A.easeOut(p / .28);
-      else if (p < .55) sa = -2.75 + (0.75 + 2.75) * A.easeIn((p - .28) / .27);
-      else sa = .75 + (idle - .75) * A.easeInOut((p - .55) / .45);
+      const p = an.swing, combo = an.combo || 0;
+      const A0 = combo === 1 ? 1.0 : combo === 2 ? -3.25 : -2.75;
+      const A1 = combo === 1 ? -2.3 : combo === 2 ? 1.35 : .75;
+      if (p < .28) sa = idle + (A0 - idle) * A.easeOut(p / .28);
+      else if (p < .55) sa = A0 + (A1 - A0) * A.easeIn((p - .28) / .27);
+      else sa = A1 + (idle - A1) * A.easeInOut((p - .55) / .45);
     } else if (an.cast > 0) {
       const c = an.castType;
       if (c === 'single') sa = -.35 + Math.sin(t * 30) * .08;

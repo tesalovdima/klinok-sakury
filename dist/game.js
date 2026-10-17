@@ -1320,6 +1320,12 @@ const ART = (() => {
     const hurtX = an.hurt > 0 ? Math.sin(an.hurt * 60) * 8 * an.hurt : 0;
     ctx.translate(hurtX, bob);
     ctx.rotate(lean);
+    if (an.cast > 0) {
+      const q = 1 - Math.min(1, an.cast / .4), s = Math.sin(q * Math.PI);
+      if (an.castType === 'meteor') ctx.translate(0, -7 * s);
+      else if (an.castType === 'cone' || an.castType === 'storm') ctx.rotate(-.07 * s);
+      else if (an.castType === 'aoe') ctx.rotate(.06 * s);
+    }
 
     const ug = look.upper, lg = look.lower;
     const U = ug >= 0 ? GEAR[ug].up : BASE.up, L = lg >= 0 ? GEAR[lg].lo : BASE.lo;
@@ -1980,10 +1986,12 @@ const ART = (() => {
     let sa;
     const idle = -1.25 + Math.sin(t * 2.4) * .05;
     if (an.swing >= 0) {
-      const p = an.swing;
-      if (p < .28) sa = idle + (-2.75 - idle) * A.easeOut(p / .28);
-      else if (p < .55) sa = -2.75 + (0.75 + 2.75) * A.easeIn((p - .28) / .27);
-      else sa = .75 + (idle - .75) * A.easeInOut((p - .55) / .45);
+      const p = an.swing, combo = an.combo || 0;
+      const A0 = combo === 1 ? 1.0 : combo === 2 ? -3.25 : -2.75;
+      const A1 = combo === 1 ? -2.3 : combo === 2 ? 1.35 : .75;
+      if (p < .28) sa = idle + (A0 - idle) * A.easeOut(p / .28);
+      else if (p < .55) sa = A0 + (A1 - A0) * A.easeIn((p - .28) / .27);
+      else sa = A1 + (idle - A1) * A.easeInOut((p - .55) / .45);
     } else if (an.cast > 0) {
       const c = an.castType;
       if (c === 'single') sa = -.35 + Math.sin(t * 30) * .08;
@@ -3261,7 +3269,7 @@ const battle = $('battle'), canvas = $('scene'), ctx = canvas.getContext('2d');
 const R = {
   W: 400, H: 300, dpr: 1, k: 1, gy: 240, heroX: 100, scroll: 0, t: 0,
   monsters: [], fx: [], amb: [], shake: 0, flash: 0, flashC: '#fff',
-  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0 },
+  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
   mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null,
@@ -3590,13 +3598,15 @@ function frontMonster() {
 function heroStrike() {
   const tgt = frontMonster();
   if (!tgt) return;
+  const h = R.hero, heavy = h.combo === 2;
   const crit = rnd() < R.st.crit;
-  const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12);
+  const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1);
   const sx = tgt.x - 6 * R.k, sy = R.gy - 34 * R.k * Math.min(1.6, tgt.scale);
-  R.fx.push({ type: 'slash', x: sx, y: sy, r: 34 * R.k * Math.max(1, tgt.scale * .8), a: -.9 + rnd() * .3, life: .2, t: 0, c: crit ? '#ffd760' : '#ffffff', w: crit ? 7 : 5 });
+  R.fx.push({ type: 'slash', x: sx, y: sy, r: (heavy ? 46 : 34) * R.k * Math.max(1, tgt.scale * .8), a: (heavy ? -1.25 : -.9) + rnd() * .3, life: .2, t: 0, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', w: crit ? 8 : heavy ? 7 : 5 });
   hitDamage(tgt, dmg, crit);
   AU.sfx(crit ? 'crit' : 'hit');
   if (crit && !RM) R.shake = Math.max(R.shake, .12);
+  if (heavy && !RM) { R.shake = Math.max(R.shake, .18); R.hitStop = .03; }
 }
 function hitDamage(m, dmg, crit, color) {
   if (m.hp <= 0) return;
@@ -3965,6 +3975,7 @@ function update(dtRaw) {
   if (h.dashT > 0) { h.dashT = Math.max(0, h.dashT - dtRaw); R.heroOff = Math.sin((1 - h.dashT / .28) * Math.PI) * 34 * k; }
   else R.heroOff = 0;
   if (h.lungeT > 0) { h.lungeT = Math.max(0, h.lungeT - dtRaw); R.heroOff += Math.sin((1 - h.lungeT / .2) * Math.PI) * 14 * k; }
+  if (h.comboT > 0) { h.comboT = Math.max(0, h.comboT - dtRaw); if (h.comboT === 0) h.combo = 0; }
   const z = zoneOf(S.stage);
   for (const b in R.buffs) R.buffs[b] = Math.max(0, R.buffs[b] - dt);
   if (h.hurt > 0) h.hurt -= dt;
@@ -4039,7 +4050,11 @@ function update(dtRaw) {
     const swingDur = Math.min(.34, .7 / st.aspd);
     if (engaged) {
       h.atkT += dt * st.aspd;
-      if (h.swing < 0 && h.atkT >= 1) { h.atkT = 0; h.swing = 0; h.hit = false; h.lungeT = .2; }
+      if (h.swing < 0 && h.atkT >= 1) {
+        h.atkT = 0; h.swing = 0; h.hit = false; h.lungeT = .2;
+        h.combo = h.comboT > 0 ? (h.combo + 1) % 3 : 0;
+        h.comboT = 1.15;
+      }
     } else h.atkT = Math.min(1, h.atkT + dt * st.aspd);
     if (h.swing >= 0) {
       h.swing += dt / swingDur;
@@ -4085,23 +4100,27 @@ function render() {
   if (R.buffs.guard > 0) { c.strokeStyle = `rgba(116,224,168,${.5 + .3 * Math.sin(R.t * 6)})`; c.lineWidth = 2 * k; A.ell(c, R.heroX, R.gy - 55 * k, 42 * k, 62 * k); c.stroke(); }
   // след клинка при взмахе — дуга, а не просто поворот руки
   if (h.swing >= 0 && !h.dead) {
-    const p = h.swing, a0 = -2.6, a1 = .8, ang = a0 + (a1 - a0) * p;
+    const p = h.swing, combo = h.combo || 0;
+    const a0 = combo === 1 ? 1.0 : combo === 2 ? -3.25 : -2.6;
+    const a1 = combo === 1 ? -2.3 : combo === 2 ? 1.35 : .8;
+    const ang = a0 + (a1 - a0) * p, heavy = combo === 2;
     c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
-    c.strokeStyle = `rgba(255,236,246,${.42 * Math.sin(p * Math.PI)})`; c.lineWidth = 11 * k;
-    c.beginPath(); c.arc(R.heroX + R.heroOff, R.gy - 50 * k, 62 * k, ang - 1.15, ang); c.stroke();
-    c.strokeStyle = `rgba(255,143,193,${.25 * Math.sin(p * Math.PI)})`; c.lineWidth = 18 * k;
-    c.beginPath(); c.arc(R.heroX + R.heroOff, R.gy - 50 * k, 62 * k, ang - .75, ang); c.stroke();
+    c.strokeStyle = heavy ? `rgba(255,179,214,${.5 * Math.sin(p * Math.PI)})` : `rgba(255,236,246,${.42 * Math.sin(p * Math.PI)})`;
+    c.lineWidth = (heavy ? 14 : 11) * k;
+    c.beginPath(); c.arc(R.heroX + R.heroOff, R.gy - 50 * k, (heavy ? 70 : 62) * k, ang - 1.15, ang); c.stroke();
+    c.strokeStyle = `rgba(255,143,193,${.25 * Math.sin(p * Math.PI)})`; c.lineWidth = (heavy ? 22 : 18) * k;
+    c.beginPath(); c.arc(R.heroX + R.heroOff, R.gy - 50 * k, (heavy ? 70 : 62) * k, ang - .75, ang); c.stroke();
     c.restore();
   }
   // послеобразы рывка
   if (h.dashT > 0 && !h.dead) {
     for (let i = 2; i >= 1; i--) {
       c.save(); c.globalAlpha = .13 * i;
-      A.drawHero(c, R.heroX + R.heroOff - i * 20 * k, R.gy, k * 1.02, R.look, { t: R.t - i * .05, run: 1, phase: h.phase, swing: -1, hurt: 0, dead: false, cast: 0 });
+      A.drawHero(c, R.heroX + R.heroOff - i * 20 * k, R.gy, k * 1.02, R.look, { t: R.t - i * .05, run: 1, phase: h.phase, swing: -1, hurt: 0, dead: false, cast: 0, combo: 0 });
       c.restore();
     }
   }
-  A.drawHero(c, R.heroX + R.heroOff, R.gy, k * 1.02, R.look, { t: R.t, run: h.run, phase: h.phase, swing: h.swing, hurt: Math.max(0, h.hurt), dead: h.dead > 0, cast: Math.max(0, h.cast), castType: h.castType, castEl: h.castEl });
+  A.drawHero(c, R.heroX + R.heroOff, R.gy, k * 1.02, R.look, { t: R.t, run: h.run, phase: h.phase, swing: h.swing, hurt: Math.max(0, h.hurt), dead: h.dead > 0, cast: Math.max(0, h.cast), castType: h.castType, castEl: h.castEl, combo: h.combo });
   const pet = activePet();
   if (pet && !(h.dead > 0)) { const p = petPos(); A.drawPet(c, p.x, p.y, k * .85, pet, R.t, { attack: R.pet.attack }); }
   drawFx(c);
@@ -5224,7 +5243,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.5</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.6</p>`));
 }
 
 /* --- 35_trials.js --- */

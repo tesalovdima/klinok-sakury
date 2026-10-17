@@ -279,7 +279,7 @@ const battle = $('battle'), canvas = $('scene'), ctx = canvas.getContext('2d');
 const R = {
   W: 400, H: 300, dpr: 1, k: 1, gy: 240, heroX: 100, scroll: 0, t: 0,
   monsters: [], fx: [], amb: [], shake: 0, flash: 0, flashC: '#fff',
-  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0 },
+  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
   mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null,
