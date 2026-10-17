@@ -20,6 +20,8 @@
 | `screen-lantern.jpg` | 1080×1920 | Скриншот 7: «Ночь фонарей» |
 | `screen-weekly.jpg` | 1080×1920 | Скриншот 8: недельные задания |
 | `cover-en-800x470.jpg` | 800×470 | Обложка с английским названием |
+| `hero-cutout.png` | 900×1316 | Прозрачный вырез героини (BiRefNet) |
+| `social-en-1200x630.jpg` | 1200×630 | Английский соц-баннер |
 | `description.md` | — | Текст карточки для Яндекс Игр |
 | `description.en.md` | — | English store listing |
 
@@ -46,6 +48,14 @@
 ## AI-баннер события
 
 `src/img/event-lantern.jpg` — Illustrious XL, 1216×704, 28 шагов, CFG 7, затем кроп 800×450 и WebP/JPEG-сжатие. Вшивается в CSS как data URI, поэтому одиночный HTML и сборка для Яндекс Игр не делают внешних запросов.
+
+## BiRefNet: прозрачный вырез
+
+- Модель: `ZhengPeng7/BiRefNet`, файл `model.safetensors` (424 МБ), положен в `ComfyUI/models/background_removal/BiRefNet.safetensors`.
+- Используется штатный узел ComfyUI: `LoadBackgroundRemovalModel` → `RemoveBackground` → `InvertMask` → `JoinImageWithAlpha` → `SaveImage`.
+- Вход: `keyart-900.jpg`, выход: `hero-cutout.png` с прозрачным фоном.
+- Из выреза собран `social-en-1200x630.jpg` для английских соцсетей.
+- Воркфлоу: `_dev/birefnet2.json`.
 
 ## Лицензия и ограничения
 
