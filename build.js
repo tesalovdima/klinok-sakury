@@ -2,9 +2,19 @@ const fs = require('fs'), path = require('path');
 const r = f => fs.readFileSync(path.join(__dirname, 'src', f), 'utf8');
 const gameParts = fs.readdirSync(path.join(__dirname, 'src/game')).filter(f => f.endsWith('.js')).sort();
 const game = "(() => {\n'use strict';\n" + gameParts.map(f => `/* --- ${f} --- */\n` + r('game/' + f)).join('\n') + "\n})();";
+// иконки умений: AI-эмблемы вшиваются как data URI, чтобы работал одиночный HTML
+const skillDir = path.join(__dirname, 'src/img/skills');
+const skillIcons = {};
+if (fs.existsSync(skillDir)) {
+  for (const f of fs.readdirSync(skillDir)) {
+    if (!f.endsWith('.webp')) continue;
+    skillIcons[f.slice(0, -5)] = 'data:image/webp;base64,' + fs.readFileSync(path.join(skillDir, f)).toString('base64');
+  }
+}
 const scripts = [
   r('balance.js').replace("if (typeof module !== 'undefined') module.exports = BAL;", ''),
-  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), r('net.js'), game,
+  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), r('net.js'),
+  `const SKILL_ICONS=${JSON.stringify(skillIcons)};`, game,
 ].join('\n');
 const GOOGLE = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

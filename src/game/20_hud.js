@@ -1,6 +1,6 @@
 /* ===== HUD, журнал, всплывашки, модальные окна, музыка ===== */
 const hud = {};
-['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'socialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
+['hLvl', 'xpFill', 'hpFill', 'hpText', 'mpFill', 'mpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'socialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
 
 function updateHudStatic() {
   if (!S) return;
@@ -39,6 +39,8 @@ function updateHud() {
   hud.xpFill.style.width = clamp(S.xp / B.xpNeed(S.level) * 100, 0, 100) + '%';
   hud.hpFill.style.width = clamp(h.hp / R.st.hp * 100, 0, 100) + '%';
   hud.hpText.textContent = `${fmt(Math.max(0, h.hp))} / ${fmt(R.st.hp)}`;
+  hud.mpFill.style.width = clamp((R.mp || 0) / (R.mpMax || 1) * 100, 0, 100) + '%';
+  hud.mpText.textContent = `${Math.floor(R.mp || 0)}`;
   hud.goldText.textContent = fmt(S.gold);
   hud.gemText.textContent = fmt(S.gems);
   if (R.boss) {
@@ -48,12 +50,15 @@ function updateHud() {
     hud.bossTime.classList.toggle('low', R.boss.time < 8);
     hud.bossFill.parentElement.classList.toggle('rage', !!m.enr);
   }
+  const learnedN = SKILLS.reduce((n, s) => n + (S.skills[s.id] ? 1 : 0), 0);
+  hud.skillDock.style.setProperty('--sk', (learnedN > 8 ? 30 : learnedN > 6 ? 34 : 38) + 'px');
   for (const el of hud.skillDock.children) {
     const s = SK[el.dataset.sk];
     const learned = S.skills[s.id] > 0;
     el.classList.toggle('locked', !learned);
     el.style.setProperty('--cd', learned ? (R.cd[s.id] / s.cd).toFixed(3) : 0);
-    el.classList.toggle('ready', learned && R.cd[s.id] <= 0);
+    el.classList.toggle('ready', learned && R.cd[s.id] <= 0 && (R.mp || 0) >= s.mp);
+    el.classList.toggle('poor', learned && (R.mp || 0) < s.mp);
   }
   const bl = S.boost.goldUntil - Date.now();
   hud.boostChip.hidden = bl <= 0;

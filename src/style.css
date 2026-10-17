@@ -88,7 +88,7 @@ img { -webkit-user-drag: none; user-select: none; }
 .bars { display: flex; flex-direction: column; gap: 4px; flex: 1 1 auto; min-width: 0; }
 .bar { position: relative; height: 8px; border-radius: 5px; background: rgba(10, 6, 24, .7); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); overflow: hidden; }
 .bar > i { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; transition: width .15s linear; }
-.bar.xp > i { background: linear-gradient(90deg, #8fd3ff, #c4a8ff); }
+.bar.xp > i { background: linear-gradient(90deg, #ffd760, #ffb36b); }
 .bar.hp { height: 13px; }
 .bar.hp > i { background: linear-gradient(#ff8a9b, #e93b5a); }
 .bar.hp > span { position: absolute; inset: 0; font: 700 9.5px/13px var(--font-ui); text-align: center; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
@@ -157,9 +157,9 @@ img { -webkit-user-drag: none; user-select: none; }
 .chat p.boss { color: #ffb3d6; }
 @keyframes logIn { from { opacity: 0; transform: translateX(-6px); } }
 
-.skills { position: absolute; right: var(--gutter-r); bottom: 10px; display: flex; gap: 6px; }
+.skills { --sk: 38px; position: absolute; right: var(--gutter-r); bottom: 10px; display: flex; gap: 5px; max-width: calc(100% - 16px); }
 .sk {
-  position: relative; width: 38px; height: 38px; border-radius: 50%; border: 0; padding: 0;
+  position: relative; width: var(--sk); height: var(--sk); border-radius: 50%; border: 0; padding: 0;
   background: rgba(10, 6, 24, .6); box-shadow: 0 0 0 2px rgba(255, 255, 255, .18);
 }
 .sk img { width: 100%; height: 100%; border-radius: 50%; display: block; }
@@ -742,3 +742,9 @@ input { -webkit-user-select: text; user-select: text; }
 .season-card .season-hist { margin-top: 8px; }
 .season-card .season-hist .row { grid-template-columns: 40px minmax(0, 1fr); }
 .season-card .season-hist .row-main { gap: 2px; }
+.bar.mp { height: 8px; }
+.bar.mp > i { background: linear-gradient(90deg, #5a7dff, #8fd3ff); }
+.bar.mp > span { position: absolute; inset: 0; font: 700 7.5px/8px var(--font-ui); text-align: center; color: #e8f2ff; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
+.skill-el { font: 800 10px/1 var(--font-ui); }
+.sk img { filter: saturate(1.15) brightness(1.12); }
+.row-main b .el { font: 800 10px/1 var(--font-ui); margin-left: 4px; opacity: .95; }

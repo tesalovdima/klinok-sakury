@@ -233,7 +233,7 @@ hud.gemBtn.addEventListener('click', () => { R.shopTab = 'gems'; setTab('shop');
 hud.skillDock.addEventListener('click', e => {
   const b = e.target.closest('[data-sk]'); if (!b) return;
   const id = b.dataset.sk, f = frontMonster(), eng = f && f.x <= standX(f) + 3;
-  if (S.skills[id] && R.cd[id] <= 0 && !R.hero.dead && (id === 'bloom' || eng)) cast(id);
+  if (S.skills[id] && R.cd[id] <= 0 && (R.mp || 0) >= SK[id].mp && !R.hero.dead && (id === 'bloom' || eng)) cast(id);
 });
 
 /* ---------- запуск ---------- */
@@ -260,7 +260,7 @@ async function start(hot) {
   dailyReset();
   for (const el of document.querySelectorAll('[data-ic]')) el.src = A.miscIcon(el.dataset.ic, 64);
   $('icGold').src = A.miscIcon('gold', 40); $('icGem').src = A.miscIcon('gem', 40);
-  hud.skillDock.innerHTML = SKILLS.map(s => `<button class="sk locked" data-sk="${s.id}" aria-label="${s.name}"><img src="${A.miscIcon(s.icon, 64)}" alt=""></button>`).join('');
+  hud.skillDock.innerHTML = SKILLS.map(s => `<button class="sk locked" data-sk="${s.id}" aria-label="${s.name}"><img src="${skillIcon(s.icon, 64)}" alt=""></button>`).join('');
   AU.setVolume('music', S.settings.music); AU.setVolume('sfx', S.settings.sfx);
   resize();
   recalc(); R.hero.hp = R.st.hp;
@@ -297,6 +297,6 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
-    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast,
   };
 }

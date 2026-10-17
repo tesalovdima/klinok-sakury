@@ -105,14 +105,17 @@ function buyGrowth(id) {
   return true;
 }
 function renderSkills() {
-  return `<p class="sub">Очко навыка даётся за каждый уровень. Изученные навыки срабатывают сами. Иконки на сцене показывают перезарядку, по ним можно нажать.</p>
-    <ul class="rows">${SKILLS.map(s => {
+  const list = SKILLS.slice().sort((a, b) => a.unlock - b.unlock);
+  return `<p class="sub">Очко навыка даётся за каждый уровень. Изученные навыки срабатывают сами, тратя ману. Иконки на сцене показывают перезарядку, по ним можно нажать.</p>
+    <ul class="rows">${list.map(s => {
       const l = S.skills[s.id], open = S.level >= s.unlock, maxed = l >= SKILL_MAX;
+      const el = ELEMENTS[s.el];
       const btn = !open ? `<button class="buy" disabled>Ур. ${s.unlock}</button>`
         : maxed ? '<button class="buy" disabled>Максимум</button>'
         : `<button class="buy pink" data-act="learn" data-sk="${s.id}" ${S.sp > 0 ? '' : 'disabled'}>${l ? 'Улучшить' : 'Изучить'}</button>`;
-      return `<li class="row"><img src="${A.miscIcon(s.icon, 64)}" alt="" style="${open ? '' : 'filter:grayscale(1) brightness(.6)'}">
-        <div class="row-main"><b>${s.name}</b><span class="meta">${l ? `Ур. ${l}/${SKILL_MAX}` : open ? 'Не изучен' : `Откроется на уровне ${s.unlock}`} · перезарядка ${s.cd} с</span>
+      return `<li class="row"><img src="${skillIcon(s.icon, 64)}" alt="" style="${open ? '' : 'filter:grayscale(1) brightness(.6)'}">
+        <div class="row-main"><b>${s.name} <small class="el" style="color:${el.color}">${el.name}</small></b>
+        <span class="meta">${l ? `Ур. ${l}/${SKILL_MAX}` : open ? 'Не изучен' : `Откроется на уровне ${s.unlock}`} · ${s.mp} маны · перезарядка ${s.cd} с</span>
         <p>${s.desc(Math.max(1, l))}</p></div>${btn}</li>`;
     }).join('')}</ul>`;
 }
@@ -586,5 +589,5 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.4</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.5</p>`));
 }

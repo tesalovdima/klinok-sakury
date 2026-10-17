@@ -16,6 +16,7 @@
 | `screen-event.jpg` | 1080×1920 | Скриншот 3: событие и награды |
 | `screen-tower.jpg` | 1080×1920 | Скриншот 4: башня |
 | `screen-world.jpg` | 1080×1920 | Скриншот 5: мировой босс |
+| `screen-skills.jpg` | 1080×1920 | Скриншот 6: умения со стихиями |
 
 Скриншоты сняты с реальной сборки (Chrome headless, 540×960 @2x), без нарисованных вручную элементов.
 
@@ -32,6 +33,10 @@
 
 **Key art (seed 41, 832×1216):**
 `masterpiece, best quality, anime key visual, full body samurai girl with long pink hair, white and red outfit, katana, standing on a stone path in a sakura shrine at night, glowing lanterns, falling petals, cinematic lighting, detailed background, no text`
+
+## AI-иконки умений
+
+10 эмблем для умений сгенерированы Illustrious XL (1024×1024, 26 шагов, CFG 6.5) по промптам вида «anime magical emblem, a circle of glowing [стихия], dark background, no text», затем обрезаны в круг 96×96 и сохранены как WebP (`src/img/skills/*.webp`, ~32 КБ на все). Стихии: ветер (лепестки), вода (луна, лёд), огонь (пламя, дух, метеор), земля (цветение, землетряс), ветер (гром, буря).
 
 ## Лицензия и ограничения
 

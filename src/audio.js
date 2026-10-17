@@ -241,6 +241,7 @@ const AUDIO = (() => {
       case 'rage': tone(110, 0, .7, 'sawtooth', .07, 55); hiss(0, .6, .12, 500); break;
       case 'victory': [523, 659, 784, 1047, 1319].forEach((f, i) => { tone(f, i * .09, .3, 'square', .04); tone(f / 2, i * .09, .3, 'triangle', .05); }); break;
       case 'skill': hiss(0, .25, .1, 1200); tone(880, 0, .2, 'sine', .05, 1760); break;
+      case 'explode': hiss(0, .5, .35, 180); tone(70, 0, .4, 'sine', .12, 32); break;
       case 'thunder': hiss(0, .3, .2, 600); break;
       case 'buff': [392, 523, 659].forEach((f, i) => tone(f, i * .06, .25, 'sine', .05)); break;
       case 'charge': tone(220, 0, 1.1, 'sine', .04, 880); break;

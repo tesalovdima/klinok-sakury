@@ -68,8 +68,9 @@
     if (look.cosmetic === 'petals') petalOrbit(ctx, t, false);
 
     const run = an.run, ph = an.phase;
-    const bob = run ? -Math.abs(Math.sin(ph)) * 3.2 : Math.sin(t * 2.4) * 1.1;
-    const lean = an.swing >= 0 ? Math.sin(Math.min(1, an.swing * 1.6) * Math.PI) * .12 : (run ? .08 : 0);
+    const bob = (run ? -Math.abs(Math.sin(ph)) * 3.2 : Math.sin(t * 2.4) * 1.1) - (an.cast > 0 ? Math.sin((1 - Math.min(1, an.cast / .4)) * Math.PI) * 5 : 0);
+    let lean = an.swing >= 0 ? Math.sin(Math.min(1, an.swing * 1.6) * Math.PI) * .12 : (an.cast > 0 ? -.05 : run ? .08 : 0);
+    if (an.cast > 0) lean += an.castType === 'single' ? .12 : an.castType === 'meteor' ? -.04 : 0;
     const hurtX = an.hurt > 0 ? Math.sin(an.hurt * 60) * 8 * an.hurt : 0;
     ctx.translate(hurtX, bob);
     ctx.rotate(lean);
@@ -100,6 +101,17 @@
     if (look.ear >= 0) earring(ctx, look.ear, t);
     pauldron(ctx, ug, U, t);
     swordArm(ctx, t, look, an, U);
+    if (an.cast > 0) {
+      const p = Math.min(1, an.cast / .4), c = an.castEl || '#ffe3f0';
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = .55 * Math.sin(p * Math.PI);
+      const g = ctx.createRadialGradient(22, -78, 2, 22, -78, 46);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(.35, c); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ell(ctx, 22, -78, 46, 46); ctx.fill();
+      ctx.strokeStyle = c; ctx.lineWidth = 1.4; ctx.globalAlpha = .5;
+      ell(ctx, 22, -78, 20 + 8 * Math.sin(t * 12), 20 + 8 * Math.sin(t * 12)); ctx.stroke();
+      ctx.restore();
+    }
     if (look.cosmetic === 'petals') petalOrbit(ctx, t, true);
     ctx.restore();
   }
@@ -726,7 +738,14 @@
       if (p < .28) sa = idle + (-2.75 - idle) * A.easeOut(p / .28);
       else if (p < .55) sa = -2.75 + (0.75 + 2.75) * A.easeIn((p - .28) / .27);
       else sa = .75 + (idle - .75) * A.easeInOut((p - .55) / .45);
-    } else if (an.cast > 0) sa = -1.9 - Math.sin(an.cast * Math.PI) * .6;
+    } else if (an.cast > 0) {
+      const c = an.castType;
+      if (c === 'single') sa = -.35 + Math.sin(t * 30) * .08;
+      else if (c === 'meteor') sa = -2.95 + Math.sin(t * 18) * .1;
+      else if (c === 'aoe' || c === 'cone') sa = -2.2 + Math.sin(t * 20) * .45;
+      else if (c === 'multi' || c === 'storm') sa = -.75 + Math.sin(t * 28) * .55;
+      else sa = -1.9 - Math.sin(an.cast * Math.PI) * .6;
+    }
     else if (an.run) sa = -.55 + Math.sin(an.phase) * .1;
     else sa = idle;
     const sx = 7, sy = -53, aa = sa * .55 + .55;
