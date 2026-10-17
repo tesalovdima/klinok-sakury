@@ -49,8 +49,16 @@
       ell(ctx, 0, -33, 3.2, 2.4); ctx.fillStyle = '#ffb3d6'; ctx.fill();
       ctx.restore();
     },
-    boss(ctx) {
-      ctx.save(); ctx.translate(32, 33);
+    chat(ctx) {
+      ctx.beginPath();
+      ctx.moveTo(9, 13); ctx.quadraticCurveTo(9, 6, 17, 6); ctx.lineTo(47, 6);
+      ctx.quadraticCurveTo(55, 6, 55, 14); ctx.lineTo(55, 38);
+      ctx.quadraticCurveTo(55, 45, 47, 45); ctx.lineTo(27, 45); ctx.lineTo(15, 56);
+      ctx.lineTo(17, 45); ctx.quadraticCurveTo(9, 45, 9, 38); ctx.closePath();
+      fillStroke(ctx, '#4a3d86', OUT, 2.6);
+      for (const x of [22, 32, 42]) { ell(ctx, x, 25.5, 3.4, 3.4); ctx.fillStyle = '#ff8fc1'; ctx.fill(); }
+    },
+    boss(ctx) {      ctx.save(); ctx.translate(32, 33);
       // рога
       for (const s of [-1, 1]) {
         ctx.beginPath(); ctx.moveTo(s * 9, -10); ctx.quadraticCurveTo(s * 25, -26, s * 23, -2); ctx.quadraticCurveTo(s * 18, -9, s * 8, -6); ctx.closePath();

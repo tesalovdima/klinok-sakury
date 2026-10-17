@@ -1,0 +1,25 @@
+[Unit]
+Description=Klinok Sakury — browser game and chat API
+Documentation=https://github.com/tesalovdima/klinok-sakury
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sakura
+Group=sakura
+WorkingDirectory=/opt/klinok-sakury
+Environment=PORT=8080
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/klinok-sakury/server.py
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/klinok-sakury/data
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

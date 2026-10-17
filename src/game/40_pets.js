@@ -1,5 +1,6 @@
 /* ===== Питомцы: коллекция и призыв ===== */
 function renderPets() {
+  if (!unlockOk('pets')) return lockCard('pets', 'Питомцы');
   const seg = segHTML('petseg', R.petSeg, [['summon', 'Призыв', !hud.petDot.hidden], ['collection', `Коллекция ${petsOwnedCount()}/${B.PETS.length}`]]);
   return seg + (R.petSeg === 'summon' ? renderSummon() : renderCollection());
 }

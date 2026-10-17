@@ -2,7 +2,7 @@
 const panel = $('panel');
 function renderPanel() {
   if (!S || !S.hero) { panel.innerHTML = ''; return; }
-  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, trials: renderTrials, shop: renderShop }[R.tab];
+  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, trials: renderTrials, social: renderSocial, shop: renderShop }[R.tab];
   panel.innerHTML = fn ? fn() : '';
   if (R.tab === 'gear') setupDoll();
   if (R.tab === 'pets') setupPetStage();
@@ -12,6 +12,7 @@ function setTab(t) {
   R.tab = t;
   for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false');
   renderPanel(); panel.scrollTop = 0;
+  if (t === 'social') Social.enter();
 }
 const segHTML = (act, cur, items) => `<div class="seg" role="group">${items.map(([v, l, dot]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${l}${dot ? '<i class="mini-dot"></i>' : ''}</button>`).join('')}</div>`;
 
@@ -116,6 +117,12 @@ function renderSkills() {
 }
 
 /* ---------- снаряжение ---------- */
+function lockCard(id, title) {
+  const u = B.UNLOCK[id] || {};
+  const cur = u.stage != null ? `Сейчас этап ${zoneOf(S.maxStage).num}.` : `Сейчас уровень ${S.level}.`;
+  return `<section class="card lock-card"><img src="${A.miscIcon('lock', 64)}" alt="">
+    <div class="row-main"><b>${title}</b><span class="meta">Откроется на ${unlockLabel(id)}. ${cur}</span></div></section>`;
+}
 const DOLL = { left: ['helmet', 'upper', 'lower'], right: ['weapon', 'gloves', 'boots'], bottom: ['neck', 'ear', 'ring'] };
 function slotTile(slot) {
   const id = S.equip[slot], it = id && itemById(id);
@@ -209,11 +216,11 @@ function openItem(id) {
   const eq = isEquipped(it), gr = B.GRADES[it.g];
   const eqId = S.equip[it.slot], eqIt = !eq && eqId && itemById(eqId);
   const vs = eqIt ? itemTotals(eqIt) : null;
-  const lvOk = S.level >= gr.lvl, k = scrollKind(it.slot), canEnch = it.g > 0 && it.e < B.MAX_ENCH;
+  const lvOk = gradeUnlocked(it.g), k = scrollKind(it.slot), canEnch = it.g > 0 && it.e < B.MAX_ENCH;
   openModal(sheet(`<span class="gtext g${it.g}">${itemName(it)}</span>`, `${B.SLOT[it.slot].name} · ${gr.label}${eq ? ' · надето' : ''}`, `
     <dl class="compare">${compareRows(it.slot, it.g, it.e, it.opts, vs)}</dl>
     ${optsHTML(it)}
-    ${!lvOk ? `<p class="note warn">Нужен уровень ${gr.lvl}, чтобы надеть этот предмет.</p>` : ''}
+    ${!lvOk ? `<p class="note warn">Нужен этап ${gr.stage}, чтобы надеть этот предмет.</p>` : ''}
     ${it.g === 0 ? '' : `<p class="note">Свитков ${B.GRADES[it.g].short} для ${k === 'w' ? 'оружия' : 'доспехов'}: обычных ${S.scrolls[k][it.g]}, благословенных ${S.scrolls['b' + k][it.g]}.</p>`}
     <div class="btn-row">
       ${eq ? `<button class="buy ghost" data-act="unequip" data-id="${it.id}">Снять</button>` : `<button class="buy" data-act="equip" data-id="${it.id}" ${lvOk ? '' : 'disabled'}>Надеть</button>`}
@@ -225,7 +232,7 @@ function openItem(id) {
     </div>`}`, { icon: tileHTML(it, 'tabindex="-1"') }), { item: id });
 }
 function equip(id) {
-  const it = itemById(id); if (!it || S.level < B.GRADES[it.g].lvl) return;
+  const it = itemById(id); if (!it || !gradeUnlocked(it.g)) return;
   S.equip[it.slot] = it.id; recalc();
   log(`Надето: ${itemName(it)}.`, 'sys');
 }
@@ -243,6 +250,7 @@ function enchantHTML(it, st) {
   const now = itemTotals(it), nxt = B.itemStats(it.slot, it.g, target);
   const kindName = k === 'w' ? 'оружие' : 'доспех', cy = B.crystalYield(it.slot, it.g, it.e);
   const maxed = it.e >= B.MAX_ENCH;
+  const stops = [3, 5, 7, 10, 13, 16, 20].filter(n => n > B.SAFE);
   return sheet('Заточка', `<span class="gtext g${it.g}">${itemName(it)}</span>`, `
     <div class="forge"><canvas id="forgeCv"></canvas>${tileHTML(it, 'id="forgeTile" tabindex="-1"')}<div class="forge-result" id="forgeRes"></div></div>
     ${maxed ? `<p class="chance safe">Достигнута максимальная заточка <b>+${B.MAX_ENCH}</b></p>` : `
@@ -257,13 +265,24 @@ function enchantHTML(it, st) {
       : st.kind === 'b' ? '<p class="note">Благословенный свиток: при неудаче заточка сбросится до +0, предмет уцелеет.</p>'
       : info.destructive ? `<p class="note warn">При неудаче предмет разрушится и превратится в ${fmt(cy)} ${plural(cy, CRY_W)}. Выше +7 рискуйте только с запасом.</p>`
       : `<p class="note">При неудаче заточка откатится до +${B.ENCH.fallback}, предмет уцелеет. Каждая неудача даёт искру: +6% к следующей попытке.</p>`}
-    ${have ? '<button class="buy pink wide" data-act="do-enchant">Заточить</button>'
+    ${have ? `<div class="btn-row">
+        <button class="buy pink" data-act="do-enchant" ${st.autoRun ? 'disabled' : ''}>Заточить</button>
+        <button class="buy ghost" data-act="auto-enchant" ${st.autoRun ? 'disabled' : ''}>Авто до +${st.autoStop}</button>
+      </div>
+      <div class="auto-row" role="group" aria-label="Авто-заточка до">
+        <span>Авто до</span>
+        ${stops.map(n => `<button class="auto-stop ${st.autoStop === n ? 'on' : ''}" data-act="auto-stop" data-n="${n}" ${st.autoRun ? 'disabled' : ''}>+${n}</button>`).join('')}
+      </div>
+      <p class="note auto-status" id="autoStatus">${st.autoRun ? 'Авто-заточка идёт…' : 'Авто точит, пока не достигнет цели, не кончатся свитки или не сломается вещь.'}</p>`
       : `<button class="buy wide" data-act="buy-scrolls" data-g="${it.g}">Нет свитков: купить в магазине</button>`}`}`);
 }
 function openEnchant(id) {
   const it = itemById(id); if (!it || it.g === 0) return;
   const prev = modalState && modalState.enchant ? modalState : null;
-  const st = { enchant: true, item: id, kind: prev ? prev.kind : 'n', busy: false, power: 0, parts: [], t: 0, color: '#ff8fc1' };
+  const st = {
+    enchant: true, item: id, kind: prev ? prev.kind : 'n', busy: false, power: 0, parts: [], t: 0, color: '#ff8fc1',
+    autoRun: false, autoStop: S.settings.autoEnchantTo || 7,
+  };
   openModal(enchantHTML(it, st), st);
   startForge(st);
 }
@@ -298,68 +317,150 @@ function burst(st, color, shard, n) {
     st.parts.push({ x: w / 2, y: h / 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: shard ? 260 : 40, t: 0, life: .8 + rnd() * .6, c: Array.isArray(color) ? color[i % color.length] : color, s: 3 + rnd() * 4, shard });
   }
 }
+/* одно испытание: меняет состояние и возвращает исход */
+function enchantOnce(it, key) {
+  const target = it.e + 1, info = enchInfo(it), blessed = key[0] === 'b';
+  S.stats.enchants++; quest('enchant');
+  S.scrolls[key][it.g]--;
+  if (rnd() < info.ch) {
+    it.e = target; it.pt = 0;
+    S.stats.best = Math.max(S.stats.best, target);
+    autoEquipBest(it.slot);
+    recalc(); checkAch(); updateSideButtons();
+    return { r: 'ok', target };
+  }
+  if (blessed) {
+    const was = it.e; it.e = 0; it.pt = 0; recalc();
+    return { r: 'reset', was };
+  }
+  if (info.destructive) {
+    const cry = B.crystalYield(it.slot, it.g, it.e), nm = itemName(it), slot = it.slot, g = it.g;
+    removeItem(it.id); S.crystals += cry; S.stats.breaks++; autoEquipBest(slot); recalc();
+    return { r: 'destroyed', cry, nm, slot, g };
+  }
+  const was = it.e; it.e = B.ENCH.fallback; it.pt = (it.pt || 0) + 1; recalc();
+  return { r: 'fell', was, to: B.ENCH.fallback, pt: it.pt };
+}
+function showEnchantResult(st, out, it) {
+  const res = $('forgeRes'), tile = $('forgeTile');
+  if (!res) return;
+  if (out.r === 'ok') {
+    st.color = '#ffd760'; burst(st, ['#ffd760', '#ffffff', '#ff8fc1'], false, 34);
+    res.className = 'forge-result ok'; res.innerHTML = `+${out.target} Успех!`;
+    if (it) log(`${B.NAMES[it.slot][it.g]} заточен до +${out.target}.`, 'good');
+    AU.sfx('success');
+  } else if (out.r === 'reset') {
+    st.color = '#7cc8ff'; burst(st, ['#7cc8ff', '#ffffff'], false, 22);
+    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Благословение спасло предмет: +${out.was} → +0.</small>`;
+    AU.sfx('fail');
+  } else if (out.r === 'fell') {
+    st.color = '#ff9a5c'; burst(st, ['#ff9a5c', '#ffffff'], false, 22);
+    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>+${out.was} → +${out.to}. Искра +${Math.round(Math.min(B.ENCH.pityMax, out.pt * B.ENCH.pityStep) * 100)}%.</small>`;
+    AU.sfx('fail');
+  } else if (out.r === 'destroyed') {
+    st.color = '#ff5d73'; burst(st, ['#ff5d73', '#bfe9ff', '#ffffff'], true, 40);
+    if (tile) tile.classList.add('shatter');
+    res.className = 'forge-result bad'; res.innerHTML = `Предмет разрушен<small>+${fmt(out.cry)} ${plural(out.cry, CRY_W)}</small>`;
+    AU.sfx('fail'); if (!RM) R.shake = .25;
+  }
+}
 function doEnchant() {
-  const st = modalState; if (!st || !st.enchant || st.busy) return;
+  const st = modalState; if (!st || !st.enchant || st.busy || st.autoRun) return;
   const it = itemById(st.item); if (!it || it.e >= B.MAX_ENCH) return;
   const k = scrollKind(it.slot), key = (st.kind === 'b' ? 'b' : '') + k;
   if (S.scrolls[key][it.g] <= 0) return;
   st.busy = true;
   modal.querySelectorAll('button').forEach(b => b.disabled = true);
-  S.scrolls[key][it.g]--;
   AU.sfx('charge');
-  const t0 = performance.now(), D = RM ? 300 : 1100;
+  const t0 = performance.now(), D = RM ? 250 : 900;
   const ramp = () => {
     if (modalState !== st) return;
     const p = Math.min(1, (performance.now() - t0) / D);
     st.power = p;
-    if (p < 1) requestAnimationFrame(ramp); else resolveEnchant(st, it, key);
+    if (p < 1) requestAnimationFrame(ramp);
+    else {
+      const out = enchantOnce(it, key);
+      showEnchantResult(st, out, it);
+      saveLocal();
+      setTimeout(() => {
+        if (modalState !== st) return;
+        st.busy = false; st.power = 0; st.color = '#ff8fc1';
+        if (out.r === 'destroyed') { handleBreak(st, out); return; }
+        rerenderEnchant(st);
+      }, out.r === 'destroyed' ? (RM ? 500 : 1200) : (RM ? 350 : 900));
+      if (R.tab === 'gear') renderPanel();
+    }
   };
   requestAnimationFrame(ramp);
 }
-function resolveEnchant(st, it, key) {
-  const target = it.e + 1, info = enchInfo(it), ch = info.ch, blessed = key[0] === 'b';
-  S.stats.enchants++; quest('enchant');
-  const res = $('forgeRes'), tile = $('forgeTile');
-  const finish = (ms) => setTimeout(() => { if (modalState === st) { st.busy = false; st.power = 0; st.color = '#ff8fc1'; rerenderEnchant(st); } }, RM ? 400 : ms);
-  if (rnd() < ch) {
-    it.e = target; it.pt = 0; S.stats.best = Math.max(S.stats.best, target);
-    st.color = '#ffd760'; burst(st, ['#ffd760', '#ffffff', '#ff8fc1'], false, 40);
-    res.className = 'forge-result ok'; res.innerHTML = `+${target} Успех!`;
-    log(`${B.NAMES[it.slot][it.g]} заточен до +${target}.`, 'good');
-    AU.sfx('success'); recalc(); checkAch(); updateSideButtons(); finish(1100);
-  } else if (blessed) {
-    const was = it.e; it.e = 0; it.pt = 0;
-    st.color = '#7cc8ff'; burst(st, ['#7cc8ff', '#ffffff'], false, 26);
-    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Благословение спасло предмет. Заточка +${was} сброшена до +0.</small>`;
-    log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +0.`, 'bad');
-    AU.sfx('fail'); recalc(); finish(1600);
-  } else if (info.destructive) {
-    const cry = B.crystalYield(it.slot, it.g, it.e), nm = itemName(it), slot = it.slot, g = it.g;
-    removeItem(it.id); S.crystals += cry; S.stats.breaks++;
-    recalc();
-    st.color = '#ff5d73'; burst(st, ['#ff5d73', '#bfe9ff', '#ffffff'], true, 46);
-    if (tile) tile.classList.add('shatter');
-    res.className = 'forge-result bad'; res.innerHTML = `Предмет разрушен<small>${nm} кристаллизовался: +${fmt(cry)} ${plural(cry, CRY_W)}</small>`;
-    log(`Заточка не удалась. ${nm} разрушен: получено ${fmt(cry)} ${plural(cry, CRY_W)}.`, 'bad');
-    AU.sfx('fail');
-    if (!RM) R.shake = .25;
-    setTimeout(() => {
-      if (modalState !== st) return;
-      st.busy = false;
-      const sh = modal.querySelector('.sheet');
-      sh.querySelectorAll('.ench-line,.chance,.compare,.scroll-pick,.note,.wide').forEach(n => n.remove());
-      sh.insertAdjacentHTML('beforeend', `<p class="note">Новый ${B.NAMES[slot][g]} стоит ${fmt(B.price(slot, g))} золота.</p>
-        <div class="btn-row"><button class="buy" data-act="goshop" data-g="${g}">Купить заново</button><button class="buy ghost" data-act="close">Закрыть</button></div>`);
-    }, RM ? 400 : 1300);
-  } else {
-    const was = it.e;
-    it.e = B.ENCH.fallback; it.pt = (it.pt || 0) + 1;
-    st.color = '#ff9a5c'; burst(st, ['#ff9a5c', '#ffffff'], false, 26);
-    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Заточка +${was} откатилась до +${B.ENCH.fallback}. Искра даст +${Math.round(Math.min(B.ENCH.pityMax, it.pt * B.ENCH.pityStep) * 100)}% к следующей попытке.</small>`;
-    log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +${B.ENCH.fallback}. Накоплена искра.`, 'bad');
-    AU.sfx('fail'); recalc(); finish(1600);
+/* авто-заточка до выбранного уровня */
+async function autoEnchant() {
+  const st = modalState;
+  if (!st || !st.enchant || st.autoRun) return;
+  const it0 = itemById(st.item); if (!it0) return;
+  st.autoRun = true;
+  modal.querySelectorAll('button').forEach(b => b.disabled = true);
+  let steps = 0;
+  while (modalState === st && st.autoRun) {
+    const it = itemById(st.item);
+    if (!it || it.e >= st.autoStop || it.e >= B.MAX_ENCH) break;
+    const k = scrollKind(it.slot);
+    let key = (st.kind === 'b' ? 'b' : '') + k;
+    if (S.scrolls[key][it.g] <= 0) {
+      const alt = key[0] === 'b' ? k : 'b' + k;
+      if (S.scrolls[alt][it.g] > 0) key = alt; else break;
+    }
+    st.busy = true; st.power = 0;
+    const out = enchantOnce(it, key);
+    steps++;
+    showEnchantResult(st, out, it);
+    const cur = itemById(st.item);
+    const label = $('autoStatus');
+    if (label) label.textContent = `${cur ? '+' + cur.e : '—'} · шаг ${steps} · свитков ${cur ? S.scrolls[(st.kind === 'b' ? 'b' : '') + scrollKind(cur.slot)][cur.g] : 0}`;
+    saveLocal();
+    await new Promise(r => setTimeout(r, RM ? 120 : 280));
+    if (out.r === 'destroyed') { st.autoRun = false; handleBreak(st, out); return; }
+  }
+  st.autoRun = false;
+  st.busy = false;
+  saveLocal();
+  if (modalState === st) {
+    const it = itemById(st.item);
+    if (it && it.e >= st.autoStop) toast(`Достигнуто +${it.e}`);
+    else if (it) toast('Свитки закончились');
+    rerenderEnchant(st);
   }
   if (R.tab === 'gear') renderPanel();
+}
+/* при сломе: результат, галочка «покупать заново» и кнопка */
+function handleBreak(st, out) {
+  st.busy = false;
+  const sh = modal.querySelector('.sheet'); if (!sh) return;
+  const price = B.price(out.slot, out.g);
+  const on = !!S.settings.autoBuyBreak;
+  const autoBuy = on && S.gold >= price;
+  sh.querySelectorAll('.ench-line,.chance,.compare,.scroll-pick,.note,.wide,.auto-row,.btn-row,.forge-result,.auto-status').forEach(n => n.remove());
+  sh.insertAdjacentHTML('beforeend', `
+    <p class="note warn">${out.nm} разрушен и превратился в ${fmt(out.cry)} ${plural(out.cry, CRY_W)}.</p>
+    <label class="check-row"><input type="checkbox" id="autoBuyBox" ${on ? 'checked' : ''}><span>Покупать заново при сломе</span></label>
+    <p class="note">Новый ${B.NAMES[out.slot][out.g]} стоит ${fmt(price)} золота. У вас ${fmt(S.gold)}.</p>
+    <div class="btn-row">
+      <button class="buy" data-act="buy-again" data-slot="${out.slot}" data-g="${out.g}" ${S.gold >= price ? '' : 'disabled'}>Купить заново за ${fmt(price)}</button>
+      <button class="buy ghost" data-act="close">Закрыть</button>
+    </div>`);
+  const box = $('autoBuyBox');
+  if (box) box.addEventListener('change', () => { S.settings.autoBuyBreak = box.checked; saveLocal(); });
+  if (autoBuy) {
+    setTimeout(() => {
+      if (modalState !== st) return;
+      const bought = buyItem(out.slot, out.g, { silent: true });
+      if (bought) {
+        toast(`Куплено заново: ${itemName(bought)}`);
+        closeModal();
+        if (R.tab === 'gear') renderPanel();
+      }
+    }, RM ? 400 : 1100);
+  }
 }
 function rerenderEnchant(st) {
   const it = itemById(st.item); if (!it) return;
@@ -375,14 +476,14 @@ function rerenderEnchant(st) {
 }
 
 /* ---------- магазин ---------- */
-function unlockedGrade() { let g = 0; B.GRADES.forEach((gr, i) => { if (gr.lvl <= S.level) g = i; }); return g; }
+function unlockedGrade() { let g = 0; B.GRADES.forEach((gr, i) => { if (gradeUnlocked(i)) g = i; }); return g; }
 function renderShop() {
   const seg = segHTML('shoptab', R.shopTab, [['gear', 'Снаряжение'], ['scrolls', 'Свитки'], ['gems', 'Самоцветы', !hud.shopDot.hidden]]);
   if (R.shopTab === 'scrolls') return seg + renderScrollShop();
   if (R.shopTab === 'gems') return seg + Monet.renderShop();
-  const g = R.shopGrade, gr = B.GRADES[g], lvOk = S.level >= gr.lvl;
+  const g = R.shopGrade, gr = B.GRADES[g], lvOk = gradeUnlocked(g);
   const chips = `<div class="grade-chips" role="group" aria-label="Грейд">${B.GRADES.map((x, i) =>
-    `<button class="g${i}" data-act="shopgrade" data-g="${i}" aria-pressed="${i === g}">${x.short}${S.level < x.lvl ? `<small>ур. ${x.lvl}</small>` : ''}</button>`).join('')}</div>`;
+    `<button class="g${i}" data-act="shopgrade" data-g="${i}" aria-pressed="${i === g}">${x.short}${!gradeUnlocked(i) ? `<small>эт. ${x.stage}</small>` : ''}</button>`).join('')}</div>`;
   const rows = B.SLOTS.map(sl => {
     const p = B.price(sl.id, g), st = B.itemStats(sl.id, g, 0);
     const main = Object.keys(st).map(k => `${STAT_LABEL[k]} ${statStr(k, st[k])}`).join(', ');
@@ -390,10 +491,10 @@ function renderShop() {
     return `<li class="row">${tileHTML({ slot: sl.id, g, e: 0 }, 'tabindex="-1"')}
       <div class="row-main"><b class="gtext g${g}">${B.NAMES[sl.id][g]}</b><span class="meta">${sl.name}${own ? ` · у вас: ${own}` : ''}</span><span class="val">${main}</span></div>
       ${lvOk ? `<button class="buy ${p > S.gold ? 'poor' : ''}" data-act="buyitem" data-slot="${sl.id}" data-g="${g}" data-cost="${p}"><img src="${A.miscIcon('gold', 32)}" alt="">${fmt(p)}</button>`
-        : `<button class="buy" disabled>Ур. ${gr.lvl}</button>`}</li>`;
+        : `<button class="buy" disabled>Этап ${gr.stage}</button>`}</li>`;
   }).join('');
   return `${seg}${chips}
-    <p class="sub">${lvOk ? `${gr.label}: купленное надевается само, если оно лучше текущего. Старая вещь уходит в сумку.` : `${gr.label} откроется на уровне ${gr.lvl}.`}</p>
+    <p class="sub">${lvOk ? `${gr.label}: надевается лучшая по силе и заточке вещь слота. Старая уходит в сумку.` : `${gr.label} откроется на этапе ${gr.stage}.`}</p>
     <ul class="rows">${rows}</ul>`;
 }
 function renderScrollShop() {
@@ -414,18 +515,23 @@ function renderScrollShop() {
       <span class="val">${bl ? 'При неудаче заточка сбрасывается до +0' : 'При неудаче выше +3 предмет разрушается'}</span></div>
       <button class="buy ${cost > S.crystals ? 'poor' : ''}" data-act="buyscroll" data-k="${k}" data-g="${g}" data-cost="${cost}" data-cur="cry"><img src="${A.miscIcon('crystal', 32)}" alt="">${fmt(cost)}</button></li>`).join('')}</ul>`;
 }
-function buyItem(slot, g) {
+function buyItem(slot, g, opts = {}) {
   const p = B.price(slot, g);
-  if (S.gold < p || S.level < B.GRADES[g].lvl) { toast(S.gold < p ? 'Не хватает золота' : `Нужен уровень ${B.GRADES[g].lvl}`); return; }
+  if (!gradeUnlocked(g)) { toast(`Грейд откроется на этапе ${B.GRADES[g].stage}`); return null; }
+  if (S.gold < p) { toast('Не хватает золота'); return null; }
   S.gold -= p;
   const it = { id: S.nextId++, slot, g, e: 0, pt: 0, opts: B.rollOpts(rnd, g) };
   S.items.push(it);
   if (!S.codex[slot + ':' + g]) { S.codex[slot + ':' + g] = 1; log(`Коллекция: ${B.NAMES[slot][g]} (${B.GRADES[g].short}) добавлен.`, 'good'); }
-  const curId = S.equip[slot], cur = curId && itemById(curId);
-  if (!cur || itemScore(slot, g, 0, it.opts) > itemScore(cur.slot, cur.g, cur.e, cur.opts)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
-  else toast(`${itemName(it)} в сумке`);
+  const best = autoEquipBest(slot);
+  recalc();
+  if (!opts.silent) {
+    if (best && best.id === it.id) toast(`Надето: ${itemName(it)}`);
+    else toast(`${itemName(it)} в сумке${best ? ` · надет ${itemName(best)}` : ''}`);
+  }
   log(`Куплено: ${itemName(it)}.`, 'sys');
   AU.sfx('buy');
+  return it;
 }
 function buyScroll(k, g) {
   const base = k.endsWith('w') ? B.SCROLL_COST.weapon[g] : B.SCROLL_COST.armor[g];
@@ -479,5 +585,5 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.0</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.1</p>`));
 }

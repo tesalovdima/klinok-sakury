@@ -1,13 +1,13 @@
 /* ===== Баланс: грейды, предметы, монстры, рост ===== */
 const BAL = (() => {
   const GRADES = [
-    { id: 'NG', label: 'Без грейда', short: 'NG', lvl: 1,  color: '#cfc5b0' },
-    { id: 'D',  label: 'Грейд D',    short: 'D',  lvl: 8,  color: '#7fe07c' },
-    { id: 'C',  label: 'Грейд C',    short: 'C',  lvl: 19, color: '#5cbcff' },
-    { id: 'B',  label: 'Грейд B',    short: 'B',  lvl: 30, color: '#bd8aff' },
-    { id: 'A',  label: 'Грейд A',    short: 'A',  lvl: 41, color: '#ff9156' },
-    { id: 'S',  label: 'Грейд S',    short: 'S',  lvl: 51, color: '#ffd760' },
-    { id: 'R',  label: 'Грейд R',    short: 'R',  lvl: 60, color: '#ff5fd2' },
+    { id: 'NG', label: 'Без грейда', short: 'NG', lvl: 1,  stage: 0,   color: '#cfc5b0' },
+    { id: 'D',  label: 'Грейд D',    short: 'D',  lvl: 6,  stage: 6,   color: '#7fe07c' },
+    { id: 'C',  label: 'Грейд C',    short: 'C',  lvl: 20, stage: 28,  color: '#5cbcff' },
+    { id: 'B',  label: 'Грейд B',    short: 'B',  lvl: 38, stage: 50,  color: '#bd8aff' },
+    { id: 'A',  label: 'Грейд A',    short: 'A',  lvl: 58, stage: 80,  color: '#ff9156' },
+    { id: 'S',  label: 'Грейд S',    short: 'S',  lvl: 82, stage: 110, color: '#ffd760' },
+    { id: 'R',  label: 'Грейд R',    short: 'R',  lvl: 110, stage: 140, color: '#ff5fd2' },
   ];
   const GM = [1, 5, 22, 90, 360, 1400, 5500];                     // множитель статов грейда
   const GP = [30, 300, 2500, 18000, 130000, 800000, 3.6e6];        // цена оружия грейда
@@ -48,12 +48,12 @@ const BAL = (() => {
   function itemStats(slot, g, e = 0) {
     const m = GM[g], em = enchMult(e), r = {};
     switch (slot) {
-      case 'weapon': r.atk = 6 * m * em; break;
-      case 'helmet': r.def = 2 * m * em; r.hp = 14 * m * em; break;
-      case 'upper':  r.def = 5 * m * em; r.hp = 30 * m * em; break;
-      case 'lower':  r.def = 3.5 * m * em; r.hp = 20 * m * em; break;
-      case 'gloves': r.def = 1.5 * m * em; r.atkPct = [.03, .05, .07, .09, .12, .15, .18][g] * em; break;
-      case 'boots':  r.def = 1.5 * m * em; r.hp = 12 * m * em; break;
+      case 'weapon': r.atk = 60 * m * em; break;
+      case 'helmet': r.def = 8 * m * em; r.hp = 90 * m * em; break;
+      case 'upper':  r.def = 18 * m * em; r.hp = 200 * m * em; break;
+      case 'lower':  r.def = 12 * m * em; r.hp = 130 * m * em; break;
+      case 'gloves': r.def = 6 * m * em; r.atkPct = [.03, .05, .07, .09, .12, .15, .18][g] * em; break;
+      case 'boots':  r.def = 6 * m * em; r.hp = 80 * m * em; break;
       case 'neck':   r.hpPct = [.04, .06, .09, .12, .16, .2, .25][g] * em; r.regenPct = [.002, .003, .004, .005, .006, .008, .01][g] * em; break;
       case 'ear':    r.crit = [.01, .015, .02, .03, .04, .05, .06][g] * (1 + (em - 1) * .5); break;
       case 'ring':   r.critDmg = [.08, .12, .2, .3, .4, .55, .7][g] * em; break;
@@ -72,29 +72,33 @@ const BAL = (() => {
   };
   const BLESS_MULT = 7;
 
-  /* Монстры по глобальному индексу этапа s */
-  // после 62-го этапа рост монстров мягче: бесконечный режим держится на заточке и росте
+  /* Монстры по глобальному индексу этапа s.
+     Этапы растут заметно медленнее, чем в 2.x: грейды C/B/A/S/R — это часы, а не минуты. */
   const curve = (s, a, b) => s <= 62 ? Math.pow(a, s) : Math.pow(a, 62) * Math.pow(b, s - 62);
-  const mHp   = s => 20 * curve(s, 1.185, 1.075);
-  const mAtk  = s => 2.5 * curve(s, 1.16, 1.065);
-  const mGold = s => 2.2 * curve(s, 1.172, 1.085);
-  const mXp   = s => 3 * curve(s, 1.13, 1.06);
-  const defK  = s => 12 * curve(s, 1.17, 1.07);
-  const BOSS = { hp: 12, atk: 1.45, gold: 10, xp: 8, time: 30 };
+  const mHp   = s => 45 * curve(s, 1.16, 1.065);
+  const mAtk  = s => 3.0 * curve(s, 1.145, 1.05);
+  const mGold = s => 3.4 * curve(s, 1.165, 1.08);
+  const mXp   = s => 4.5 * curve(s, 1.13, 1.06);
+  const defK  = s => 14 * curve(s, 1.175, 1.075);
+  const BOSS = { hp: 8, atk: 1.45, gold: 10, xp: 8, time: 32 };
+  const STAGE_KILLS = 15;
 
-  /* Рост за золото */
+  /* Рост за золото.
+     Крит и скорость атаки — долгосрочные вложения: стоимость polynomial × мягкий
+     процент, чтобы потолок +90% крита и +1000% скорости был достижим в теории. */
   const GROWTH = [
-    { id: 'atk',     name: 'Атака',            val: l => 3 * l * Math.pow(1.02, l),    cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
-    { id: 'hp',      name: 'Здоровье',         val: l => 24 * l * Math.pow(1.02, l),   cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
-    { id: 'regen',   name: 'Восстановление',   val: l => .8 * l * Math.pow(1.02, l),   cost: l => 9 * Math.pow(1.085, l),  max: 3000, fmt: 'regen' },
-    { id: 'crit',    name: 'Шанс крита',       val: l => .002 * l,                     cost: l => 25 * Math.pow(1.11, l),  max: 150,  fmt: 'pct' },
+    { id: 'atk',     name: 'Атака',            val: l => 1.5 * l * Math.pow(1.012, l),  cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
+    { id: 'hp',      name: 'Здоровье',         val: l => 12 * l * Math.pow(1.012, l),   cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
+    { id: 'regen',   name: 'Восстановление',   val: l => .5 * l * Math.pow(1.012, l),   cost: l => 9 * Math.pow(1.085, l),  max: 3000, fmt: 'regen' },
+    { id: 'crit',    name: 'Шанс крита',       val: l => .002 * l,                     cost: l => 16 * Math.pow(l + 1, 1.9) * Math.pow(1.006, l), max: 450,  fmt: 'pct' },
     { id: 'critDmg', name: 'Урон крита',       val: l => .02 * l,                      cost: l => 30 * Math.pow(1.1, l),   max: 300,  fmt: 'pct' },
-    { id: 'aspd',    name: 'Скорость атаки',   val: l => .01 * l,                      cost: l => 60 * Math.pow(1.13, l),  max: 100,  fmt: 'pct' },
+    { id: 'aspd',    name: 'Скорость атаки',   val: l => .01 * l,                      cost: l => 28 * Math.pow(l + 1, 2.0) * Math.pow(1.008, l), max: 1000, fmt: 'pct' },
   ];
   const GROWTH_BY = Object.fromEntries(GROWTH.map(g => [g.id, g]));
 
-  const xpNeed = L => Math.round(10 * Math.pow(1.14, L - 1));
+  const xpNeed = L => Math.round(12 * Math.pow(1.145, L - 1));
   const BASE = { atk: 8, hp: 100, crit: .05, critDmg: 1.5, aspd: 1, regen: 1 };
+  const CRIT_CAP = .9;
 
   /* Итоговые характеристики героя. gear: [{slot,g,e,opts}] */
   function heroStats(level, growth, gear, extra = {}) {
@@ -124,19 +128,24 @@ const BAL = (() => {
       }
     }
     const set = armorSet(bySlot);
-    if (set) { hpPct += .15; defPct += .1; }
-    if (set && set.glow) atkPct += .1;
+    // Экипировка даёт весомые прибавки: каждая часть сета и полный комплект.
+    const armorPieces = ARMOR_SET.filter(s => bySlot[s]).length;
+    atkPct += .02 * armorPieces;
+    hpPct += .03 * armorPieces;
+    if (set) { hpPct += .18; defPct += .12; atkPct += .08; }
+    if (set && set.glow) atkPct += .10;
+    if (SLOTS.every(s => bySlot[s.id])) { atkPct += .05; hpPct += .05; }
     const lvA = 1 + .04 * (level - 1), lvH = 1 + .04 * (level - 1);
     const atk = atkFlat * lvA * (1 + atkPct) * (1 + (extra.atkBuff || 0));
     const hp = hpFlat * lvH * (1 + hpPct);
     def *= (1 + defPct);
     return {
       atk, hp, def,
-      crit: Math.min(.8, crit), critDmg,
+      crit: Math.min(CRIT_CAP, crit), critDmg,
       aspd: BASE.aspd + gv('aspd'),
       regen: regenFlat * lvH + hp * regenPct,
       goldPct, xpPct, dropPct,
-      set,
+      set, armorPieces,
     };
   }
   // полный сет: 5 частей доспехов одного грейда; сияние при всех >= +6
@@ -231,11 +240,11 @@ const BAL = (() => {
     { name: 'Мастер',  min: 2000, daily: 420, color: '#ff5fd2' },
   ];
   const league = r => { let i = 0; LEAGUES.forEach((l, j) => { if (r >= l.min) i = j; }); return i; };
-  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.6 };
+  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.05 };
   const eloExpect = (a, b) => 1 / (1 + Math.pow(10, (b - a) / 400));
   const eloDelta = (a, b, win) => Math.round(ARENA.K * ((win ? 1 : 0) - eloExpect(a, b)));
-  // урон в PvP: защита режет до 60%
-  const pvpHit = (atk, def) => atk * (1 - Math.min(.6, def / (def + 4 * atk)));
+  // урон в PvP: защита режет не более 45% и мягче, чтобы бои не были вечными
+  const pvpHit = (atk, def) => atk * (1 - Math.min(.45, def / (def + 6 * atk)));
   const BOT_NAMES = ['Акира', 'Юкино', 'Харуто', 'Мио', 'Рин', 'Кайто', 'Сора', 'Хината', 'Рэйдзи', 'Аой', 'Кэнта', 'Нацуми', 'Сюн', 'Мэй', 'Такуми', 'Кохару', 'Рэн', 'Сакура', 'Даити', 'Юи', 'Итиро', 'Хонока', 'Ямато', 'Кирара'];
 
   /* ===== Задания, достижения, вход, пропуск ===== */
@@ -407,10 +416,10 @@ const BAL = (() => {
 
   /* ===== Подземелья дня ===== */
   const DUNGEONS = [
-    { id: 'gold',    name: 'Золотая жила',     icon: 'gold',    desc: 'Золото с монстров' },
-    { id: 'scrolls', name: 'Архив свитков',    icon: 'quests',  desc: 'Свитки заточки топового грейда' },
-    { id: 'crystal', name: 'Кристальная шахта',icon: 'crystal', desc: 'Кристаллы для перековки' },
-    { id: 'xp',      name: 'Зал памяти',       icon: 'hp',      desc: 'Опыт уровня' },
+    { id: 'gold',    name: 'Золотая жила',      icon: 'gold',    stage: 6,  desc: 'Золото с монстров' },
+    { id: 'scrolls', name: 'Архив свитков',     icon: 'quests',  stage: 20, desc: 'Свитки заточки топового грейда' },
+    { id: 'crystal', name: 'Кристальная шахта', icon: 'crystal', stage: 38, desc: 'Кристаллы для перековки' },
+    { id: 'xp',      name: 'Зал памяти',        icon: 'hp',      stage: 55, desc: 'Опыт уровня' },
   ];
   const DUNGEON_BY = Object.fromEntries(DUNGEONS.map(d => [d.id, d]));
   const DKEYS = { perDay: 3, adExtra: 2, gemCost: 40, gemMax: 3 };
@@ -429,9 +438,19 @@ const BAL = (() => {
     return {};
   }
 
+  /* ===== Когда открывается контент ===== */
+  const UNLOCK = {
+    pets:      { level: 5,  label: 'уровень 5' },
+    arena:     { stage: 12, label: 'этап 12' },
+    dungeon:   { stage: 6,  label: 'этап 6' },
+    awakening: { stage: 50, label: 'этап 50' },
+    chat:      { stage: 8,  label: 'этап 8' },
+    pass:      { level: 5,  label: 'уровень 5' },
+  };
+
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
-    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES,
+    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP,
     DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
@@ -439,7 +458,7 @@ const BAL = (() => {
     ITEM_OPTS, OPT_BY, optCount, optStats, rollOpts, rerollCost,
     AW, AW_NODES, AW_BY, awCost, awBonus,
     TOWER, towerGuard, DUNGEONS, DUNGEON_BY, DKEYS, dungeonGuard, dungeonReward,
-    mHp, mAtk, mGold, mXp, defK, BOSS, GROWTH, GROWTH_BY, xpNeed, BASE, heroStats, armorSet, power,
+    mHp, mAtk, mGold, mXp, defK, BOSS, STAGE_KILLS, GROWTH, GROWTH_BY, xpNeed, BASE, heroStats, armorSet, power,
     zoneDropGrade, DROP,
   };
 })();

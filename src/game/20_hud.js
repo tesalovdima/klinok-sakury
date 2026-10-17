@@ -1,6 +1,6 @@
 /* ===== HUD, журнал, всплывашки, модальные окна, музыка ===== */
 const hud = {};
-['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
+['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'socialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
 
 function updateHudStatic() {
   if (!S) return;
@@ -8,9 +8,9 @@ function updateHudStatic() {
   hud.hLvl.textContent = S.level;
   hud.stageNum.textContent = z.num;
   hud.stageName.textContent = z.title;
-  hud.killText.textContent = `${Math.min(10, S.kills)}/10`;
-  hud.killFill.style.width = Math.min(100, S.kills * 10) + '%';
-  const ready = S.kills >= 10 && !R.boss && !R.bossPending;
+  hud.killText.textContent = `${Math.min(B.STAGE_KILLS, S.kills)}/${B.STAGE_KILLS}`;
+  hud.killFill.style.width = Math.min(100, S.kills / B.STAGE_KILLS * 100) + '%';
+  const ready = S.kills >= B.STAGE_KILLS && !R.boss && !R.bossPending;
   hud.bossBtn.disabled = !ready; hud.bossBtn.classList.toggle('ready', ready && !S.autoBoss);
   hud.autoBtn.setAttribute('aria-pressed', S.autoBoss ? 'true' : 'false');
   const inBoss = !!R.boss;
@@ -59,7 +59,7 @@ function updateHud() {
   hud.boostChip.hidden = bl <= 0;
   if (bl > 0) hud.boostTime.textContent = left(bl);
   // пока автобой фармит после поражения, кнопка показывает, сколько ещё ждать
-  if (S.autoBoss && R.bossCd > 0 && S.kills >= 10 && !R.boss) {
+  if (S.autoBoss && R.bossCd > 0 && S.kills >= B.STAGE_KILLS && !R.boss) {
     hud.bossBtn.textContent = `Фарм ${Math.ceil(R.bossCd)}`;
     hud.bossBtn.disabled = true;
   } else if (hud.bossBtn.textContent !== 'Босс') {

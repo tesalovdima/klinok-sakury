@@ -67,7 +67,7 @@ function run(hours = 8, awAt = 60, verbose = true) {
         const cost = g.cost(l); S.growth[g.id]++; const d = metric(stats()) - base; S.growth[g.id]--;
         const r = d / cost; if (!best || r > best.r) best = { r, cost, apply: () => S.growth[g.id]++ };
       }
-      let gb = 0; B.GRADES.forEach((gr, i) => { if (gr.lvl <= S.L) gb = i; });
+      let gb = 0; B.GRADES.forEach((gr, i) => { if ((gr.stage || 0) <= S.s) gb = i; });
       for (const sl of B.SLOTS) for (let g = 0; g <= gb; g++) {
         const cur = S.gear[sl.id]; if (cur && cur.g >= g) continue;
         const cost = B.price(sl.id, g); const old = S.gear[sl.id];
@@ -107,7 +107,7 @@ function run(hours = 8, awAt = 60, verbose = true) {
     const z = Math.floor(S.s / 10);
     if (rnd() < B.DROP.armorScroll * dropMul()) S.scr.armor[B.zoneDropGrade(z, rnd)]++;
     if (rnd() < B.DROP.weaponScroll * dropMul()) S.scr.weapon[B.zoneDropGrade(z, rnd)]++;
-    if (S.kills >= 10) {
+    if (S.kills >= B.STAGE_KILLS) {
       S.kills = 0;
       const hpB = B.mHp(S.s) * B.BOSS.hp, ttkB = hpB / dps;
       const incB = B.mAtk(S.s) * B.BOSS.atk * (1 - red) * .8 - st.regen;
@@ -127,14 +127,14 @@ function run(hours = 8, awAt = 60, verbose = true) {
     }
     while (S.xp >= B.xpNeed(S.L)) { S.xp -= B.xpNeed(S.L); S.L++; }
     // пробуждение: только когда этап действительно упёрся
-    if (S.s >= B.AW.unlockStage && failsHere >= 12) {
+    if (S.s >= 60 && failsHere >= 25) {
       const was = S.s;
       failsHere = 0;
       awaken();
       if (verbose) console.log(`t=${(t / 60).toFixed(0).padStart(5)}м ПРОБУЖДЕНИЕ #${S.awCount} с этапа ${was}: лепестков ${S.petals}, старт с этапа ${S.s + 1}, башня ${S.tower}`);
     }
     const nz = Math.floor(S.s / 10);
-    if (nz !== lastZone || S.s === B.AW.unlockStage) {
+    if (nz !== lastZone) {
       lastZone = nz;
       const gr = B.SLOTS.map(sl => S.gear[sl.id] ? B.GRADES[S.gear[sl.id].g].short + '+' + S.gear[sl.id].e : '--').join(' ');
       marks.push({ s: S.s });

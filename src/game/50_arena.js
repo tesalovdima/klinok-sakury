@@ -3,22 +3,44 @@ function seeded(seed) { let s = (seed * 9301 + 49297) % 233280 || 1; return () =
 const SHADOWS = [2350, 2150, 1980, 1820, 1690, 1560, 1440, 1330, 1230, 1150, 1080, 1020, 960].map((r, i) => ({ name: B.BOT_NAMES[(i * 7 + 3) % B.BOT_NAMES.length], rating: r, shadow: true }));
 
 const Arena = {
-  players: [], lastFetch: 0, lastPush: 0, opp: null, oppSeed: -1,
+  players: [], lastFetch: 0, lastPush: 0, opp: null, oppSeed: -1, netPlayers: [],
   cloudReady() { this.push(); },
+  async netPush() {
+    if (!S || !S.hero) return;
+    const ok = await NET.probe();
+    if (!ok) return;
+    const L = R.look, st = R.st;
+    await NET.arenaPush({
+      pid: S.pid, name: heroName(), rating: S.arena.rating, power: Math.round(R.power), level: S.level,
+      body: S.hero.body, hair: S.hero.hair,
+      st: { atk: st.atk, hp: st.hp, def: st.def, crit: st.crit, critDmg: st.critDmg, aspd: st.aspd },
+      look: { weapon: L.weapon, helmet: L.helmet, upper: L.upper, lower: L.lower, gloves: L.gloves, boots: L.boots, neck: L.neck, ear: L.ear, aura: L.aura },
+    });
+  },
   sanitize(id, d) {
     if (!d || typeof d !== 'object') return null;
     const num = (v, lo, hi) => { v = Number(v); return isFinite(v) ? clamp(v, lo, hi) : lo; };
-    const st = d.stats || {};
+    const st = d.stats || d.st || {};
     const lk = d.look || {};
     const gr = v => Math.round(num(v, -1, 6));
+    const lg = d.body === 'boy' ? 'boy' : 'girl';
     return {
-      id, real: true, name: String(d.name || 'Игрок').slice(0, 14), rating: Math.round(num(d.rating, 0, 9999)), power: num(d.power, 0, 1e300), level: Math.round(num(d.level, 1, 9999)),
-      body: d.body === 'boy' ? 'boy' : 'girl', hair: Math.round(num(d.hair, 0, 3)),
-      st: { atk: num(st.atk, 1, 1e300), hp: num(st.hp, 1, 1e300), def: num(st.def, 0, 1e300), crit: num(st.crit, 0, .8), critDmg: num(st.critDmg, 1, 50), aspd: num(st.aspd, .5, 3) },
-      look: { body: d.body === 'boy' ? 'boy' : 'girl', hair: Math.round(num(d.hair, 0, 3)), weapon: gr(lk.wg) >= 0 ? { g: gr(lk.wg), e: Math.round(num(lk.we, 0, 16)) } : null, helmet: gr(lk.helmet), upper: gr(lk.upper), lower: gr(lk.lower), gloves: gr(lk.gloves), boots: gr(lk.boots), neck: gr(lk.neck), ear: gr(lk.ear), aura: gr(lk.aura) },
+      id: id || d.pid, pid: d.pid || id, real: true, name: String(d.name || 'Игрок').slice(0, 14), rating: Math.round(num(d.rating, 0, 9999)), power: num(d.power, 0, 1e300), level: Math.round(num(d.level, 1, 9999)),
+      body: lg, hair: Math.round(num(d.hair ?? lk.hair, 0, 3)),
+      st: { atk: num(st.atk, 1, 1e300), hp: num(st.hp, 1, 1e300), def: num(st.def, 0, 1e300), crit: num(st.crit, 0, .9), critDmg: num(st.critDmg, 1, 50), aspd: num(st.aspd, .5, 12) },
+      look: { body: lg, hair: Math.round(num(d.hair ?? lk.hair, 0, 3)), weapon: lk.weapon && gr(lk.weapon.g) >= 0 ? { g: gr(lk.weapon.g), e: Math.round(num(lk.weapon.e, 0, 20)) } : null, helmet: gr(lk.helmet), upper: gr(lk.upper), lower: gr(lk.lower), gloves: gr(lk.gloves), boots: gr(lk.boots), neck: gr(lk.neck), ear: gr(lk.ear), aura: gr(lk.aura) },
     };
   },
   async refresh() {
+    await NET.probe();
+    if (NET.online) {
+      try {
+        const r = await NET.arenaList(S.pid, S.arena.rating, R.power);
+        if (r && Array.isArray(r.players)) this.players = r.players.map(p => this.sanitize(p.pid, p)).filter(Boolean);
+      } catch (e) { }
+      this.netPlayers = this.players;
+      if (this.players.length) return;
+    }
     if (!Cloud.db) return;
     try {
       const snap = await Cloud.db.collection('arena').orderBy('rating', 'desc').limit(60).get();
@@ -39,22 +61,32 @@ const Arena = {
     } catch (e) { }
   },
   onOpen() {
-    if (Date.now() - this.lastFetch > 30000 && Cloud.db) {
+    if (Date.now() - this.lastFetch > 30000) {
       this.lastFetch = Date.now();
       this.push();
-      this.refresh().then(() => { const b = $('arenaBoard'); if (b && R.tab === 'arena') b.innerHTML = boardHTML(); });
+      this.netPush();
+      this.refresh().then(() => {
+        Arena.opp = null; Arena.oppSeed = -1;
+        if (R.tab === 'arena' && this.players.length) renderPanel();
+      });
     }
   },
 };
 
+/* Соперники: в первую очередь реальные игроки с сервера, боты — только фон.
+   Статы реального игрока приводим к нашей мощи, чтобы не было «неубиваемых». */
+const BOT_F = [.84, .95, 1.02];
+function scaledStats(st, k) {
+  return { atk: Math.max(1, st.atk * k), hp: Math.max(1, st.hp * k), def: Math.max(0, st.def * k), crit: Math.min(.9, st.crit), critDmg: st.critDmg, aspd: clamp(st.aspd, .5, 12) };
+}
 function genOpponents() {
-  const r = seeded(S.arena.seed + S.level * 13), g0 = unlockedGrade();
-  const list = [.82, 1, 1.22].map((base, i) => {
-    const f = base * (.95 + r() * .1);
-    const st = { atk: R.st.atk * f, hp: R.st.hp * f, def: R.st.def * f, crit: R.st.crit, critDmg: R.st.critDmg, aspd: R.st.aspd * (.95 + r() * .1) };
+  const r = seeded(S.arena.seed + S.level * 13 + Math.floor(S.arena.rating)), g0 = unlockedGrade();
+  const list = BOT_F.map((base, i) => {
+    const f = base * (.97 + r() * .05);
+    const st = scaledStats({ atk: R.st.atk, hp: R.st.hp, def: R.st.def, crit: R.st.crit, critDmg: R.st.critDmg, aspd: R.st.aspd }, f);
     const body = r() < .5 ? 'girl' : 'boy', hair = Math.floor(r() * 4);
-    const g = clamp(g0 + (f > 1.1 ? 1 : f < .9 ? -1 : 0), 0, 6);
-    const e = Math.floor(r() * 9);
+    const g = clamp(g0 + (f > 1.01 ? 1 : f < .9 ? -1 : 0), 0, 6);
+    const e = Math.floor(r() * 7);
     return {
       name: B.BOT_NAMES[Math.floor(r() * B.BOT_NAMES.length)], body, hair, st, power: B.power(st),
       rating: Math.max(0, Math.round(S.arena.rating + (f - 1) * 350 + (r() - .5) * 60)),
@@ -62,10 +94,19 @@ function genOpponents() {
       real: false,
     };
   });
-  const cands = Arena.players.filter(p => p.id !== Cloud.uid);
-  if (cands.length) {
-    const near = cands.reduce((b, p) => Math.abs(p.rating - S.arena.rating) < Math.abs(b.rating - S.arena.rating) ? p : b, cands[0]);
-    list[1] = { ...near, power: B.power(near.st) };
+  // реальные соперники: до двух ближайших по рейтингу
+  const cands = [...(Arena.netPlayers || []), ...Arena.players]
+    .filter(p => p && p.st && p.pid !== S.pid && p.id !== S.pid)
+    .sort((a, b) => Math.abs(a.rating - S.arena.rating) - Math.abs(b.rating - S.arena.rating));
+  const used = new Set();
+  for (let slot = 1; slot >= 0 && cands.length; slot--) {
+    const p = cands.find(x => !used.has(x.pid || x.id));
+    if (!p) break;
+    used.add(p.pid || p.id);
+    const desired = R.power * (slot === 1 ? .92 : 1.04);
+    const basePower = B.power(p.st) || p.power || 1;
+    const k = clamp(Math.sqrt(desired / Math.max(1, basePower)), .78, 1.12);
+    list[slot] = { ...p, st: scaledStats(p.st, k), power: B.power(scaledStats(p.st, k)), real: true };
   }
   return list;
 }
@@ -85,6 +126,7 @@ function boardHTML() {
   }).join('');
 }
 function renderArena() {
+  if (!unlockOk('arena')) return lockCard('arena', 'Арена');
   const a = S.arena, li = B.league(a.rating), lg = B.LEAGUES[li], next = B.LEAGUES[li + 1];
   const canClaim = a.rewardDay !== dayKey();
   const ops = opponents();

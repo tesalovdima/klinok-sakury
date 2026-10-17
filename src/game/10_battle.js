@@ -225,7 +225,7 @@ function killMonster(m) {
   rollDrops(m, z, y);
   AU.sfx('coin');
   if (m.boss) { bossKilled(m); bossWin(); return; }
-  if (S.kills < 10) S.kills++;
+  if (S.kills < B.STAGE_KILLS) S.kills++;
   updateHudStatic();
 }
 function rollDrops(m, z, y) {
@@ -484,7 +484,12 @@ function frame(now) {
   if (hudTick > .12) { hudTick = 0; updateHud(); }
   if (saveTick > 5) { saveTick = 0; saveLocal(); }
   if (cloudTick > 30) { cloudTick = 0; Cloud.push(); }
-  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); }
+  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); Social.sync(); }
+  // чат: подтягиваем новые сообщения, пока открыта вкладка
+  if (R.tab === 'social' && R.socialSeg === 'chat') {
+    R.chatT = (R.chatT || 0) + dtRaw;
+    if (R.chatT > 6) { R.chatT = 0; Social.loadChat(); }
+  }
 }
 
 function update(dtRaw) {
@@ -510,7 +515,7 @@ function update(dtRaw) {
   } else if (!R.bossPending) {
     spawnLogic();
     if (R.bossCd > 0) R.bossCd = Math.max(0, R.bossCd - dtRaw);
-    if (S.kills >= 10 && S.autoBoss && !h.dead && R.bossCd <= 0) startBoss();
+    if (S.kills >= B.STAGE_KILLS && S.autoBoss && !h.dead && R.bossCd <= 0) startBoss();
   }
 
   const alive = R.monsters.filter(m => m.hp > 0).sort((a, b) => a.x - b.x);

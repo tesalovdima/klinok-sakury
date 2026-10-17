@@ -66,6 +66,10 @@ document.addEventListener('click', async e => {
     case 'heroseg': R.heroSeg = b.dataset.v; renderPanel(); break;
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
     case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
+    case 'socialseg': R.socialSeg = b.dataset.v; renderPanel(); Social.enter(); break;
+    case 'chat-send': Social.send(); break;
+    case 'board-refresh': Social.loadBoard(); break;
+    case 'chat-retry': NET.probe(true).then(ok => { renderPanel(); Social.enter(); if (!ok) toast('Сервер недоступен'); }); break;
     // испытания
     case 'tower-fight': towerFightStart(); break;
     case 'tower-auto': towerAuto(); break;
@@ -102,6 +106,21 @@ document.addEventListener('click', async e => {
     case 'enchant': openEnchant(+b.dataset.id); break;
     case 'pick': if (modalState && !modalState.busy) { modalState.kind = b.dataset.v; rerenderEnchant(modalState); } break;
     case 'do-enchant': doEnchant(); break;
+    case 'auto-enchant': autoEnchant(); break;
+    case 'auto-stop': {
+      const st = modalState;
+      if (st && st.enchant && !st.autoRun) {
+        st.autoStop = +b.dataset.n;
+        S.settings.autoEnchantTo = st.autoStop;
+        saveLocal(); rerenderEnchant(st);
+      }
+      break;
+    }
+    case 'buy-again': {
+      const it = buyItem(b.dataset.slot, +b.dataset.g, { silent: true });
+      if (it) { toast(`Куплено заново: ${itemName(it)}`); closeModal(); renderPanel(); }
+      break;
+    }
     case 'buy-scrolls': R.shopTab = 'scrolls'; R.scrollGrade = +b.dataset.g; closeModal(); setTab('shop'); break;
     case 'sell': {
       const it = itemById(+b.dataset.id); if (!it || isEquipped(it)) break;
@@ -185,14 +204,17 @@ document.addEventListener('click', async e => {
     case 'test-no': if (modalState && modalState.done) modalState.done(false); break;
   }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !modal.hidden) closeModal();
+  if (e.key === 'Enter' && e.target && e.target.id === 'chatInput') { e.preventDefault(); Social.send(); }
+});
 document.addEventListener('input', e => {
   if (e.target.id === 'volMusic') { S.settings.music = e.target.value / 100; AU.setVolume('music', S.settings.music); }
   if (e.target.id === 'volSfx') { S.settings.sfx = e.target.value / 100; AU.setVolume('sfx', S.settings.sfx); }
 });
 document.addEventListener('change', e => { if (e.target.id === 'volSfx') AU.sfx('coin'); if (e.target.id === 'volMusic' || e.target.id === 'volSfx') saveLocal(); });
 $('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { AU.sfx('click'); setTab(b.dataset.tab); } });
-hud.bossBtn.addEventListener('click', () => { if (S.kills >= 10 && !R.boss) startBoss(); });
+hud.bossBtn.addEventListener('click', () => { if (S.kills >= B.STAGE_KILLS && !R.boss) startBoss(); });
 hud.autoBtn.addEventListener('click', () => { S.autoBoss = !S.autoBoss; updateHudStatic(); toast(S.autoBoss ? 'Босс будет вызываться сам' : 'Вы остаётесь на этапе'); });
 $('stageBtn').addEventListener('click', openMap);
 hud.settingsBtn.addEventListener('click', openSettings);
@@ -222,6 +244,7 @@ async function start(hot) {
   const local = isHot ? null : loadLocal();
   R.hadLocal = isHot || !!local;
   S = (isHot && migrate(hot.S)) || local || newState();
+  equipBestAll();
   R.offlineFrom = local ? S.savedAt : 0;
   if (isHot && ['hero', 'gear', 'pets', 'arena', 'trials', 'shop'].includes(hot.tab)) R.tab = hot.tab;
   dailyReset();
@@ -262,6 +285,6 @@ window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude
 if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
-    addPet, summon, startBoss, bossWin, dailyReset,
+    addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
   };
 }

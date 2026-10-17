@@ -102,6 +102,7 @@ const SAVE_VERSION = 4;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
+const newPid = () => 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 function fillDefaults(target, def) {
   for (const k in def) {
     if (target[k] === undefined) target[k] = clone(def[k]);
@@ -114,7 +115,7 @@ function newState() {
   equip.weapon = 1; equip.upper = 2;
   const starterOpts = g => B.rollOpts(Math.random, g);
   return {
-    v: SAVE_VERSION, savedAt: Date.now(), hero: null,
+    v: SAVE_VERSION, savedAt: Date.now(), hero: null, pid: newPid(),
     gold: 20, crystals: 0, gems: 300, level: 1, xp: 0, sp: 0,
     growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
     skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
@@ -133,7 +134,7 @@ function newState() {
     shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false, starterSeen: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
-    settings: { music: .55, sfx: .75 },
+    settings: { music: .55, sfx: .75, autoBuyBreak: true, autoEnchantTo: 7 },
     intro: false,
     aw: { petals: 0, count: 0, lvl: Object.fromEntries(B.AW_NODES.map(n => [n.id, 0])) },
     tower: { floor: 0, best: 0, week: '', reward: 0, auto: false },
@@ -176,6 +177,7 @@ function migrate(o) {
   if (!isPlain(o.codex)) o.codex = {};
   for (const it of o.items) if (it && it.slot) o.codex[it.slot + ':' + (it.g | 0)] = 1;
   o.chapter.idx = clamp(Math.floor(o.chapter.idx || 0), 0, 40);
+  if (!o.pid) o.pid = newPid();
   if (!Array.isArray(o.pass.free)) o.pass.free = [];
   if (!Array.isArray(o.pass.prem)) o.pass.prem = [];
   return o;
@@ -262,7 +264,7 @@ const R = {
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
   st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
-  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
+  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', socialSeg: 'chat', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
   bossCd: 0, bossFails: 0, towerRun: false,
 };
@@ -291,6 +293,30 @@ const itemById = id => S.items.find(i => i.id === id);
 const isEquipped = it => S.equip[it.slot] === it.id;
 const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
 const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
+/* грейд открывается по этапу, а не по уровню: R — это долгий путь */
+const gradeUnlocked = g => (S.maxStage || 0) >= (B.GRADES[g].stage || 0);
+const unlockOk = id => {
+  const u = B.UNLOCK[id];
+  if (!u) return true;
+  if (u.stage != null && (S.maxStage || 0) < u.stage) return false;
+  if (u.level != null && S.level < u.level) return false;
+  return true;
+};
+const unlockLabel = id => { const u = B.UNLOCK[id]; if (!u) return ''; return u.stage != null ? `этап ${u.stage}` : `уровень ${u.level}`; };
+function autoEquipBest(slot) {
+  let best = null, bs = -1;
+  for (const it of S.items) {
+    if (it.slot !== slot) continue;
+    const sc = itemScore(it.slot, it.g, it.e, it.opts);
+    if (sc > bs) { bs = sc; best = it; }
+  }
+  if (best && S.equip[slot] !== best.id) { S.equip[slot] = best.id; return best; }
+  return null;
+}
+// надеть лучшую по силе и заточке вещь в каждый слот (после загрузки и массовых покупок)
+function equipBestAll() {
+  for (const sl of B.SLOTS) autoEquipBest(sl.id);
+}
 const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака %', hpPct: 'Здоровье %', defPct: 'Защита %', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
 const statStr = (k, v) => ['atkPct', 'hpPct', 'defPct', 'crit', 'critDmg', 'goldPct', 'xpPct', 'dropPct'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
 function itemTotals(it) {

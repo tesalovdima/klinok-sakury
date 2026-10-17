@@ -4,7 +4,7 @@ const gameParts = fs.readdirSync(path.join(__dirname, 'src/game')).filter(f => f
 const game = "(() => {\n'use strict';\n" + gameParts.map(f => `/* --- ${f} --- */\n` + r('game/' + f)).join('\n') + "\n})();";
 const scripts = [
   r('balance.js').replace("if (typeof module !== 'undefined') module.exports = BAL;", ''),
-  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), game,
+  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), r('net.js'), game,
 ].join('\n');
 const GOOGLE = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

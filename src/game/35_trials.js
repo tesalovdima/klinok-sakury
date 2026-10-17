@@ -21,7 +21,7 @@ function renderTower() {
   return `
     <section class="card tower-card">
       <div class="tower-head"><div><h2>Башня сакуры</h2>
-        <p class="sub">Пройдено ярусов: <b>${S.tower.best}</b> из ${B.TOWER.floors}${open ? '' : ' · вершина достигнута'}</p></div>
+        <p class="sub">Открыта с первого уровня · пройдено ярусов: <b>${S.tower.best}</b> из ${B.TOWER.floors}${open ? '' : ' · вершина достигнута'}</p></div>
         ${awBadges()}</div>
       <div class="tower-num"><span>ЯРУС</span><b>${open ? f : B.TOWER.floors}</b><span>из ${B.TOWER.floors}</span></div>
       <p class="sub">${esc(guard.name)} · мощь <b>${fmt(B.power(guard))}</b> · <span class="diff ${tag[1]}">${tag[0]}</span></p>
@@ -56,10 +56,11 @@ function renderDungeons() {
     </section>
     <ul class="rows">${B.DUNGEONS.map(dn => {
       const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = fightTag(guard, S.stage);
-      return `<li class="row"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
-        <div class="row-main"><b>${dn.name}</b><span class="meta">${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span></span>
-        <span class="val">${rewardSummary(rw)}</span></div>
-        <button class="buy ${d.keys > 0 ? 'pink' : ''}" data-act="dungeon-go" data-id="${dn.id}" ${d.keys > 0 ? '' : 'disabled'}>Войти</button></li>`;
+      const locked = (S.maxStage || 0) < dn.stage;
+      return `<li class="row ${locked ? 'locked-row' : ''}"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
+        <div class="row-main"><b>${dn.name}</b><span class="meta">${locked ? `Откроется на этапе ${dn.stage}` : `${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span>`}</span>
+        <span class="val">${locked ? '—' : rewardSummary(rw)}</span></div>
+        <button class="buy ${!locked && d.keys > 0 ? 'pink' : ''}" data-act="dungeon-go" data-id="${dn.id}" ${locked || d.keys <= 0 ? 'disabled' : ''}>${locked ? 'Этап ' + dn.stage : 'Войти'}</button></li>`;
     }).join('')}</ul>
     <p class="note">Подземелья — быстрый бой без риска: ключ тратится только при победе. Награда растёт вместе с вашим этапом.</p>`;
 }

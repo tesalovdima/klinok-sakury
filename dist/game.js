@@ -1,13 +1,13 @@
 /* ===== Баланс: грейды, предметы, монстры, рост ===== */
 const BAL = (() => {
   const GRADES = [
-    { id: 'NG', label: 'Без грейда', short: 'NG', lvl: 1,  color: '#cfc5b0' },
-    { id: 'D',  label: 'Грейд D',    short: 'D',  lvl: 8,  color: '#7fe07c' },
-    { id: 'C',  label: 'Грейд C',    short: 'C',  lvl: 19, color: '#5cbcff' },
-    { id: 'B',  label: 'Грейд B',    short: 'B',  lvl: 30, color: '#bd8aff' },
-    { id: 'A',  label: 'Грейд A',    short: 'A',  lvl: 41, color: '#ff9156' },
-    { id: 'S',  label: 'Грейд S',    short: 'S',  lvl: 51, color: '#ffd760' },
-    { id: 'R',  label: 'Грейд R',    short: 'R',  lvl: 60, color: '#ff5fd2' },
+    { id: 'NG', label: 'Без грейда', short: 'NG', lvl: 1,  stage: 0,   color: '#cfc5b0' },
+    { id: 'D',  label: 'Грейд D',    short: 'D',  lvl: 6,  stage: 6,   color: '#7fe07c' },
+    { id: 'C',  label: 'Грейд C',    short: 'C',  lvl: 20, stage: 28,  color: '#5cbcff' },
+    { id: 'B',  label: 'Грейд B',    short: 'B',  lvl: 38, stage: 50,  color: '#bd8aff' },
+    { id: 'A',  label: 'Грейд A',    short: 'A',  lvl: 58, stage: 80,  color: '#ff9156' },
+    { id: 'S',  label: 'Грейд S',    short: 'S',  lvl: 82, stage: 110, color: '#ffd760' },
+    { id: 'R',  label: 'Грейд R',    short: 'R',  lvl: 110, stage: 140, color: '#ff5fd2' },
   ];
   const GM = [1, 5, 22, 90, 360, 1400, 5500];                     // множитель статов грейда
   const GP = [30, 300, 2500, 18000, 130000, 800000, 3.6e6];        // цена оружия грейда
@@ -48,12 +48,12 @@ const BAL = (() => {
   function itemStats(slot, g, e = 0) {
     const m = GM[g], em = enchMult(e), r = {};
     switch (slot) {
-      case 'weapon': r.atk = 6 * m * em; break;
-      case 'helmet': r.def = 2 * m * em; r.hp = 14 * m * em; break;
-      case 'upper':  r.def = 5 * m * em; r.hp = 30 * m * em; break;
-      case 'lower':  r.def = 3.5 * m * em; r.hp = 20 * m * em; break;
-      case 'gloves': r.def = 1.5 * m * em; r.atkPct = [.03, .05, .07, .09, .12, .15, .18][g] * em; break;
-      case 'boots':  r.def = 1.5 * m * em; r.hp = 12 * m * em; break;
+      case 'weapon': r.atk = 60 * m * em; break;
+      case 'helmet': r.def = 8 * m * em; r.hp = 90 * m * em; break;
+      case 'upper':  r.def = 18 * m * em; r.hp = 200 * m * em; break;
+      case 'lower':  r.def = 12 * m * em; r.hp = 130 * m * em; break;
+      case 'gloves': r.def = 6 * m * em; r.atkPct = [.03, .05, .07, .09, .12, .15, .18][g] * em; break;
+      case 'boots':  r.def = 6 * m * em; r.hp = 80 * m * em; break;
       case 'neck':   r.hpPct = [.04, .06, .09, .12, .16, .2, .25][g] * em; r.regenPct = [.002, .003, .004, .005, .006, .008, .01][g] * em; break;
       case 'ear':    r.crit = [.01, .015, .02, .03, .04, .05, .06][g] * (1 + (em - 1) * .5); break;
       case 'ring':   r.critDmg = [.08, .12, .2, .3, .4, .55, .7][g] * em; break;
@@ -72,29 +72,33 @@ const BAL = (() => {
   };
   const BLESS_MULT = 7;
 
-  /* Монстры по глобальному индексу этапа s */
-  // после 62-го этапа рост монстров мягче: бесконечный режим держится на заточке и росте
+  /* Монстры по глобальному индексу этапа s.
+     Этапы растут заметно медленнее, чем в 2.x: грейды C/B/A/S/R — это часы, а не минуты. */
   const curve = (s, a, b) => s <= 62 ? Math.pow(a, s) : Math.pow(a, 62) * Math.pow(b, s - 62);
-  const mHp   = s => 20 * curve(s, 1.185, 1.075);
-  const mAtk  = s => 2.5 * curve(s, 1.16, 1.065);
-  const mGold = s => 2.2 * curve(s, 1.172, 1.085);
-  const mXp   = s => 3 * curve(s, 1.13, 1.06);
-  const defK  = s => 12 * curve(s, 1.17, 1.07);
-  const BOSS = { hp: 12, atk: 1.45, gold: 10, xp: 8, time: 30 };
+  const mHp   = s => 45 * curve(s, 1.16, 1.065);
+  const mAtk  = s => 3.0 * curve(s, 1.145, 1.05);
+  const mGold = s => 3.4 * curve(s, 1.165, 1.08);
+  const mXp   = s => 4.5 * curve(s, 1.13, 1.06);
+  const defK  = s => 14 * curve(s, 1.175, 1.075);
+  const BOSS = { hp: 8, atk: 1.45, gold: 10, xp: 8, time: 32 };
+  const STAGE_KILLS = 15;
 
-  /* Рост за золото */
+  /* Рост за золото.
+     Крит и скорость атаки — долгосрочные вложения: стоимость polynomial × мягкий
+     процент, чтобы потолок +90% крита и +1000% скорости был достижим в теории. */
   const GROWTH = [
-    { id: 'atk',     name: 'Атака',            val: l => 3 * l * Math.pow(1.02, l),    cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
-    { id: 'hp',      name: 'Здоровье',         val: l => 24 * l * Math.pow(1.02, l),   cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
-    { id: 'regen',   name: 'Восстановление',   val: l => .8 * l * Math.pow(1.02, l),   cost: l => 9 * Math.pow(1.085, l),  max: 3000, fmt: 'regen' },
-    { id: 'crit',    name: 'Шанс крита',       val: l => .002 * l,                     cost: l => 25 * Math.pow(1.11, l),  max: 150,  fmt: 'pct' },
+    { id: 'atk',     name: 'Атака',            val: l => 1.5 * l * Math.pow(1.012, l),  cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
+    { id: 'hp',      name: 'Здоровье',         val: l => 12 * l * Math.pow(1.012, l),   cost: l => 6 * Math.pow(1.08, l),   max: 3000, fmt: 'int' },
+    { id: 'regen',   name: 'Восстановление',   val: l => .5 * l * Math.pow(1.012, l),   cost: l => 9 * Math.pow(1.085, l),  max: 3000, fmt: 'regen' },
+    { id: 'crit',    name: 'Шанс крита',       val: l => .002 * l,                     cost: l => 16 * Math.pow(l + 1, 1.9) * Math.pow(1.006, l), max: 450,  fmt: 'pct' },
     { id: 'critDmg', name: 'Урон крита',       val: l => .02 * l,                      cost: l => 30 * Math.pow(1.1, l),   max: 300,  fmt: 'pct' },
-    { id: 'aspd',    name: 'Скорость атаки',   val: l => .01 * l,                      cost: l => 60 * Math.pow(1.13, l),  max: 100,  fmt: 'pct' },
+    { id: 'aspd',    name: 'Скорость атаки',   val: l => .01 * l,                      cost: l => 28 * Math.pow(l + 1, 2.0) * Math.pow(1.008, l), max: 1000, fmt: 'pct' },
   ];
   const GROWTH_BY = Object.fromEntries(GROWTH.map(g => [g.id, g]));
 
-  const xpNeed = L => Math.round(10 * Math.pow(1.14, L - 1));
+  const xpNeed = L => Math.round(12 * Math.pow(1.145, L - 1));
   const BASE = { atk: 8, hp: 100, crit: .05, critDmg: 1.5, aspd: 1, regen: 1 };
+  const CRIT_CAP = .9;
 
   /* Итоговые характеристики героя. gear: [{slot,g,e,opts}] */
   function heroStats(level, growth, gear, extra = {}) {
@@ -124,19 +128,24 @@ const BAL = (() => {
       }
     }
     const set = armorSet(bySlot);
-    if (set) { hpPct += .15; defPct += .1; }
-    if (set && set.glow) atkPct += .1;
+    // Экипировка даёт весомые прибавки: каждая часть сета и полный комплект.
+    const armorPieces = ARMOR_SET.filter(s => bySlot[s]).length;
+    atkPct += .02 * armorPieces;
+    hpPct += .03 * armorPieces;
+    if (set) { hpPct += .18; defPct += .12; atkPct += .08; }
+    if (set && set.glow) atkPct += .10;
+    if (SLOTS.every(s => bySlot[s.id])) { atkPct += .05; hpPct += .05; }
     const lvA = 1 + .04 * (level - 1), lvH = 1 + .04 * (level - 1);
     const atk = atkFlat * lvA * (1 + atkPct) * (1 + (extra.atkBuff || 0));
     const hp = hpFlat * lvH * (1 + hpPct);
     def *= (1 + defPct);
     return {
       atk, hp, def,
-      crit: Math.min(.8, crit), critDmg,
+      crit: Math.min(CRIT_CAP, crit), critDmg,
       aspd: BASE.aspd + gv('aspd'),
       regen: regenFlat * lvH + hp * regenPct,
       goldPct, xpPct, dropPct,
-      set,
+      set, armorPieces,
     };
   }
   // полный сет: 5 частей доспехов одного грейда; сияние при всех >= +6
@@ -231,11 +240,11 @@ const BAL = (() => {
     { name: 'Мастер',  min: 2000, daily: 420, color: '#ff5fd2' },
   ];
   const league = r => { let i = 0; LEAGUES.forEach((l, j) => { if (r >= l.min) i = j; }); return i; };
-  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.6 };
+  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.05 };
   const eloExpect = (a, b) => 1 / (1 + Math.pow(10, (b - a) / 400));
   const eloDelta = (a, b, win) => Math.round(ARENA.K * ((win ? 1 : 0) - eloExpect(a, b)));
-  // урон в PvP: защита режет до 60%
-  const pvpHit = (atk, def) => atk * (1 - Math.min(.6, def / (def + 4 * atk)));
+  // урон в PvP: защита режет не более 45% и мягче, чтобы бои не были вечными
+  const pvpHit = (atk, def) => atk * (1 - Math.min(.45, def / (def + 6 * atk)));
   const BOT_NAMES = ['Акира', 'Юкино', 'Харуто', 'Мио', 'Рин', 'Кайто', 'Сора', 'Хината', 'Рэйдзи', 'Аой', 'Кэнта', 'Нацуми', 'Сюн', 'Мэй', 'Такуми', 'Кохару', 'Рэн', 'Сакура', 'Даити', 'Юи', 'Итиро', 'Хонока', 'Ямато', 'Кирара'];
 
   /* ===== Задания, достижения, вход, пропуск ===== */
@@ -407,10 +416,10 @@ const BAL = (() => {
 
   /* ===== Подземелья дня ===== */
   const DUNGEONS = [
-    { id: 'gold',    name: 'Золотая жила',     icon: 'gold',    desc: 'Золото с монстров' },
-    { id: 'scrolls', name: 'Архив свитков',    icon: 'quests',  desc: 'Свитки заточки топового грейда' },
-    { id: 'crystal', name: 'Кристальная шахта',icon: 'crystal', desc: 'Кристаллы для перековки' },
-    { id: 'xp',      name: 'Зал памяти',       icon: 'hp',      desc: 'Опыт уровня' },
+    { id: 'gold',    name: 'Золотая жила',      icon: 'gold',    stage: 6,  desc: 'Золото с монстров' },
+    { id: 'scrolls', name: 'Архив свитков',     icon: 'quests',  stage: 20, desc: 'Свитки заточки топового грейда' },
+    { id: 'crystal', name: 'Кристальная шахта', icon: 'crystal', stage: 38, desc: 'Кристаллы для перековки' },
+    { id: 'xp',      name: 'Зал памяти',        icon: 'hp',      stage: 55, desc: 'Опыт уровня' },
   ];
   const DUNGEON_BY = Object.fromEntries(DUNGEONS.map(d => [d.id, d]));
   const DKEYS = { perDay: 3, adExtra: 2, gemCost: 40, gemMax: 3 };
@@ -429,9 +438,19 @@ const BAL = (() => {
     return {};
   }
 
+  /* ===== Когда открывается контент ===== */
+  const UNLOCK = {
+    pets:      { level: 5,  label: 'уровень 5' },
+    arena:     { stage: 12, label: 'этап 12' },
+    dungeon:   { stage: 6,  label: 'этап 6' },
+    awakening: { stage: 50, label: 'этап 50' },
+    chat:      { stage: 8,  label: 'этап 8' },
+    pass:      { level: 5,  label: 'уровень 5' },
+  };
+
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
-    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES,
+    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP,
     DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
@@ -439,7 +458,7 @@ const BAL = (() => {
     ITEM_OPTS, OPT_BY, optCount, optStats, rollOpts, rerollCost,
     AW, AW_NODES, AW_BY, awCost, awBonus,
     TOWER, towerGuard, DUNGEONS, DUNGEON_BY, DKEYS, dungeonGuard, dungeonReward,
-    mHp, mAtk, mGold, mXp, defK, BOSS, GROWTH, GROWTH_BY, xpNeed, BASE, heroStats, armorSet, power,
+    mHp, mAtk, mGold, mXp, defK, BOSS, STAGE_KILLS, GROWTH, GROWTH_BY, xpNeed, BASE, heroStats, armorSet, power,
     zoneDropGrade, DROP,
   };
 })();
@@ -2444,8 +2463,16 @@ const ART = (() => {
       ell(ctx, 0, -33, 3.2, 2.4); ctx.fillStyle = '#ffb3d6'; ctx.fill();
       ctx.restore();
     },
-    boss(ctx) {
-      ctx.save(); ctx.translate(32, 33);
+    chat(ctx) {
+      ctx.beginPath();
+      ctx.moveTo(9, 13); ctx.quadraticCurveTo(9, 6, 17, 6); ctx.lineTo(47, 6);
+      ctx.quadraticCurveTo(55, 6, 55, 14); ctx.lineTo(55, 38);
+      ctx.quadraticCurveTo(55, 45, 47, 45); ctx.lineTo(27, 45); ctx.lineTo(15, 56);
+      ctx.lineTo(17, 45); ctx.quadraticCurveTo(9, 45, 9, 38); ctx.closePath();
+      fillStroke(ctx, '#4a3d86', OUT, 2.6);
+      for (const x of [22, 32, 42]) { ell(ctx, x, 25.5, 3.4, 3.4); ctx.fillStyle = '#ff8fc1'; ctx.fill(); }
+    },
+    boss(ctx) {      ctx.save(); ctx.translate(32, 33);
       // рога
       for (const s of [-1, 1]) {
         ctx.beginPath(); ctx.moveTo(s * 9, -10); ctx.quadraticCurveTo(s * 25, -26, s * 23, -2); ctx.quadraticCurveTo(s * 18, -9, s * 8, -6); ctx.closePath();
@@ -2831,6 +2858,56 @@ const PLATFORM = (() => {
   };
 })();
 
+/* ===== Сеть: чат, рейтинг и реальные соперники на своём сервере =====
+   Работает, только если страница отдана сервером с /api. На Яндекс Играх
+   и локально без бэкенда все методы возвращают null, игра остаётся офлайновой. */
+const NET = (() => {
+  let online = false, checkedAt = 0, pending = null;
+
+  function url(path) {
+    const base = (typeof location !== 'undefined' && location.origin && location.origin !== 'null') ? '' : '';
+    return base + path;
+  }
+  async function req(path, opts = {}, ms = 5000) {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), ms);
+    try {
+      const r = await fetch(url(path), {
+        cache: 'no-store',
+        headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
+        method: opts.method || 'GET',
+        body: opts.body,
+        signal: ctl.signal,
+      });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) { return null; }
+    finally { clearTimeout(t); }
+  }
+  async function probe(force) {
+    if (!force && pending) return pending;
+    if (!force && Date.now() - checkedAt < 30000) return online;
+    checkedAt = Date.now();
+    pending = (async () => {
+      const r = await req('/api/health', {}, 3000);
+      online = !!(r && r.ok);
+      pending = null;
+      return online;
+    })();
+    return pending;
+  }
+  return {
+    probe,
+    get online() { return online; },
+    chatList: since => req('/api/chat' + (since ? `?since=${encodeURIComponent(since)}` : '')),
+    chatSend: (pid, name, text) => req('/api/chat', { method: 'POST', body: JSON.stringify({ pid, name, text }) }),
+    boardTop: () => req('/api/board'),
+    boardPush: p => req('/api/board', { method: 'POST', body: JSON.stringify(p) }),
+    arenaList: (pid, rating, power) => req(`/api/arena?pid=${encodeURIComponent(pid)}&rating=${Math.round(rating)}&power=${Math.round(power)}`),
+    arenaPush: p => req('/api/arena', { method: 'POST', body: JSON.stringify(p) }),
+  };
+})();
+
 (() => {
 'use strict';
 /* --- 00_core.js --- */
@@ -2938,6 +3015,7 @@ const SAVE_VERSION = 4;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
+const newPid = () => 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 function fillDefaults(target, def) {
   for (const k in def) {
     if (target[k] === undefined) target[k] = clone(def[k]);
@@ -2950,7 +3028,7 @@ function newState() {
   equip.weapon = 1; equip.upper = 2;
   const starterOpts = g => B.rollOpts(Math.random, g);
   return {
-    v: SAVE_VERSION, savedAt: Date.now(), hero: null,
+    v: SAVE_VERSION, savedAt: Date.now(), hero: null, pid: newPid(),
     gold: 20, crystals: 0, gems: 300, level: 1, xp: 0, sp: 0,
     growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
     skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
@@ -2969,7 +3047,7 @@ function newState() {
     shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false, starterSeen: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
-    settings: { music: .55, sfx: .75 },
+    settings: { music: .55, sfx: .75, autoBuyBreak: true, autoEnchantTo: 7 },
     intro: false,
     aw: { petals: 0, count: 0, lvl: Object.fromEntries(B.AW_NODES.map(n => [n.id, 0])) },
     tower: { floor: 0, best: 0, week: '', reward: 0, auto: false },
@@ -3012,6 +3090,7 @@ function migrate(o) {
   if (!isPlain(o.codex)) o.codex = {};
   for (const it of o.items) if (it && it.slot) o.codex[it.slot + ':' + (it.g | 0)] = 1;
   o.chapter.idx = clamp(Math.floor(o.chapter.idx || 0), 0, 40);
+  if (!o.pid) o.pid = newPid();
   if (!Array.isArray(o.pass.free)) o.pass.free = [];
   if (!Array.isArray(o.pass.prem)) o.pass.prem = [];
   return o;
@@ -3098,7 +3177,7 @@ const R = {
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
   st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
-  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
+  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', socialSeg: 'chat', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
   bossCd: 0, bossFails: 0, towerRun: false,
 };
@@ -3127,6 +3206,30 @@ const itemById = id => S.items.find(i => i.id === id);
 const isEquipped = it => S.equip[it.slot] === it.id;
 const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
 const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
+/* грейд открывается по этапу, а не по уровню: R — это долгий путь */
+const gradeUnlocked = g => (S.maxStage || 0) >= (B.GRADES[g].stage || 0);
+const unlockOk = id => {
+  const u = B.UNLOCK[id];
+  if (!u) return true;
+  if (u.stage != null && (S.maxStage || 0) < u.stage) return false;
+  if (u.level != null && S.level < u.level) return false;
+  return true;
+};
+const unlockLabel = id => { const u = B.UNLOCK[id]; if (!u) return ''; return u.stage != null ? `этап ${u.stage}` : `уровень ${u.level}`; };
+function autoEquipBest(slot) {
+  let best = null, bs = -1;
+  for (const it of S.items) {
+    if (it.slot !== slot) continue;
+    const sc = itemScore(it.slot, it.g, it.e, it.opts);
+    if (sc > bs) { bs = sc; best = it; }
+  }
+  if (best && S.equip[slot] !== best.id) { S.equip[slot] = best.id; return best; }
+  return null;
+}
+// надеть лучшую по силе и заточке вещь в каждый слот (после загрузки и массовых покупок)
+function equipBestAll() {
+  for (const sl of B.SLOTS) autoEquipBest(sl.id);
+}
 const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака %', hpPct: 'Здоровье %', defPct: 'Защита %', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
 const statStr = (k, v) => ['atkPct', 'hpPct', 'defPct', 'crit', 'critDmg', 'goldPct', 'xpPct', 'dropPct'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
 function itemTotals(it) {
@@ -3425,7 +3528,7 @@ function killMonster(m) {
   rollDrops(m, z, y);
   AU.sfx('coin');
   if (m.boss) { bossKilled(m); bossWin(); return; }
-  if (S.kills < 10) S.kills++;
+  if (S.kills < B.STAGE_KILLS) S.kills++;
   updateHudStatic();
 }
 function rollDrops(m, z, y) {
@@ -3684,7 +3787,12 @@ function frame(now) {
   if (hudTick > .12) { hudTick = 0; updateHud(); }
   if (saveTick > 5) { saveTick = 0; saveLocal(); }
   if (cloudTick > 30) { cloudTick = 0; Cloud.push(); }
-  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); }
+  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); Social.sync(); }
+  // чат: подтягиваем новые сообщения, пока открыта вкладка
+  if (R.tab === 'social' && R.socialSeg === 'chat') {
+    R.chatT = (R.chatT || 0) + dtRaw;
+    if (R.chatT > 6) { R.chatT = 0; Social.loadChat(); }
+  }
 }
 
 function update(dtRaw) {
@@ -3710,7 +3818,7 @@ function update(dtRaw) {
   } else if (!R.bossPending) {
     spawnLogic();
     if (R.bossCd > 0) R.bossCd = Math.max(0, R.bossCd - dtRaw);
-    if (S.kills >= 10 && S.autoBoss && !h.dead && R.bossCd <= 0) startBoss();
+    if (S.kills >= B.STAGE_KILLS && S.autoBoss && !h.dead && R.bossCd <= 0) startBoss();
   }
 
   const alive = R.monsters.filter(m => m.hp > 0).sort((a, b) => a.x - b.x);
@@ -4161,7 +4269,7 @@ function rerollOpts(it) {
 /* --- 20_hud.js --- */
 /* ===== HUD, журнал, всплывашки, модальные окна, музыка ===== */
 const hud = {};
-['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
+['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'socialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
 
 function updateHudStatic() {
   if (!S) return;
@@ -4169,9 +4277,9 @@ function updateHudStatic() {
   hud.hLvl.textContent = S.level;
   hud.stageNum.textContent = z.num;
   hud.stageName.textContent = z.title;
-  hud.killText.textContent = `${Math.min(10, S.kills)}/10`;
-  hud.killFill.style.width = Math.min(100, S.kills * 10) + '%';
-  const ready = S.kills >= 10 && !R.boss && !R.bossPending;
+  hud.killText.textContent = `${Math.min(B.STAGE_KILLS, S.kills)}/${B.STAGE_KILLS}`;
+  hud.killFill.style.width = Math.min(100, S.kills / B.STAGE_KILLS * 100) + '%';
+  const ready = S.kills >= B.STAGE_KILLS && !R.boss && !R.bossPending;
   hud.bossBtn.disabled = !ready; hud.bossBtn.classList.toggle('ready', ready && !S.autoBoss);
   hud.autoBtn.setAttribute('aria-pressed', S.autoBoss ? 'true' : 'false');
   const inBoss = !!R.boss;
@@ -4220,7 +4328,7 @@ function updateHud() {
   hud.boostChip.hidden = bl <= 0;
   if (bl > 0) hud.boostTime.textContent = left(bl);
   // пока автобой фармит после поражения, кнопка показывает, сколько ещё ждать
-  if (S.autoBoss && R.bossCd > 0 && S.kills >= 10 && !R.boss) {
+  if (S.autoBoss && R.bossCd > 0 && S.kills >= B.STAGE_KILLS && !R.boss) {
     hud.bossBtn.textContent = `Фарм ${Math.ceil(R.bossCd)}`;
     hud.bossBtn.disabled = true;
   } else if (hud.bossBtn.textContent !== 'Босс') {
@@ -4290,7 +4398,7 @@ function updateMusic() {
 const panel = $('panel');
 function renderPanel() {
   if (!S || !S.hero) { panel.innerHTML = ''; return; }
-  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, trials: renderTrials, shop: renderShop }[R.tab];
+  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, trials: renderTrials, social: renderSocial, shop: renderShop }[R.tab];
   panel.innerHTML = fn ? fn() : '';
   if (R.tab === 'gear') setupDoll();
   if (R.tab === 'pets') setupPetStage();
@@ -4300,6 +4408,7 @@ function setTab(t) {
   R.tab = t;
   for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false');
   renderPanel(); panel.scrollTop = 0;
+  if (t === 'social') Social.enter();
 }
 const segHTML = (act, cur, items) => `<div class="seg" role="group">${items.map(([v, l, dot]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${l}${dot ? '<i class="mini-dot"></i>' : ''}</button>`).join('')}</div>`;
 
@@ -4404,6 +4513,12 @@ function renderSkills() {
 }
 
 /* ---------- снаряжение ---------- */
+function lockCard(id, title) {
+  const u = B.UNLOCK[id] || {};
+  const cur = u.stage != null ? `Сейчас этап ${zoneOf(S.maxStage).num}.` : `Сейчас уровень ${S.level}.`;
+  return `<section class="card lock-card"><img src="${A.miscIcon('lock', 64)}" alt="">
+    <div class="row-main"><b>${title}</b><span class="meta">Откроется на ${unlockLabel(id)}. ${cur}</span></div></section>`;
+}
 const DOLL = { left: ['helmet', 'upper', 'lower'], right: ['weapon', 'gloves', 'boots'], bottom: ['neck', 'ear', 'ring'] };
 function slotTile(slot) {
   const id = S.equip[slot], it = id && itemById(id);
@@ -4497,11 +4612,11 @@ function openItem(id) {
   const eq = isEquipped(it), gr = B.GRADES[it.g];
   const eqId = S.equip[it.slot], eqIt = !eq && eqId && itemById(eqId);
   const vs = eqIt ? itemTotals(eqIt) : null;
-  const lvOk = S.level >= gr.lvl, k = scrollKind(it.slot), canEnch = it.g > 0 && it.e < B.MAX_ENCH;
+  const lvOk = gradeUnlocked(it.g), k = scrollKind(it.slot), canEnch = it.g > 0 && it.e < B.MAX_ENCH;
   openModal(sheet(`<span class="gtext g${it.g}">${itemName(it)}</span>`, `${B.SLOT[it.slot].name} · ${gr.label}${eq ? ' · надето' : ''}`, `
     <dl class="compare">${compareRows(it.slot, it.g, it.e, it.opts, vs)}</dl>
     ${optsHTML(it)}
-    ${!lvOk ? `<p class="note warn">Нужен уровень ${gr.lvl}, чтобы надеть этот предмет.</p>` : ''}
+    ${!lvOk ? `<p class="note warn">Нужен этап ${gr.stage}, чтобы надеть этот предмет.</p>` : ''}
     ${it.g === 0 ? '' : `<p class="note">Свитков ${B.GRADES[it.g].short} для ${k === 'w' ? 'оружия' : 'доспехов'}: обычных ${S.scrolls[k][it.g]}, благословенных ${S.scrolls['b' + k][it.g]}.</p>`}
     <div class="btn-row">
       ${eq ? `<button class="buy ghost" data-act="unequip" data-id="${it.id}">Снять</button>` : `<button class="buy" data-act="equip" data-id="${it.id}" ${lvOk ? '' : 'disabled'}>Надеть</button>`}
@@ -4513,7 +4628,7 @@ function openItem(id) {
     </div>`}`, { icon: tileHTML(it, 'tabindex="-1"') }), { item: id });
 }
 function equip(id) {
-  const it = itemById(id); if (!it || S.level < B.GRADES[it.g].lvl) return;
+  const it = itemById(id); if (!it || !gradeUnlocked(it.g)) return;
   S.equip[it.slot] = it.id; recalc();
   log(`Надето: ${itemName(it)}.`, 'sys');
 }
@@ -4531,6 +4646,7 @@ function enchantHTML(it, st) {
   const now = itemTotals(it), nxt = B.itemStats(it.slot, it.g, target);
   const kindName = k === 'w' ? 'оружие' : 'доспех', cy = B.crystalYield(it.slot, it.g, it.e);
   const maxed = it.e >= B.MAX_ENCH;
+  const stops = [3, 5, 7, 10, 13, 16, 20].filter(n => n > B.SAFE);
   return sheet('Заточка', `<span class="gtext g${it.g}">${itemName(it)}</span>`, `
     <div class="forge"><canvas id="forgeCv"></canvas>${tileHTML(it, 'id="forgeTile" tabindex="-1"')}<div class="forge-result" id="forgeRes"></div></div>
     ${maxed ? `<p class="chance safe">Достигнута максимальная заточка <b>+${B.MAX_ENCH}</b></p>` : `
@@ -4545,13 +4661,24 @@ function enchantHTML(it, st) {
       : st.kind === 'b' ? '<p class="note">Благословенный свиток: при неудаче заточка сбросится до +0, предмет уцелеет.</p>'
       : info.destructive ? `<p class="note warn">При неудаче предмет разрушится и превратится в ${fmt(cy)} ${plural(cy, CRY_W)}. Выше +7 рискуйте только с запасом.</p>`
       : `<p class="note">При неудаче заточка откатится до +${B.ENCH.fallback}, предмет уцелеет. Каждая неудача даёт искру: +6% к следующей попытке.</p>`}
-    ${have ? '<button class="buy pink wide" data-act="do-enchant">Заточить</button>'
+    ${have ? `<div class="btn-row">
+        <button class="buy pink" data-act="do-enchant" ${st.autoRun ? 'disabled' : ''}>Заточить</button>
+        <button class="buy ghost" data-act="auto-enchant" ${st.autoRun ? 'disabled' : ''}>Авто до +${st.autoStop}</button>
+      </div>
+      <div class="auto-row" role="group" aria-label="Авто-заточка до">
+        <span>Авто до</span>
+        ${stops.map(n => `<button class="auto-stop ${st.autoStop === n ? 'on' : ''}" data-act="auto-stop" data-n="${n}" ${st.autoRun ? 'disabled' : ''}>+${n}</button>`).join('')}
+      </div>
+      <p class="note auto-status" id="autoStatus">${st.autoRun ? 'Авто-заточка идёт…' : 'Авто точит, пока не достигнет цели, не кончатся свитки или не сломается вещь.'}</p>`
       : `<button class="buy wide" data-act="buy-scrolls" data-g="${it.g}">Нет свитков: купить в магазине</button>`}`}`);
 }
 function openEnchant(id) {
   const it = itemById(id); if (!it || it.g === 0) return;
   const prev = modalState && modalState.enchant ? modalState : null;
-  const st = { enchant: true, item: id, kind: prev ? prev.kind : 'n', busy: false, power: 0, parts: [], t: 0, color: '#ff8fc1' };
+  const st = {
+    enchant: true, item: id, kind: prev ? prev.kind : 'n', busy: false, power: 0, parts: [], t: 0, color: '#ff8fc1',
+    autoRun: false, autoStop: S.settings.autoEnchantTo || 7,
+  };
   openModal(enchantHTML(it, st), st);
   startForge(st);
 }
@@ -4586,68 +4713,150 @@ function burst(st, color, shard, n) {
     st.parts.push({ x: w / 2, y: h / 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: shard ? 260 : 40, t: 0, life: .8 + rnd() * .6, c: Array.isArray(color) ? color[i % color.length] : color, s: 3 + rnd() * 4, shard });
   }
 }
+/* одно испытание: меняет состояние и возвращает исход */
+function enchantOnce(it, key) {
+  const target = it.e + 1, info = enchInfo(it), blessed = key[0] === 'b';
+  S.stats.enchants++; quest('enchant');
+  S.scrolls[key][it.g]--;
+  if (rnd() < info.ch) {
+    it.e = target; it.pt = 0;
+    S.stats.best = Math.max(S.stats.best, target);
+    autoEquipBest(it.slot);
+    recalc(); checkAch(); updateSideButtons();
+    return { r: 'ok', target };
+  }
+  if (blessed) {
+    const was = it.e; it.e = 0; it.pt = 0; recalc();
+    return { r: 'reset', was };
+  }
+  if (info.destructive) {
+    const cry = B.crystalYield(it.slot, it.g, it.e), nm = itemName(it), slot = it.slot, g = it.g;
+    removeItem(it.id); S.crystals += cry; S.stats.breaks++; autoEquipBest(slot); recalc();
+    return { r: 'destroyed', cry, nm, slot, g };
+  }
+  const was = it.e; it.e = B.ENCH.fallback; it.pt = (it.pt || 0) + 1; recalc();
+  return { r: 'fell', was, to: B.ENCH.fallback, pt: it.pt };
+}
+function showEnchantResult(st, out, it) {
+  const res = $('forgeRes'), tile = $('forgeTile');
+  if (!res) return;
+  if (out.r === 'ok') {
+    st.color = '#ffd760'; burst(st, ['#ffd760', '#ffffff', '#ff8fc1'], false, 34);
+    res.className = 'forge-result ok'; res.innerHTML = `+${out.target} Успех!`;
+    if (it) log(`${B.NAMES[it.slot][it.g]} заточен до +${out.target}.`, 'good');
+    AU.sfx('success');
+  } else if (out.r === 'reset') {
+    st.color = '#7cc8ff'; burst(st, ['#7cc8ff', '#ffffff'], false, 22);
+    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Благословение спасло предмет: +${out.was} → +0.</small>`;
+    AU.sfx('fail');
+  } else if (out.r === 'fell') {
+    st.color = '#ff9a5c'; burst(st, ['#ff9a5c', '#ffffff'], false, 22);
+    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>+${out.was} → +${out.to}. Искра +${Math.round(Math.min(B.ENCH.pityMax, out.pt * B.ENCH.pityStep) * 100)}%.</small>`;
+    AU.sfx('fail');
+  } else if (out.r === 'destroyed') {
+    st.color = '#ff5d73'; burst(st, ['#ff5d73', '#bfe9ff', '#ffffff'], true, 40);
+    if (tile) tile.classList.add('shatter');
+    res.className = 'forge-result bad'; res.innerHTML = `Предмет разрушен<small>+${fmt(out.cry)} ${plural(out.cry, CRY_W)}</small>`;
+    AU.sfx('fail'); if (!RM) R.shake = .25;
+  }
+}
 function doEnchant() {
-  const st = modalState; if (!st || !st.enchant || st.busy) return;
+  const st = modalState; if (!st || !st.enchant || st.busy || st.autoRun) return;
   const it = itemById(st.item); if (!it || it.e >= B.MAX_ENCH) return;
   const k = scrollKind(it.slot), key = (st.kind === 'b' ? 'b' : '') + k;
   if (S.scrolls[key][it.g] <= 0) return;
   st.busy = true;
   modal.querySelectorAll('button').forEach(b => b.disabled = true);
-  S.scrolls[key][it.g]--;
   AU.sfx('charge');
-  const t0 = performance.now(), D = RM ? 300 : 1100;
+  const t0 = performance.now(), D = RM ? 250 : 900;
   const ramp = () => {
     if (modalState !== st) return;
     const p = Math.min(1, (performance.now() - t0) / D);
     st.power = p;
-    if (p < 1) requestAnimationFrame(ramp); else resolveEnchant(st, it, key);
+    if (p < 1) requestAnimationFrame(ramp);
+    else {
+      const out = enchantOnce(it, key);
+      showEnchantResult(st, out, it);
+      saveLocal();
+      setTimeout(() => {
+        if (modalState !== st) return;
+        st.busy = false; st.power = 0; st.color = '#ff8fc1';
+        if (out.r === 'destroyed') { handleBreak(st, out); return; }
+        rerenderEnchant(st);
+      }, out.r === 'destroyed' ? (RM ? 500 : 1200) : (RM ? 350 : 900));
+      if (R.tab === 'gear') renderPanel();
+    }
   };
   requestAnimationFrame(ramp);
 }
-function resolveEnchant(st, it, key) {
-  const target = it.e + 1, info = enchInfo(it), ch = info.ch, blessed = key[0] === 'b';
-  S.stats.enchants++; quest('enchant');
-  const res = $('forgeRes'), tile = $('forgeTile');
-  const finish = (ms) => setTimeout(() => { if (modalState === st) { st.busy = false; st.power = 0; st.color = '#ff8fc1'; rerenderEnchant(st); } }, RM ? 400 : ms);
-  if (rnd() < ch) {
-    it.e = target; it.pt = 0; S.stats.best = Math.max(S.stats.best, target);
-    st.color = '#ffd760'; burst(st, ['#ffd760', '#ffffff', '#ff8fc1'], false, 40);
-    res.className = 'forge-result ok'; res.innerHTML = `+${target} Успех!`;
-    log(`${B.NAMES[it.slot][it.g]} заточен до +${target}.`, 'good');
-    AU.sfx('success'); recalc(); checkAch(); updateSideButtons(); finish(1100);
-  } else if (blessed) {
-    const was = it.e; it.e = 0; it.pt = 0;
-    st.color = '#7cc8ff'; burst(st, ['#7cc8ff', '#ffffff'], false, 26);
-    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Благословение спасло предмет. Заточка +${was} сброшена до +0.</small>`;
-    log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +0.`, 'bad');
-    AU.sfx('fail'); recalc(); finish(1600);
-  } else if (info.destructive) {
-    const cry = B.crystalYield(it.slot, it.g, it.e), nm = itemName(it), slot = it.slot, g = it.g;
-    removeItem(it.id); S.crystals += cry; S.stats.breaks++;
-    recalc();
-    st.color = '#ff5d73'; burst(st, ['#ff5d73', '#bfe9ff', '#ffffff'], true, 46);
-    if (tile) tile.classList.add('shatter');
-    res.className = 'forge-result bad'; res.innerHTML = `Предмет разрушен<small>${nm} кристаллизовался: +${fmt(cry)} ${plural(cry, CRY_W)}</small>`;
-    log(`Заточка не удалась. ${nm} разрушен: получено ${fmt(cry)} ${plural(cry, CRY_W)}.`, 'bad');
-    AU.sfx('fail');
-    if (!RM) R.shake = .25;
-    setTimeout(() => {
-      if (modalState !== st) return;
-      st.busy = false;
-      const sh = modal.querySelector('.sheet');
-      sh.querySelectorAll('.ench-line,.chance,.compare,.scroll-pick,.note,.wide').forEach(n => n.remove());
-      sh.insertAdjacentHTML('beforeend', `<p class="note">Новый ${B.NAMES[slot][g]} стоит ${fmt(B.price(slot, g))} золота.</p>
-        <div class="btn-row"><button class="buy" data-act="goshop" data-g="${g}">Купить заново</button><button class="buy ghost" data-act="close">Закрыть</button></div>`);
-    }, RM ? 400 : 1300);
-  } else {
-    const was = it.e;
-    it.e = B.ENCH.fallback; it.pt = (it.pt || 0) + 1;
-    st.color = '#ff9a5c'; burst(st, ['#ff9a5c', '#ffffff'], false, 26);
-    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Заточка +${was} откатилась до +${B.ENCH.fallback}. Искра даст +${Math.round(Math.min(B.ENCH.pityMax, it.pt * B.ENCH.pityStep) * 100)}% к следующей попытке.</small>`;
-    log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +${B.ENCH.fallback}. Накоплена искра.`, 'bad');
-    AU.sfx('fail'); recalc(); finish(1600);
+/* авто-заточка до выбранного уровня */
+async function autoEnchant() {
+  const st = modalState;
+  if (!st || !st.enchant || st.autoRun) return;
+  const it0 = itemById(st.item); if (!it0) return;
+  st.autoRun = true;
+  modal.querySelectorAll('button').forEach(b => b.disabled = true);
+  let steps = 0;
+  while (modalState === st && st.autoRun) {
+    const it = itemById(st.item);
+    if (!it || it.e >= st.autoStop || it.e >= B.MAX_ENCH) break;
+    const k = scrollKind(it.slot);
+    let key = (st.kind === 'b' ? 'b' : '') + k;
+    if (S.scrolls[key][it.g] <= 0) {
+      const alt = key[0] === 'b' ? k : 'b' + k;
+      if (S.scrolls[alt][it.g] > 0) key = alt; else break;
+    }
+    st.busy = true; st.power = 0;
+    const out = enchantOnce(it, key);
+    steps++;
+    showEnchantResult(st, out, it);
+    const cur = itemById(st.item);
+    const label = $('autoStatus');
+    if (label) label.textContent = `${cur ? '+' + cur.e : '—'} · шаг ${steps} · свитков ${cur ? S.scrolls[(st.kind === 'b' ? 'b' : '') + scrollKind(cur.slot)][cur.g] : 0}`;
+    saveLocal();
+    await new Promise(r => setTimeout(r, RM ? 120 : 280));
+    if (out.r === 'destroyed') { st.autoRun = false; handleBreak(st, out); return; }
+  }
+  st.autoRun = false;
+  st.busy = false;
+  saveLocal();
+  if (modalState === st) {
+    const it = itemById(st.item);
+    if (it && it.e >= st.autoStop) toast(`Достигнуто +${it.e}`);
+    else if (it) toast('Свитки закончились');
+    rerenderEnchant(st);
   }
   if (R.tab === 'gear') renderPanel();
+}
+/* при сломе: результат, галочка «покупать заново» и кнопка */
+function handleBreak(st, out) {
+  st.busy = false;
+  const sh = modal.querySelector('.sheet'); if (!sh) return;
+  const price = B.price(out.slot, out.g);
+  const on = !!S.settings.autoBuyBreak;
+  const autoBuy = on && S.gold >= price;
+  sh.querySelectorAll('.ench-line,.chance,.compare,.scroll-pick,.note,.wide,.auto-row,.btn-row,.forge-result,.auto-status').forEach(n => n.remove());
+  sh.insertAdjacentHTML('beforeend', `
+    <p class="note warn">${out.nm} разрушен и превратился в ${fmt(out.cry)} ${plural(out.cry, CRY_W)}.</p>
+    <label class="check-row"><input type="checkbox" id="autoBuyBox" ${on ? 'checked' : ''}><span>Покупать заново при сломе</span></label>
+    <p class="note">Новый ${B.NAMES[out.slot][out.g]} стоит ${fmt(price)} золота. У вас ${fmt(S.gold)}.</p>
+    <div class="btn-row">
+      <button class="buy" data-act="buy-again" data-slot="${out.slot}" data-g="${out.g}" ${S.gold >= price ? '' : 'disabled'}>Купить заново за ${fmt(price)}</button>
+      <button class="buy ghost" data-act="close">Закрыть</button>
+    </div>`);
+  const box = $('autoBuyBox');
+  if (box) box.addEventListener('change', () => { S.settings.autoBuyBreak = box.checked; saveLocal(); });
+  if (autoBuy) {
+    setTimeout(() => {
+      if (modalState !== st) return;
+      const bought = buyItem(out.slot, out.g, { silent: true });
+      if (bought) {
+        toast(`Куплено заново: ${itemName(bought)}`);
+        closeModal();
+        if (R.tab === 'gear') renderPanel();
+      }
+    }, RM ? 400 : 1100);
+  }
 }
 function rerenderEnchant(st) {
   const it = itemById(st.item); if (!it) return;
@@ -4663,14 +4872,14 @@ function rerenderEnchant(st) {
 }
 
 /* ---------- магазин ---------- */
-function unlockedGrade() { let g = 0; B.GRADES.forEach((gr, i) => { if (gr.lvl <= S.level) g = i; }); return g; }
+function unlockedGrade() { let g = 0; B.GRADES.forEach((gr, i) => { if (gradeUnlocked(i)) g = i; }); return g; }
 function renderShop() {
   const seg = segHTML('shoptab', R.shopTab, [['gear', 'Снаряжение'], ['scrolls', 'Свитки'], ['gems', 'Самоцветы', !hud.shopDot.hidden]]);
   if (R.shopTab === 'scrolls') return seg + renderScrollShop();
   if (R.shopTab === 'gems') return seg + Monet.renderShop();
-  const g = R.shopGrade, gr = B.GRADES[g], lvOk = S.level >= gr.lvl;
+  const g = R.shopGrade, gr = B.GRADES[g], lvOk = gradeUnlocked(g);
   const chips = `<div class="grade-chips" role="group" aria-label="Грейд">${B.GRADES.map((x, i) =>
-    `<button class="g${i}" data-act="shopgrade" data-g="${i}" aria-pressed="${i === g}">${x.short}${S.level < x.lvl ? `<small>ур. ${x.lvl}</small>` : ''}</button>`).join('')}</div>`;
+    `<button class="g${i}" data-act="shopgrade" data-g="${i}" aria-pressed="${i === g}">${x.short}${!gradeUnlocked(i) ? `<small>эт. ${x.stage}</small>` : ''}</button>`).join('')}</div>`;
   const rows = B.SLOTS.map(sl => {
     const p = B.price(sl.id, g), st = B.itemStats(sl.id, g, 0);
     const main = Object.keys(st).map(k => `${STAT_LABEL[k]} ${statStr(k, st[k])}`).join(', ');
@@ -4678,10 +4887,10 @@ function renderShop() {
     return `<li class="row">${tileHTML({ slot: sl.id, g, e: 0 }, 'tabindex="-1"')}
       <div class="row-main"><b class="gtext g${g}">${B.NAMES[sl.id][g]}</b><span class="meta">${sl.name}${own ? ` · у вас: ${own}` : ''}</span><span class="val">${main}</span></div>
       ${lvOk ? `<button class="buy ${p > S.gold ? 'poor' : ''}" data-act="buyitem" data-slot="${sl.id}" data-g="${g}" data-cost="${p}"><img src="${A.miscIcon('gold', 32)}" alt="">${fmt(p)}</button>`
-        : `<button class="buy" disabled>Ур. ${gr.lvl}</button>`}</li>`;
+        : `<button class="buy" disabled>Этап ${gr.stage}</button>`}</li>`;
   }).join('');
   return `${seg}${chips}
-    <p class="sub">${lvOk ? `${gr.label}: купленное надевается само, если оно лучше текущего. Старая вещь уходит в сумку.` : `${gr.label} откроется на уровне ${gr.lvl}.`}</p>
+    <p class="sub">${lvOk ? `${gr.label}: надевается лучшая по силе и заточке вещь слота. Старая уходит в сумку.` : `${gr.label} откроется на этапе ${gr.stage}.`}</p>
     <ul class="rows">${rows}</ul>`;
 }
 function renderScrollShop() {
@@ -4702,18 +4911,23 @@ function renderScrollShop() {
       <span class="val">${bl ? 'При неудаче заточка сбрасывается до +0' : 'При неудаче выше +3 предмет разрушается'}</span></div>
       <button class="buy ${cost > S.crystals ? 'poor' : ''}" data-act="buyscroll" data-k="${k}" data-g="${g}" data-cost="${cost}" data-cur="cry"><img src="${A.miscIcon('crystal', 32)}" alt="">${fmt(cost)}</button></li>`).join('')}</ul>`;
 }
-function buyItem(slot, g) {
+function buyItem(slot, g, opts = {}) {
   const p = B.price(slot, g);
-  if (S.gold < p || S.level < B.GRADES[g].lvl) { toast(S.gold < p ? 'Не хватает золота' : `Нужен уровень ${B.GRADES[g].lvl}`); return; }
+  if (!gradeUnlocked(g)) { toast(`Грейд откроется на этапе ${B.GRADES[g].stage}`); return null; }
+  if (S.gold < p) { toast('Не хватает золота'); return null; }
   S.gold -= p;
   const it = { id: S.nextId++, slot, g, e: 0, pt: 0, opts: B.rollOpts(rnd, g) };
   S.items.push(it);
   if (!S.codex[slot + ':' + g]) { S.codex[slot + ':' + g] = 1; log(`Коллекция: ${B.NAMES[slot][g]} (${B.GRADES[g].short}) добавлен.`, 'good'); }
-  const curId = S.equip[slot], cur = curId && itemById(curId);
-  if (!cur || itemScore(slot, g, 0, it.opts) > itemScore(cur.slot, cur.g, cur.e, cur.opts)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
-  else toast(`${itemName(it)} в сумке`);
+  const best = autoEquipBest(slot);
+  recalc();
+  if (!opts.silent) {
+    if (best && best.id === it.id) toast(`Надето: ${itemName(it)}`);
+    else toast(`${itemName(it)} в сумке${best ? ` · надет ${itemName(best)}` : ''}`);
+  }
   log(`Куплено: ${itemName(it)}.`, 'sys');
   AU.sfx('buy');
+  return it;
 }
 function buyScroll(k, g) {
   const base = k.endsWith('w') ? B.SCROLL_COST.weapon[g] : B.SCROLL_COST.armor[g];
@@ -4767,7 +4981,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.0</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.1</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -4794,7 +5008,7 @@ function renderTower() {
   return `
     <section class="card tower-card">
       <div class="tower-head"><div><h2>Башня сакуры</h2>
-        <p class="sub">Пройдено ярусов: <b>${S.tower.best}</b> из ${B.TOWER.floors}${open ? '' : ' · вершина достигнута'}</p></div>
+        <p class="sub">Открыта с первого уровня · пройдено ярусов: <b>${S.tower.best}</b> из ${B.TOWER.floors}${open ? '' : ' · вершина достигнута'}</p></div>
         ${awBadges()}</div>
       <div class="tower-num"><span>ЯРУС</span><b>${open ? f : B.TOWER.floors}</b><span>из ${B.TOWER.floors}</span></div>
       <p class="sub">${esc(guard.name)} · мощь <b>${fmt(B.power(guard))}</b> · <span class="diff ${tag[1]}">${tag[0]}</span></p>
@@ -4829,10 +5043,11 @@ function renderDungeons() {
     </section>
     <ul class="rows">${B.DUNGEONS.map(dn => {
       const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = fightTag(guard, S.stage);
-      return `<li class="row"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
-        <div class="row-main"><b>${dn.name}</b><span class="meta">${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span></span>
-        <span class="val">${rewardSummary(rw)}</span></div>
-        <button class="buy ${d.keys > 0 ? 'pink' : ''}" data-act="dungeon-go" data-id="${dn.id}" ${d.keys > 0 ? '' : 'disabled'}>Войти</button></li>`;
+      const locked = (S.maxStage || 0) < dn.stage;
+      return `<li class="row ${locked ? 'locked-row' : ''}"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
+        <div class="row-main"><b>${dn.name}</b><span class="meta">${locked ? `Откроется на этапе ${dn.stage}` : `${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span>`}</span>
+        <span class="val">${locked ? '—' : rewardSummary(rw)}</span></div>
+        <button class="buy ${!locked && d.keys > 0 ? 'pink' : ''}" data-act="dungeon-go" data-id="${dn.id}" ${locked || d.keys <= 0 ? 'disabled' : ''}>${locked ? 'Этап ' + dn.stage : 'Войти'}</button></li>`;
     }).join('')}</ul>
     <p class="note">Подземелья — быстрый бой без риска: ключ тратится только при победе. Награда растёт вместе с вашим этапом.</p>`;
 }
@@ -5039,6 +5254,7 @@ function openAwakenAsk() {
 /* --- 40_pets.js --- */
 /* ===== Питомцы: коллекция и призыв ===== */
 function renderPets() {
+  if (!unlockOk('pets')) return lockCard('pets', 'Питомцы');
   const seg = segHTML('petseg', R.petSeg, [['summon', 'Призыв', !hud.petDot.hidden], ['collection', `Коллекция ${petsOwnedCount()}/${B.PETS.length}`]]);
   return seg + (R.petSeg === 'summon' ? renderSummon() : renderCollection());
 }
@@ -5240,28 +5456,186 @@ function skipSummon() {
   while (st.shown < st.results.length) revealCard(st);
 }
 
+/* --- 45_social.js --- */
+/* ===== Чат и рейтинг игроков (свой сервер, /api) ===== */
+const Social = {
+  chat: [], lastId: 0, board: [], at: 0, busy: false, state: 'idle',
+  async push() {
+    if (!S || !S.hero) return;
+    const ok = await NET.probe();
+    if (!ok) { this.state = 'offline'; return; }
+    await NET.boardPush({
+      pid: S.pid, name: heroName(), stage: S.maxStage, best: S.bestStage || 0,
+      level: S.level, power: Math.round(R.power), rating: S.arena.rating,
+    });
+    this.at = Date.now();
+    this.state = 'online';
+  },
+  async sync(force) {
+    if (!S || !S.hero) return;
+    if (!force && Date.now() - this.at < 45000) return;
+    await this.push();
+    Arena.netPush();
+  },
+  async loadChat() {
+    const ok = await NET.probe();
+    if (!ok) { this.state = 'offline'; paintChat(); return; }
+    this.state = 'online';
+    const r = await NET.chatList(this.lastId);
+    if (r && Array.isArray(r.messages)) {
+      for (const m of r.messages) if (!this.chat.some(x => x.id === m.id)) this.chat.push(m);
+      this.chat = this.chat.slice(-80);
+      for (const m of this.chat) this.lastId = Math.max(this.lastId, m.id || 0);
+      paintChat();
+    }
+  },
+  async send() {
+    if (this.busy) return;
+    const inp = $('chatInput'); if (!inp) return;
+    const text = (inp.value || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text) return;
+    const ok = await NET.probe();
+    if (!ok) { this.state = 'offline'; paintChat(); toast('Нет связи с сервером'); return; }
+    this.busy = true;
+    inp.disabled = true;
+    const r = await NET.chatSend(S.pid, heroName(), text);
+    this.busy = false;
+    if (inp) { inp.disabled = false; }
+    if (!r || !r.ok) {
+      toast(r && r.error === 'slow' ? 'Слишком часто: подождите пару секунд' : 'Не удалось отправить');
+      return;
+    }
+    inp.value = '';
+    if (r.message) { this.chat.push(r.message); this.chat = this.chat.slice(-80); this.lastId = Math.max(this.lastId, r.message.id || 0); paintChat(); }
+    inp.focus({ preventScroll: true });
+  },
+  async loadBoard() {
+    const ok = await NET.probe();
+    if (!ok) { this.state = 'offline'; paintBoard(); return; }
+    this.state = 'online';
+    await this.push();
+    const r = await NET.boardTop();
+    if (r && Array.isArray(r.top)) { this.board = r.top; paintBoard(); }
+  },
+  enter() {
+    if (R.socialSeg === 'chat') this.loadChat();
+    else this.loadBoard();
+  },
+};
+
+function timeHM(ts) {
+  const d = new Date((ts || 0) * 1000);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+function renderSocial() {
+  const seg = segHTML('socialseg', R.socialSeg, [['chat', 'Чат'], ['board', 'Рейтинг']]);
+  if (!unlockOk('chat')) return seg + lockCard('chat', 'Чат и рейтинг');
+  return seg + (R.socialSeg === 'chat' ? renderChatPanel() : renderBoardPanel());
+}
+function renderChatPanel() {
+  return `
+    <section class="card chat-card">
+      <div class="card-head"><h3>Чат</h3><span class="sub" id="chatState">${NET.online ? 'онлайн' : 'соединение…'}</span></div>
+      <ul class="chat-list" id="chatList" aria-live="polite"></ul>
+      <div class="chat-input">
+        <input id="chatInput" maxlength="200" autocomplete="off" placeholder="Сообщение игрокам…" aria-label="Сообщение">
+        <button class="buy pink small" data-act="chat-send">Отправить</button>
+      </div>
+      <p class="note">Имя в чате — имя героя. Будьте вежливы: сообщения видят все.</p>
+    </section>`;
+}
+function renderBoardPanel() {
+  return `
+    <section class="card">
+      <div class="card-head"><h3>Рейтинг игроков</h3><button class="link-btn" data-act="board-refresh">Обновить</button></div>
+      <ol class="board server-board" id="boardList"><li class="board-empty">Загрузка…</li></ol>
+      <p class="note">Сортировка по рекордному этапу, затем по мощи. Ваша строка подсвечена.</p>
+    </section>`;
+}
+function paintChat() {
+  const el = $('chatList'); if (!el) return;
+  const st = $('chatState');
+  if (st) st.textContent = Social.state === 'offline' ? 'нет связи с сервером' : 'онлайн';
+  if (!Social.chat.length) {
+    el.innerHTML = `<li class="chat-empty">${Social.state === 'offline' ? 'Чат доступен на сервере игры.' : 'Пока тихо — напишите первым.'}</li>`;
+    return;
+  }
+  el.innerHTML = '';
+  for (const m of Social.chat) {
+    const li = document.createElement('li');
+    if (m.pid && m.pid === S.pid) li.className = 'me';
+    const head = document.createElement('div');
+    head.className = 'chat-head';
+    const b = document.createElement('b'); b.textContent = m.name || 'Игрок';
+    const t = document.createElement('span'); t.className = 't'; t.textContent = timeHM(m.ts);
+    head.append(b, t);
+    const p = document.createElement('p'); p.textContent = m.text || '';
+    li.append(head, p);
+    el.append(li);
+  }
+  el.scrollTop = el.scrollHeight;
+}
+function paintBoard() {
+  const el = $('boardList'); if (!el) return;
+  if (Social.state === 'offline') { el.innerHTML = '<li class="board-empty">Рейтинг доступен на сервере игры.</li>'; return; }
+  if (!Social.board.length) { el.innerHTML = '<li class="board-empty">Пока нет игроков.</li>'; return; }
+  el.innerHTML = '';
+  Social.board.forEach((p, i) => {
+    const li = document.createElement('li');
+    if (p.pid === S.pid) li.className = 'me';
+    const place = document.createElement('span'); place.className = 'place'; place.textContent = i + 1;
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = p.name || 'Игрок';
+    const lg = document.createElement('span'); lg.className = 'lg'; lg.textContent = `ур. ${p.level || 1}`;
+    const b = document.createElement('b'); b.textContent = p.stage ? `${Math.floor(p.stage / 10) + 1}-${p.stage % 10 + 1}` : '—';
+    li.append(place, nm, lg, b);
+    el.append(li);
+  });
+}
+
 /* --- 50_arena.js --- */
 /* ===== Арена: асинхронные бои, рейтинг, лиги ===== */
 function seeded(seed) { let s = (seed * 9301 + 49297) % 233280 || 1; return () => ((s = (s * 16807) % 2147483647) / 2147483647); }
 const SHADOWS = [2350, 2150, 1980, 1820, 1690, 1560, 1440, 1330, 1230, 1150, 1080, 1020, 960].map((r, i) => ({ name: B.BOT_NAMES[(i * 7 + 3) % B.BOT_NAMES.length], rating: r, shadow: true }));
 
 const Arena = {
-  players: [], lastFetch: 0, lastPush: 0, opp: null, oppSeed: -1,
+  players: [], lastFetch: 0, lastPush: 0, opp: null, oppSeed: -1, netPlayers: [],
   cloudReady() { this.push(); },
+  async netPush() {
+    if (!S || !S.hero) return;
+    const ok = await NET.probe();
+    if (!ok) return;
+    const L = R.look, st = R.st;
+    await NET.arenaPush({
+      pid: S.pid, name: heroName(), rating: S.arena.rating, power: Math.round(R.power), level: S.level,
+      body: S.hero.body, hair: S.hero.hair,
+      st: { atk: st.atk, hp: st.hp, def: st.def, crit: st.crit, critDmg: st.critDmg, aspd: st.aspd },
+      look: { weapon: L.weapon, helmet: L.helmet, upper: L.upper, lower: L.lower, gloves: L.gloves, boots: L.boots, neck: L.neck, ear: L.ear, aura: L.aura },
+    });
+  },
   sanitize(id, d) {
     if (!d || typeof d !== 'object') return null;
     const num = (v, lo, hi) => { v = Number(v); return isFinite(v) ? clamp(v, lo, hi) : lo; };
-    const st = d.stats || {};
+    const st = d.stats || d.st || {};
     const lk = d.look || {};
     const gr = v => Math.round(num(v, -1, 6));
+    const lg = d.body === 'boy' ? 'boy' : 'girl';
     return {
-      id, real: true, name: String(d.name || 'Игрок').slice(0, 14), rating: Math.round(num(d.rating, 0, 9999)), power: num(d.power, 0, 1e300), level: Math.round(num(d.level, 1, 9999)),
-      body: d.body === 'boy' ? 'boy' : 'girl', hair: Math.round(num(d.hair, 0, 3)),
-      st: { atk: num(st.atk, 1, 1e300), hp: num(st.hp, 1, 1e300), def: num(st.def, 0, 1e300), crit: num(st.crit, 0, .8), critDmg: num(st.critDmg, 1, 50), aspd: num(st.aspd, .5, 3) },
-      look: { body: d.body === 'boy' ? 'boy' : 'girl', hair: Math.round(num(d.hair, 0, 3)), weapon: gr(lk.wg) >= 0 ? { g: gr(lk.wg), e: Math.round(num(lk.we, 0, 16)) } : null, helmet: gr(lk.helmet), upper: gr(lk.upper), lower: gr(lk.lower), gloves: gr(lk.gloves), boots: gr(lk.boots), neck: gr(lk.neck), ear: gr(lk.ear), aura: gr(lk.aura) },
+      id: id || d.pid, pid: d.pid || id, real: true, name: String(d.name || 'Игрок').slice(0, 14), rating: Math.round(num(d.rating, 0, 9999)), power: num(d.power, 0, 1e300), level: Math.round(num(d.level, 1, 9999)),
+      body: lg, hair: Math.round(num(d.hair ?? lk.hair, 0, 3)),
+      st: { atk: num(st.atk, 1, 1e300), hp: num(st.hp, 1, 1e300), def: num(st.def, 0, 1e300), crit: num(st.crit, 0, .9), critDmg: num(st.critDmg, 1, 50), aspd: num(st.aspd, .5, 12) },
+      look: { body: lg, hair: Math.round(num(d.hair ?? lk.hair, 0, 3)), weapon: lk.weapon && gr(lk.weapon.g) >= 0 ? { g: gr(lk.weapon.g), e: Math.round(num(lk.weapon.e, 0, 20)) } : null, helmet: gr(lk.helmet), upper: gr(lk.upper), lower: gr(lk.lower), gloves: gr(lk.gloves), boots: gr(lk.boots), neck: gr(lk.neck), ear: gr(lk.ear), aura: gr(lk.aura) },
     };
   },
   async refresh() {
+    await NET.probe();
+    if (NET.online) {
+      try {
+        const r = await NET.arenaList(S.pid, S.arena.rating, R.power);
+        if (r && Array.isArray(r.players)) this.players = r.players.map(p => this.sanitize(p.pid, p)).filter(Boolean);
+      } catch (e) { }
+      this.netPlayers = this.players;
+      if (this.players.length) return;
+    }
     if (!Cloud.db) return;
     try {
       const snap = await Cloud.db.collection('arena').orderBy('rating', 'desc').limit(60).get();
@@ -5282,22 +5656,32 @@ const Arena = {
     } catch (e) { }
   },
   onOpen() {
-    if (Date.now() - this.lastFetch > 30000 && Cloud.db) {
+    if (Date.now() - this.lastFetch > 30000) {
       this.lastFetch = Date.now();
       this.push();
-      this.refresh().then(() => { const b = $('arenaBoard'); if (b && R.tab === 'arena') b.innerHTML = boardHTML(); });
+      this.netPush();
+      this.refresh().then(() => {
+        Arena.opp = null; Arena.oppSeed = -1;
+        if (R.tab === 'arena' && this.players.length) renderPanel();
+      });
     }
   },
 };
 
+/* Соперники: в первую очередь реальные игроки с сервера, боты — только фон.
+   Статы реального игрока приводим к нашей мощи, чтобы не было «неубиваемых». */
+const BOT_F = [.84, .95, 1.02];
+function scaledStats(st, k) {
+  return { atk: Math.max(1, st.atk * k), hp: Math.max(1, st.hp * k), def: Math.max(0, st.def * k), crit: Math.min(.9, st.crit), critDmg: st.critDmg, aspd: clamp(st.aspd, .5, 12) };
+}
 function genOpponents() {
-  const r = seeded(S.arena.seed + S.level * 13), g0 = unlockedGrade();
-  const list = [.82, 1, 1.22].map((base, i) => {
-    const f = base * (.95 + r() * .1);
-    const st = { atk: R.st.atk * f, hp: R.st.hp * f, def: R.st.def * f, crit: R.st.crit, critDmg: R.st.critDmg, aspd: R.st.aspd * (.95 + r() * .1) };
+  const r = seeded(S.arena.seed + S.level * 13 + Math.floor(S.arena.rating)), g0 = unlockedGrade();
+  const list = BOT_F.map((base, i) => {
+    const f = base * (.97 + r() * .05);
+    const st = scaledStats({ atk: R.st.atk, hp: R.st.hp, def: R.st.def, crit: R.st.crit, critDmg: R.st.critDmg, aspd: R.st.aspd }, f);
     const body = r() < .5 ? 'girl' : 'boy', hair = Math.floor(r() * 4);
-    const g = clamp(g0 + (f > 1.1 ? 1 : f < .9 ? -1 : 0), 0, 6);
-    const e = Math.floor(r() * 9);
+    const g = clamp(g0 + (f > 1.01 ? 1 : f < .9 ? -1 : 0), 0, 6);
+    const e = Math.floor(r() * 7);
     return {
       name: B.BOT_NAMES[Math.floor(r() * B.BOT_NAMES.length)], body, hair, st, power: B.power(st),
       rating: Math.max(0, Math.round(S.arena.rating + (f - 1) * 350 + (r() - .5) * 60)),
@@ -5305,10 +5689,19 @@ function genOpponents() {
       real: false,
     };
   });
-  const cands = Arena.players.filter(p => p.id !== Cloud.uid);
-  if (cands.length) {
-    const near = cands.reduce((b, p) => Math.abs(p.rating - S.arena.rating) < Math.abs(b.rating - S.arena.rating) ? p : b, cands[0]);
-    list[1] = { ...near, power: B.power(near.st) };
+  // реальные соперники: до двух ближайших по рейтингу
+  const cands = [...(Arena.netPlayers || []), ...Arena.players]
+    .filter(p => p && p.st && p.pid !== S.pid && p.id !== S.pid)
+    .sort((a, b) => Math.abs(a.rating - S.arena.rating) - Math.abs(b.rating - S.arena.rating));
+  const used = new Set();
+  for (let slot = 1; slot >= 0 && cands.length; slot--) {
+    const p = cands.find(x => !used.has(x.pid || x.id));
+    if (!p) break;
+    used.add(p.pid || p.id);
+    const desired = R.power * (slot === 1 ? .92 : 1.04);
+    const basePower = B.power(p.st) || p.power || 1;
+    const k = clamp(Math.sqrt(desired / Math.max(1, basePower)), .78, 1.12);
+    list[slot] = { ...p, st: scaledStats(p.st, k), power: B.power(scaledStats(p.st, k)), real: true };
   }
   return list;
 }
@@ -5328,6 +5721,7 @@ function boardHTML() {
   }).join('');
 }
 function renderArena() {
+  if (!unlockOk('arena')) return lockCard('arena', 'Арена');
   const a = S.arena, li = B.league(a.rating), lg = B.LEAGUES[li], next = B.LEAGUES[li + 1];
   const canClaim = a.rewardDay !== dayKey();
   const ops = opponents();
@@ -5998,6 +6392,10 @@ document.addEventListener('click', async e => {
     case 'heroseg': R.heroSeg = b.dataset.v; renderPanel(); break;
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
     case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
+    case 'socialseg': R.socialSeg = b.dataset.v; renderPanel(); Social.enter(); break;
+    case 'chat-send': Social.send(); break;
+    case 'board-refresh': Social.loadBoard(); break;
+    case 'chat-retry': NET.probe(true).then(ok => { renderPanel(); Social.enter(); if (!ok) toast('Сервер недоступен'); }); break;
     // испытания
     case 'tower-fight': towerFightStart(); break;
     case 'tower-auto': towerAuto(); break;
@@ -6034,6 +6432,21 @@ document.addEventListener('click', async e => {
     case 'enchant': openEnchant(+b.dataset.id); break;
     case 'pick': if (modalState && !modalState.busy) { modalState.kind = b.dataset.v; rerenderEnchant(modalState); } break;
     case 'do-enchant': doEnchant(); break;
+    case 'auto-enchant': autoEnchant(); break;
+    case 'auto-stop': {
+      const st = modalState;
+      if (st && st.enchant && !st.autoRun) {
+        st.autoStop = +b.dataset.n;
+        S.settings.autoEnchantTo = st.autoStop;
+        saveLocal(); rerenderEnchant(st);
+      }
+      break;
+    }
+    case 'buy-again': {
+      const it = buyItem(b.dataset.slot, +b.dataset.g, { silent: true });
+      if (it) { toast(`Куплено заново: ${itemName(it)}`); closeModal(); renderPanel(); }
+      break;
+    }
     case 'buy-scrolls': R.shopTab = 'scrolls'; R.scrollGrade = +b.dataset.g; closeModal(); setTab('shop'); break;
     case 'sell': {
       const it = itemById(+b.dataset.id); if (!it || isEquipped(it)) break;
@@ -6117,14 +6530,17 @@ document.addEventListener('click', async e => {
     case 'test-no': if (modalState && modalState.done) modalState.done(false); break;
   }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !modal.hidden) closeModal();
+  if (e.key === 'Enter' && e.target && e.target.id === 'chatInput') { e.preventDefault(); Social.send(); }
+});
 document.addEventListener('input', e => {
   if (e.target.id === 'volMusic') { S.settings.music = e.target.value / 100; AU.setVolume('music', S.settings.music); }
   if (e.target.id === 'volSfx') { S.settings.sfx = e.target.value / 100; AU.setVolume('sfx', S.settings.sfx); }
 });
 document.addEventListener('change', e => { if (e.target.id === 'volSfx') AU.sfx('coin'); if (e.target.id === 'volMusic' || e.target.id === 'volSfx') saveLocal(); });
 $('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { AU.sfx('click'); setTab(b.dataset.tab); } });
-hud.bossBtn.addEventListener('click', () => { if (S.kills >= 10 && !R.boss) startBoss(); });
+hud.bossBtn.addEventListener('click', () => { if (S.kills >= B.STAGE_KILLS && !R.boss) startBoss(); });
 hud.autoBtn.addEventListener('click', () => { S.autoBoss = !S.autoBoss; updateHudStatic(); toast(S.autoBoss ? 'Босс будет вызываться сам' : 'Вы остаётесь на этапе'); });
 $('stageBtn').addEventListener('click', openMap);
 hud.settingsBtn.addEventListener('click', openSettings);
@@ -6154,6 +6570,7 @@ async function start(hot) {
   const local = isHot ? null : loadLocal();
   R.hadLocal = isHot || !!local;
   S = (isHot && migrate(hot.S)) || local || newState();
+  equipBestAll();
   R.offlineFrom = local ? S.savedAt : 0;
   if (isHot && ['hero', 'gear', 'pets', 'arena', 'trials', 'shop'].includes(hot.tab)) R.tab = hot.tab;
   dailyReset();
@@ -6194,7 +6611,7 @@ window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude
 if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
-    addPet, summon, startBoss, bossWin, dailyReset,
+    addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
   };
 }
 
