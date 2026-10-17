@@ -1351,11 +1351,13 @@ const BAL = (() => {
     { id: 'scrolls', name: 'Архив свитков',     icon: 'quests',  stage: 20, desc: 'Свитки заточки топового грейда' },
     { id: 'crystal', name: 'Кристальная шахта', icon: 'crystal', stage: 38, desc: 'Кристаллы для перековки' },
     { id: 'xp',      name: 'Зал памяти',        icon: 'hp',      stage: 55, desc: 'Опыт уровня' },
+    { id: 'petals',  name: 'Сакуровый склеп',   icon: 'petal',   stage: 62, desc: 'Лепестки и кристаллы' },
+    { id: 'blessed', name: 'Благословенный зал', icon: 'scroll', stage: 75, desc: 'Благословенные свитки' },
   ];
   const DUNGEON_BY = Object.fromEntries(DUNGEONS.map(d => [d.id, d]));
   const DKEYS = { perDay: 3, adExtra: 2, gemCost: 40, gemMax: 3 };
   function dungeonGuard(id, stage) {
-    const m = { gold: 1, scrolls: .9, crystal: 1, xp: .8 }[id] || 1;
+    const m = { gold: 1, scrolls: .9, crystal: 1, xp: .8, petals: 1.1, blessed: 1.2 }[id] || 1;
     return { hp: mHp(stage) * 9 * m, atk: mAtk(stage) * .85, def: defK(stage) * .7, crit: .05, critDmg: 1.5, aspd: 1, regen: 0 };
   }
   function dungeonReward(id, stage) {
@@ -1365,6 +1367,8 @@ const BAL = (() => {
       case 'scrolls': return { scrollsA: 2 + Math.floor(stage / 30), scrollsW: 1, blessedA: stage >= 30 ? 1 : 0 };
       case 'crystal': return { crystals: Math.round(30 * crMul(g) * 2) };
       case 'xp':      return { xp: Math.round(mXp(stage) * 70) };
+      case 'petals':  return { petals: 1 + Math.floor(stage / 35), crystals: Math.round(40 * crMul(g)) };
+      case 'blessed': return { blessedA: 1, blessedW: stage >= 80 ? 1 : 0, scrollsA: 1 };
     }
     return {};
   }
@@ -6275,7 +6279,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.5</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.6</p>`));
 }
 
 /* --- 35_trials.js --- */
