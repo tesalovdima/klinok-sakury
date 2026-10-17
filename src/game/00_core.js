@@ -96,51 +96,104 @@ const SKILL_MAX = 20;
 
 /* ---------- состояние ---------- */
 const SAVE_KEY = 'klinok-sakury-v1';
-// Версия 3: сброс прогресса по просьбе владельца перед тестированием. Сохранения младше обнуляются.
-const SAVE_VERSION = 3;
+// Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
+// Старые сохранения (v3) переводятся без потери прогресса.
+const SAVE_VERSION = 4;
 const zeros = () => Array(NG).fill(0);
+const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
+const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
+function fillDefaults(target, def) {
+  for (const k in def) {
+    if (target[k] === undefined) target[k] = clone(def[k]);
+    else if (isPlain(def[k]) && isPlain(target[k])) fillDefaults(target[k], def[k]);
+  }
+  return target;
+}
 function newState() {
   const equip = {}; B.SLOTS.forEach(s => equip[s.id] = null);
   equip.weapon = 1; equip.upper = 2;
+  const starterOpts = g => B.rollOpts(Math.random, g);
   return {
     v: SAVE_VERSION, savedAt: Date.now(), hero: null,
-    gold: 20, crystals: 0, gems: 200, level: 1, xp: 0, sp: 0,
+    gold: 20, crystals: 0, gems: 300, level: 1, xp: 0, sp: 0,
     growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
     skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
-    items: [{ id: 1, slot: 'weapon', g: 0, e: 0 }, { id: 2, slot: 'upper', g: 0, e: 0 }],
+    items: [{ id: 1, slot: 'weapon', g: 0, e: 0, pt: 0, opts: starterOpts(0) }, { id: 2, slot: 'upper', g: 0, e: 0, pt: 0, opts: starterOpts(0) }],
     equip, nextId: 3,
-    scrolls: { w: zeros(), a: zeros(), bw: zeros(), ba: zeros() },
-    stage: 0, maxStage: 0, kills: 0, autoBoss: true,
-    stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0 },
+    scrolls: { w: [0, 2, 0, 0, 0, 0, 0], a: [0, 3, 0, 0, 0, 0, 0], bw: zeros(), ba: zeros() },
+    stage: 0, maxStage: 0, bestStage: 0, kills: 0, autoBoss: true,
+    stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0, dungeonRuns: 0, awakenings: 0, rerolls: 0 },
     pets: { owned: {}, active: null },
-    gacha: { pity: 0, total: 0, tickets: 1 },
+    gacha: { pity: 0, total: 0, tickets: 1, first10: false },
     arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0 },
     quests: { day: '', prog: {}, claimed: {}, chest: false },
     ach: {},
     login: { idx: 0, last: '' },
     pass: { season: -1, xp: 0, free: [], prem: [], premium: false },
-    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [] },
+    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
     settings: { music: .55, sfx: .75 },
     intro: false,
+    aw: { petals: 0, count: 0, lvl: Object.fromEntries(B.AW_NODES.map(n => [n.id, 0])) },
+    tower: { floor: 0, best: 0, week: '', reward: 0, auto: false },
+    dungeon: { day: '', keys: B.DKEYS.perDay, ads: 0, buys: 0, runs: 0, stage: 0 },
+    fund: { owned: false, claimed: [] },
+    chapter: { idx: 0, claimed: [] },
   };
 }
 function migrate(o) {
+  if (!o || typeof o !== 'object') return newState();
+  if ((o.v || 1) < 3) return newState();          // совсем старые сохранения несовместимы
   const d = newState();
-  if (!o || typeof o !== 'object' || (o.v || 1) < SAVE_VERSION) return d;
-  for (const k in d) if (o[k] === undefined) o[k] = d[k];
-  for (const k of ['w', 'a', 'bw', 'ba']) { o.scrolls[k] = o.scrolls[k] || zeros(); while (o.scrolls[k].length < NG) o.scrolls[k].push(0); }
+  fillDefaults(o, d);
+  o.v = SAVE_VERSION;
+  for (const k of ['w', 'a', 'bw', 'ba']) {
+    o.scrolls[k] = Array.isArray(o.scrolls[k]) ? o.scrolls[k] : zeros();
+    while (o.scrolls[k].length < NG) o.scrolls[k].push(0);
+    o.scrolls[k] = o.scrolls[k].slice(0, NG).map(n => Math.max(0, Math.floor(n) || 0));
+  }
   for (const g of B.GROWTH) o.growth[g.id] = o.growth[g.id] || 0;
   for (const s of SKILLS) o.skills[s.id] = o.skills[s.id] || 0;
   for (const sl of B.SLOTS) if (!(sl.id in o.equip)) o.equip[sl.id] = null;
-  for (const k of ['stats', 'pets', 'gacha', 'arena', 'quests', 'login', 'pass', 'shop', 'boost', 'ads', 'settings'])
-    for (const kk in d[k]) if (o[k][kk] === undefined) o[k][kk] = d[k][kk];
+  if (!Array.isArray(o.items)) o.items = [];
+  for (const it of o.items) {
+    if (!Number.isFinite(it.id)) it.id = o.nextId++;
+    if (!Array.isArray(it.opts)) it.opts = seededOpts(it);
+    if (!Number.isFinite(it.pt)) it.pt = 0;
+    if (!Number.isFinite(it.e)) it.e = 0;
+    if (!Number.isFinite(it.g)) it.g = 0;
+  }
+  o.nextId = Math.max(o.nextId || 3, ...o.items.map(i => i.id + 1), 3);
+  if (!isPlain(o.aw.lvl)) o.aw.lvl = {};
+  for (const n of B.AW_NODES) o.aw.lvl[n.id] = clamp(Math.floor(o.aw.lvl[n.id] || 0), 0, n.max);
+  o.aw.petals = Math.max(0, Math.floor(o.aw.petals || 0));
+  o.bestStage = Math.max(o.bestStage || 0, o.maxStage || 0);
+  o.tower.best = Math.max(o.tower.best || 0, o.tower.floor || 0);
+  if (!Array.isArray(o.fund.claimed)) o.fund.claimed = [];
+  if (!Array.isArray(o.chapter.claimed)) o.chapter.claimed = [];
+  o.chapter.idx = clamp(Math.floor(o.chapter.idx || 0), 0, 40);
+  if (!Array.isArray(o.pass.free)) o.pass.free = [];
+  if (!Array.isArray(o.pass.prem)) o.pass.prem = [];
   return o;
 }
+// свойства предмета из старых сохранений: стабильны, чтобы не менялись при перезагрузке
+function seededOpts(it) {
+  let s = (it.id * 2654435761 + (it.g + 1) * 40503) % 2147483647 || 1;
+  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  return B.rollOpts(r, it.g);
+}
 let S = null;
-function loadLocal() { try { const raw = localStorage.getItem(SAVE_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) { } return null; }
-function saveLocal() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
+function rawGet() {
+  try { const st = P.getStorage && P.getStorage(); const v = st && st.getItem(SAVE_KEY); if (v) return v; } catch (e) { }
+  try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
+}
+function rawSet(v) {
+  try { const st = P.getStorage && P.getStorage(); if (st) st.setItem(SAVE_KEY, v); } catch (e) { }
+  try { localStorage.setItem(SAVE_KEY, v); } catch (e) { }
+}
+function loadLocal() { try { const raw = rawGet(); if (raw) return migrate(JSON.parse(raw)); } catch (e) { } return null; }
+function saveLocal() { if (!S) return; S.savedAt = Date.now(); try { rawSet(JSON.stringify(S)); } catch (e) { } }
 
 /* ---------- облако: база артефакта или Яндекс ---------- */
 const Cloud = {
@@ -196,9 +249,10 @@ const R = {
   hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, phase: 0, run: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
-  st: null, pb: null, look: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
-  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
+  st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
+  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
+  bossCd: 0, bossFails: 0, towerRun: false,
 };
 SKILLS.forEach(s => R.cd[s.id] = 0);
 const isBoy = () => !!(S && S.hero && S.hero.body === 'boy');
@@ -225,11 +279,18 @@ const itemById = id => S.items.find(i => i.id === id);
 const isEquipped = it => S.equip[it.slot] === it.id;
 const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
 const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
-const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита' };
-const statStr = (k, v) => ['atkPct', 'hpPct', 'crit', 'critDmg'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
-function itemScore(slot, g, e) {
-  const s = B.itemStats(slot, g, e);
-  return (s.atk || 0) * 3 + (s.def || 0) * 4 + (s.hp || 0) * .3 + (s.atkPct || 0) * 1e4 + (s.hpPct || 0) * 1e4 + (s.crit || 0) * 3e4 + (s.critDmg || 0) * 1e4;
+const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', defPct: 'Защита', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
+const statStr = (k, v) => ['atkPct', 'hpPct', 'defPct', 'crit', 'critDmg', 'goldPct', 'xpPct', 'dropPct'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
+function itemTotals(it) {
+  const s = B.itemStats(it.slot, it.g, it.e || 0);
+  const o = B.optStats(it.opts);
+  for (const k in o) s[k] = (s[k] || 0) + o[k];
+  return s;
+}
+function itemScore(slot, g, e, opts) {
+  const s = itemTotals({ slot, g, e, opts });
+  return (s.atk || 0) * 3 + (s.def || 0) * 4 + (s.hp || 0) * .3 + (s.atkPct || 0) * 1e4 + (s.hpPct || 0) * 1e4
+    + (s.defPct || 0) * 1e4 + (s.crit || 0) * 3e4 + (s.critDmg || 0) * 1e4 + (s.goldPct || 0) * 4e3 + (s.xpPct || 0) * 4e3 + (s.dropPct || 0) * 6e3;
 }
 function canEnchant(it) { if (!it || it.g === 0 || it.e >= B.MAX_ENCH) return false; const k = scrollKind(it.slot); return S.scrolls[k][it.g] + S.scrolls['b' + k][it.g] > 0; }
 function glowClass(e) { return e >= 16 ? 'glow16' : e >= 13 ? 'glow13' : e >= 10 ? 'glow10' : e >= 7 ? 'glow7' : e >= 4 ? 'glow4' : ''; }
@@ -238,14 +299,20 @@ function tileHTML(it, attrs = '') {
 }
 function equippedList() {
   const out = [];
-  for (const sl of B.SLOTS) { const id = S.equip[sl.id]; const it = id && itemById(id); if (it) out.push({ slot: it.slot, g: it.g, e: it.e }); }
+  for (const sl of B.SLOTS) { const id = S.equip[sl.id]; const it = id && itemById(id); if (it) out.push({ slot: it.slot, g: it.g, e: it.e, opts: it.opts }); }
   return out;
 }
 function slotGrade(slot) { const id = S.equip[slot]; const it = id && itemById(id); return it ? it.g : -1; }
+const awOf = () => B.awBonus(S && S.aw ? S.aw.lvl : {});
 function recalc() {
   const prevMax = R.st ? R.st.hp : 0;
+  const aw = awOf();
   R.pb = B.petBonuses(S.pets.owned, S.pets.active);
-  R.st = B.heroStats(S.level, S.growth, equippedList(), { atkPct: R.pb.atkPct, hpPct: R.pb.hpPct, crit: R.pb.crit, critDmg: R.pb.critDmg });
+  R.aw = aw;
+  R.st = B.heroStats(S.level, S.growth, equippedList(), {
+    atkPct: R.pb.atkPct + aw.atkPct, hpPct: R.pb.hpPct + aw.hpPct, crit: R.pb.crit + aw.crit, critDmg: R.pb.critDmg,
+    goldPct: aw.goldPct, xpPct: aw.xpPct, dropPct: aw.dropPct,
+  });
   R.power = B.power(R.st);
   const h = R.hero;
   if (prevMax && R.st.hp > prevMax && !h.dead) h.hp += R.st.hp - prevMax;
@@ -262,5 +329,17 @@ function recalc() {
 }
 const red = s => R.st.def / (R.st.def + B.defK(s));
 const spiritBonus = () => R.buffs.spirit > 0 ? SK.spirit.mult(S.skills.spirit) : 0;
-const goldMul = () => (1 + R.pb.goldPct) * (Date.now() < S.boost.goldUntil ? 2 : 1);
+const goldMul = () => (1 + R.pb.goldPct + (R.st.goldPct || 0)) * (Date.now() < S.boost.goldUntil ? 2 : 1);
+const xpMul = () => (1 + R.pb.xpPct + (R.st.xpPct || 0));
+const dropMul = () => 1 + R.pb.dropPct + (R.st.dropPct || 0);
+const offlineHours = () => Math.min(24, 8 + (R.aw ? R.aw.offline : 0));
+const bossTime = () => B.BOSS.time + (R.aw ? R.aw.bossTime : 0);
 const petsOwnedCount = () => Object.keys(S.pets.owned).length;
+/* шанс заточки с учётом искры неудач и древа пробуждения */
+function enchInfo(it) {
+  const target = it.e + 1;
+  const base = B.enchChance(target);
+  const pity = Math.min(B.ENCH.pityMax, (it.pt || 0) * B.ENCH.pityStep);
+  const aw = R.aw ? R.aw.ench : 0;
+  return { target, base, pity, aw, ch: Math.min(.95, base + pity + aw), safe: target <= B.SAFE, destructive: target >= B.ENCH.destroyFrom };
+}

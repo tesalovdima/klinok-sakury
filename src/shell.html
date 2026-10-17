@@ -1,4 +1,5 @@
 <title>Клинок Сакуры</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%231f1a3e'/%3E%3Cg fill='%23ff8fc1'%3E%3Cellipse cx='32' cy='18' rx='7' ry='10'/%3E%3Cellipse cx='45' cy='27' rx='7' ry='10' transform='rotate(72 45 27)'/%3E%3Cellipse cx='40' cy='42' rx='7' ry='10' transform='rotate(144 40 42)'/%3E%3Cellipse cx='24' cy='42' rx='7' ry='10' transform='rotate(216 24 42)'/%3E%3Cellipse cx='19' cy='27' rx='7' ry='10' transform='rotate(288 19 27)'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='6' fill='%23ffd760'/%3E%3C/svg%3E">
 <meta name="claude:viewport-fit-sides" content="cover">
 <!--FONTS-->
 <style>
@@ -48,9 +49,10 @@
 
   <nav id="tabs" role="tablist" aria-label="Разделы">
     <button role="tab" data-tab="hero" aria-selected="true"><img data-ic="hero" alt=""><span id="heroTabLabel">Героиня</span><i class="dot" id="heroDot" hidden></i></button>
-    <button role="tab" data-tab="gear" aria-selected="false"><img data-ic="bag" alt="">Снаряжение<i class="dot" id="gearDot" hidden></i></button>
+    <button role="tab" data-tab="gear" aria-selected="false"><img data-ic="bag" alt="">Вещи<i class="dot" id="gearDot" hidden></i></button>
     <button role="tab" data-tab="pets" aria-selected="false"><img data-ic="paw" alt="">Питомцы<i class="dot" id="petDot" hidden></i></button>
     <button role="tab" data-tab="arena" aria-selected="false"><img data-ic="arena" alt="">Арена<i class="dot" id="arenaDot" hidden></i></button>
+    <button role="tab" data-tab="trials" aria-selected="false"><img data-ic="tower" alt="">Башня<i class="dot" id="trialDot" hidden></i></button>
     <button role="tab" data-tab="shop" aria-selected="false"><img data-ic="shop" alt="">Магазин<i class="dot" id="shopDot" hidden></i></button>
   </nav>
 
@@ -58,6 +60,7 @@
     <div class="intro-inner">
       <h1 class="logo"><span>Клинок</span><span>Сакуры</span></h1>
       <p class="intro-sub" id="introSub">Выберите героя для своего пути</p>
+      <p class="intro-feats">Автобой · грейды и заточка в духе Lineage 2 · питомцы · башня · пробуждение</p>
       <div class="pick">
         <button class="pick-card" data-body="girl" aria-pressed="true"><canvas></canvas><b>Героиня</b></button>
         <button class="pick-card" data-body="boy" aria-pressed="false"><canvas></canvas><b>Герой</b></button>

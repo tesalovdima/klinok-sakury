@@ -2,8 +2,8 @@
 const panel = $('panel');
 function renderPanel() {
   if (!S || !S.hero) { panel.innerHTML = ''; return; }
-  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, shop: renderShop }[R.tab];
-  panel.innerHTML = fn();
+  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, trials: renderTrials, shop: renderShop }[R.tab];
+  panel.innerHTML = fn ? fn() : '';
   if (R.tab === 'gear') setupDoll();
   if (R.tab === 'pets') setupPetStage();
   if (R.tab === 'arena') Arena.onOpen();
@@ -38,7 +38,22 @@ function statCells() {
 }
 function renderHero() {
   const spReady = S.sp > 0 && SKILLS.some(s => S.level >= s.unlock && S.skills[s.id] < SKILL_MAX);
+  const cp = chapterProgress();
+  const chIdx = Math.min(S.chapter.idx + 1, CHAPTERS.length);
+  const chapter = !cp ? '' : `<section class="card chapter-card ${cp.done ? 'done' : ''}">
+      <img src="${A.miscIcon('quests', 64)}" alt="">
+      <div class="row-main"><b>Глава ${chIdx} · ${cp.c.title}</b><span class="meta">${cp.c.text}</span>
+        <div class="bar mini"><i style="width:${Math.min(100, cp.v / cp.c.goal * 100)}%"></i></div>
+        <span class="meta">${fmt(cp.v)} / ${fmt(cp.c.goal)}</span></div>
+      ${cp.done ? `<button class="buy pink" data-act="chapter-claim">Забрать</button>` : ''}
+    </section>`;
+  const f = fundUi();
+  const fundCard = S.fund.owned && f.current ? `<section class="card chest-card"><img src="${A.miscIcon('starter', 64)}" alt="">
+      <div class="row-main"><b>Фонд сакуры</b><span class="meta">Уровень ${f.current} достигнут · ${B.FUND.gems} 💎</span></div>
+      <button class="buy pink" data-act="fund-claim" data-l="${f.current}">Забрать</button></section>` : '';
   return `
+    ${chapter}
+    ${fundCard}
     <section class="card hero-card">
       <img class="portrait" src="${A.heroIcon(S.hero.body, S.hero.hair, 128)}" alt="">
       <div class="hero-meta"><h2>${esc(heroName())}</h2><span class="power">Боевая мощь<b id="powerVal">${fmt(R.power)}</b></span></div>
@@ -165,28 +180,38 @@ function drawDoll() {
 }
 
 /* ---------- карточка предмета ---------- */
-function compareRows(slot, g, e, vsSt) {
-  const cur = B.itemStats(slot, g, e);
+function compareRows(slot, g, e, opts, vsSt) {
+  const cur = itemTotals({ slot, g, e, opts });
   return Object.keys(cur).map(k => {
     const v = cur[k], o = vsSt ? (vsSt[k] || 0) : null;
     const cls = o === null ? '' : v > o + 1e-9 ? 'up' : v < o - 1e-9 ? 'down' : '';
-    return `<dt>${STAT_LABEL[k]}</dt><dd class="${cls}">${statStr(k, v)}</dd><dd>${o === null ? '' : 'сейчас ' + statStr(k, o)}</dd>`;
+    return `<dt>${STAT_LABEL[k] || k}</dt><dd class="${cls}">${statStr(k, v)}</dd><dd>${o === null ? '' : 'сейчас ' + statStr(k, o)}</dd>`;
   }).join('');
+}
+function optsHTML(it) {
+  if (it.g === 0) return '<p class="note">Предметы без грейда нельзя заточить или перековать.</p>';
+  const opts = it.opts || [];
+  const cost = B.rerollCost(it.g);
+  const rows = opts.length ? opts.map(o => `<span class="opt-chip">${B.OPT_BY[o.k] ? B.OPT_BY[o.k].name : o.k} <b>${statStr(o.k, o.v)}</b></span>`).join('')
+    : '<span class="note">Грань пуста — перекуйте, чтобы получить свойства.</span>';
+  return `<div class="opts-block"><div class="opts-head"><b>Грань предмета</b><span class="sub">${opts.length} из ${B.optCount(it.g)}</span></div>
+    <div class="opt-chips">${rows}</div>
+    <button class="buy ghost small ${S.crystals >= cost ? '' : 'poor'}" data-act="reroll" data-id="${it.id}">Перековать · <img src="${A.miscIcon('crystal', 32)}" alt="">${fmt(cost)}</button></div>`;
 }
 function openItem(id) {
   const it = itemById(id); if (!it) return;
   const eq = isEquipped(it), gr = B.GRADES[it.g];
   const eqId = S.equip[it.slot], eqIt = !eq && eqId && itemById(eqId);
-  const vs = eqIt ? B.itemStats(eqIt.slot, eqIt.g, eqIt.e) : null;
+  const vs = eqIt ? itemTotals(eqIt) : null;
   const lvOk = S.level >= gr.lvl, k = scrollKind(it.slot), canEnch = it.g > 0 && it.e < B.MAX_ENCH;
   openModal(sheet(`<span class="gtext g${it.g}">${itemName(it)}</span>`, `${B.SLOT[it.slot].name} · ${gr.label}${eq ? ' · надето' : ''}`, `
-    <dl class="compare">${compareRows(it.slot, it.g, it.e, vs)}</dl>
+    <dl class="compare">${compareRows(it.slot, it.g, it.e, it.opts, vs)}</dl>
+    ${optsHTML(it)}
     ${!lvOk ? `<p class="note warn">Нужен уровень ${gr.lvl}, чтобы надеть этот предмет.</p>` : ''}
-    ${it.g === 0 ? '<p class="note">Предметы без грейда нельзя заточить.</p>'
-      : `<p class="note">Свитков ${B.GRADES[it.g].short} для ${k === 'w' ? 'оружия' : 'доспехов'}: обычных ${S.scrolls[k][it.g]}, благословенных ${S.scrolls['b' + k][it.g]}.</p>`}
+    ${it.g === 0 ? '' : `<p class="note">Свитков ${B.GRADES[it.g].short} для ${k === 'w' ? 'оружия' : 'доспехов'}: обычных ${S.scrolls[k][it.g]}, благословенных ${S.scrolls['b' + k][it.g]}.</p>`}
     <div class="btn-row">
       ${eq ? `<button class="buy ghost" data-act="unequip" data-id="${it.id}">Снять</button>` : `<button class="buy" data-act="equip" data-id="${it.id}" ${lvOk ? '' : 'disabled'}>Надеть</button>`}
-      <button class="buy pink" data-act="enchant" data-id="${it.id}" ${canEnch ? '' : 'disabled'}>${it.e >= B.MAX_ENCH ? 'Максимум +16' : 'Заточить'}</button>
+      <button class="buy pink" data-act="enchant" data-id="${it.id}" ${canEnch ? '' : 'disabled'}>${it.e >= B.MAX_ENCH ? `Максимум +${B.MAX_ENCH}` : 'Заточить'}</button>
     </div>
     ${eq ? '' : `<div class="btn-row">
       <button class="buy ghost" data-act="sell" data-id="${it.id}"><img src="${A.miscIcon('gold', 32)}" alt="">Продать за ${fmt(B.sellPrice(it.slot, it.g))}</button>
@@ -203,27 +228,29 @@ function removeItem(id) { const it = itemById(id); if (!it) return; if (S.equip[
 
 /* ---------- заточка ---------- */
 function enchantHTML(it, st) {
-  const k = scrollKind(it.slot), target = it.e + 1, ch = B.enchChance(target);
+  const k = scrollKind(it.slot), info = enchInfo(it), target = info.target, ch = info.ch;
   const nN = S.scrolls[k][it.g], nB = S.scrolls['b' + k][it.g];
   if (st.kind === 'n' && !nN && nB) st.kind = 'b';
   if (st.kind === 'b' && !nB && nN) st.kind = 'n';
   const have = st.kind === 'n' ? nN : nB;
-  const cls = ch >= 1 ? 'safe' : ch >= .5 ? 'risky' : 'deadly';
-  const now = B.itemStats(it.slot, it.g, it.e), nxt = B.itemStats(it.slot, it.g, target);
+  const cls = info.safe ? 'safe' : info.destructive ? 'deadly' : 'risky';
+  const now = itemTotals(it), nxt = B.itemStats(it.slot, it.g, target);
   const kindName = k === 'w' ? 'оружие' : 'доспех', cy = B.crystalYield(it.slot, it.g, it.e);
+  const maxed = it.e >= B.MAX_ENCH;
   return sheet('Заточка', `<span class="gtext g${it.g}">${itemName(it)}</span>`, `
     <div class="forge"><canvas id="forgeCv"></canvas>${tileHTML(it, 'id="forgeTile" tabindex="-1"')}<div class="forge-result" id="forgeRes"></div></div>
-    ${it.e >= B.MAX_ENCH ? '<p class="chance safe">Достигнута максимальная заточка <b>+16</b></p>' : `
+    ${maxed ? `<p class="chance safe">Достигнута максимальная заточка <b>+${B.MAX_ENCH}</b></p>` : `
     <div class="ench-line"><span class="gtext g${it.g}">+${it.e}</span><span class="arrow">→</span><span>+${target}</span></div>
-    <p class="chance ${cls}">Шанс успеха <b>${Math.round(ch * 100)}%</b>${ch >= 1 ? ' · безопасно до +3' : ''}</p>
+    <p class="chance ${cls}">Шанс успеха <b>${Math.round(ch * 100)}%</b>${info.safe ? ' · безопасно до +3' : info.pity > 0 ? ` · искра +${Math.round(info.pity * 100)}%` : ''}</p>
     <dl class="compare">${Object.keys(nxt).map(s => `<dt>${STAT_LABEL[s]}</dt><dd>${statStr(s, now[s])}</dd><dd class="up">${statStr(s, nxt[s])}</dd>`).join('')}</dl>
     <div class="scroll-pick" role="group" aria-label="Свиток">
       <button data-act="pick" data-v="n" aria-pressed="${st.kind === 'n'}" ${nN ? '' : 'disabled'}><img src="${A.scrollIcon(k === 'w' ? 'weapon' : 'armor', it.g, false)}" alt=""><b>Свиток: ${kindName} ${B.GRADES[it.g].short}</b><span>Есть ${nN}</span></button>
       <button data-act="pick" data-v="b" aria-pressed="${st.kind === 'b'}" ${nB ? '' : 'disabled'}><img src="${A.scrollIcon(k === 'w' ? 'weapon' : 'armor', it.g, true)}" alt=""><b>Благословенный</b><span>Есть ${nB}</span></button>
     </div>
-    ${ch >= 1 ? '<p class="note">Безопасная заточка: предмет не пострадает.</p>'
+    ${info.safe ? '<p class="note">Безопасная заточка: предмет не пострадает.</p>'
       : st.kind === 'b' ? '<p class="note">Благословенный свиток: при неудаче заточка сбросится до +0, предмет уцелеет.</p>'
-      : `<p class="note warn">При неудаче предмет разрушится и превратится в ${fmt(cy)} ${plural(cy, CRY_W)}. Новый придётся покупать в магазине.</p>`}
+      : info.destructive ? `<p class="note warn">При неудаче предмет разрушится и превратится в ${fmt(cy)} ${plural(cy, CRY_W)}. Выше +7 рискуйте только с запасом.</p>`
+      : `<p class="note">При неудаче заточка откатится до +${B.ENCH.fallback}, предмет уцелеет. Каждая неудача даёт искру: +6% к следующей попытке.</p>`}
     ${have ? '<button class="buy pink wide" data-act="do-enchant">Заточить</button>'
       : `<button class="buy wide" data-act="buy-scrolls" data-g="${it.g}">Нет свитков: купить в магазине</button>`}`}`);
 }
@@ -284,23 +311,23 @@ function doEnchant() {
   requestAnimationFrame(ramp);
 }
 function resolveEnchant(st, it, key) {
-  const target = it.e + 1, ch = B.enchChance(target), blessed = key[0] === 'b';
+  const target = it.e + 1, info = enchInfo(it), ch = info.ch, blessed = key[0] === 'b';
   S.stats.enchants++; quest('enchant');
   const res = $('forgeRes'), tile = $('forgeTile');
   const finish = (ms) => setTimeout(() => { if (modalState === st) { st.busy = false; st.power = 0; st.color = '#ff8fc1'; rerenderEnchant(st); } }, RM ? 400 : ms);
   if (rnd() < ch) {
-    it.e = target; S.stats.best = Math.max(S.stats.best, target);
+    it.e = target; it.pt = 0; S.stats.best = Math.max(S.stats.best, target);
     st.color = '#ffd760'; burst(st, ['#ffd760', '#ffffff', '#ff8fc1'], false, 40);
     res.className = 'forge-result ok'; res.innerHTML = `+${target} Успех!`;
     log(`${B.NAMES[it.slot][it.g]} заточен до +${target}.`, 'good');
     AU.sfx('success'); recalc(); checkAch(); updateSideButtons(); finish(1100);
   } else if (blessed) {
-    const was = it.e; it.e = 0;
+    const was = it.e; it.e = 0; it.pt = 0;
     st.color = '#7cc8ff'; burst(st, ['#7cc8ff', '#ffffff'], false, 26);
     res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Благословение спасло предмет. Заточка +${was} сброшена до +0.</small>`;
     log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +0.`, 'bad');
     AU.sfx('fail'); recalc(); finish(1600);
-  } else {
+  } else if (info.destructive) {
     const cry = B.crystalYield(it.slot, it.g, it.e), nm = itemName(it), slot = it.slot, g = it.g;
     removeItem(it.id); S.crystals += cry; S.stats.breaks++;
     recalc();
@@ -318,6 +345,13 @@ function resolveEnchant(st, it, key) {
       sh.insertAdjacentHTML('beforeend', `<p class="note">Новый ${B.NAMES[slot][g]} стоит ${fmt(B.price(slot, g))} золота.</p>
         <div class="btn-row"><button class="buy" data-act="goshop" data-g="${g}">Купить заново</button><button class="buy ghost" data-act="close">Закрыть</button></div>`);
     }, RM ? 400 : 1300);
+  } else {
+    const was = it.e;
+    it.e = B.ENCH.fallback; it.pt = (it.pt || 0) + 1;
+    st.color = '#ff9a5c'; burst(st, ['#ff9a5c', '#ffffff'], false, 26);
+    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Заточка +${was} откатилась до +${B.ENCH.fallback}. Искра даст +${Math.round(Math.min(B.ENCH.pityMax, it.pt * B.ENCH.pityStep) * 100)}% к следующей попытке.</small>`;
+    log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +${B.ENCH.fallback}. Накоплена искра.`, 'bad');
+    AU.sfx('fail'); recalc(); finish(1600);
   }
   if (R.tab === 'gear') renderPanel();
 }
@@ -378,10 +412,10 @@ function buyItem(slot, g) {
   const p = B.price(slot, g);
   if (S.gold < p || S.level < B.GRADES[g].lvl) { toast(S.gold < p ? 'Не хватает золота' : `Нужен уровень ${B.GRADES[g].lvl}`); return; }
   S.gold -= p;
-  const it = { id: S.nextId++, slot, g, e: 0 };
+  const it = { id: S.nextId++, slot, g, e: 0, pt: 0, opts: B.rollOpts(rnd, g) };
   S.items.push(it);
   const curId = S.equip[slot], cur = curId && itemById(curId);
-  if (!cur || itemScore(slot, g, 0) > itemScore(cur.slot, cur.g, cur.e)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
+  if (!cur || itemScore(slot, g, 0, it.opts) > itemScore(cur.slot, cur.g, cur.e, cur.opts)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
   else toast(`${itemName(it)} в сумке`);
   log(`Куплено: ${itemName(it)}.`, 'sys');
   AU.sfx('buy');
@@ -438,5 +472,5 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 2.0</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.0</p>`));
 }

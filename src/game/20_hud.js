@@ -1,6 +1,6 @@
 /* ===== HUD, журнал, всплывашки, модальные окна, музыка ===== */
 const hud = {};
-['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
+['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
 
 function updateHudStatic() {
   if (!S) return;
@@ -17,8 +17,10 @@ function updateHudStatic() {
   hud.stageRow.hidden = inBoss; hud.bossRow.hidden = !inBoss;
   if (R.boss) hud.bossName.textContent = R.boss.m.name;
   const spReady = S.sp > 0 && SKILLS.some(s => S.level >= s.unlock && S.skills[s.id] < SKILL_MAX);
-  hud.heroDot.hidden = !spReady; hud.heroDot.textContent = S.sp;
+  hud.heroDot.hidden = !(spReady || chaptersReady() || fundClaimable().length);
+  hud.heroDot.textContent = S.sp || '';
   hud.heroTabLabel.textContent = G('Героиня', 'Герой');
+  hud.trialDot.hidden = !(towerClaimable() || chaptersReady() > 0);
   updateSideButtons();
 }
 function updateSideButtons() {
@@ -27,7 +29,7 @@ function updateSideButtons() {
   hud.questDot.hidden = !q; hud.questDot.textContent = q;
   const gift = Monet.giftReady();
   hud.giftDot.hidden = !gift;
-  hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()));
+  hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()) || (!S.gacha.first10 && S.gems >= B.GACHA.first10));
   hud.arenaDot.hidden = !(S.arena.tickets > 0 || S.arena.rewardDay !== dayKey());
   hud.shopDot.hidden = !(S.shop.monthlyUntil > Date.now() && S.shop.monthlyDay !== dayKey());
   hud.gearDot.hidden = !S.items.some(it => isEquipped(it) && canEnchant(it));

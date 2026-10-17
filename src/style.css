@@ -298,7 +298,7 @@ img { -webkit-user-drag: none; user-select: none; }
 /* ---------- таб-бар ---------- */
 #tabs {
   flex: 0 0 auto;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   padding: 6px var(--gutter-r) 6px var(--gutter-l);
   background: var(--night);
   box-shadow: 0 -1px 0 var(--seam);
@@ -306,9 +306,9 @@ img { -webkit-user-drag: none; user-select: none; }
 #tabs button {
   position: relative; border: 0; background: none; padding: 4px 0 2px;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 11px; font-weight: 800; color: var(--mist);
+  font-size: 10.5px; font-weight: 800; color: var(--mist);
 }
-#tabs img { width: 30px; height: 30px; transition: transform .15s; }
+#tabs img { width: 27px; height: 27px; transition: transform .15s; }
 #tabs button[aria-selected="true"] { color: var(--ink); }
 #tabs button[aria-selected="true"] img { transform: translateY(-3px) scale(1.08); filter: drop-shadow(0 0 6px rgba(255, 143, 193, .7)); }
 #tabs button[aria-selected="true"]::after { content: ""; position: absolute; bottom: -6px; width: 26px; height: 3px; border-radius: 3px; background: var(--petal); }
@@ -579,6 +579,7 @@ button.cur { border: 0; cursor: pointer; }
   text-shadow: 0 3px 0 var(--petal-deep), 0 6px 0 #2b1532, 0 0 30px rgba(255, 143, 193, .6); display: flex; flex-direction: column; }
 .logo span:last-child { color: var(--petal); text-shadow: 0 3px 0 #9a2a5a, 0 6px 0 #2b1532, 0 0 30px rgba(255, 143, 193, .6); }
 .intro-sub { margin: 0; text-align: center; color: var(--mist); font-weight: 700; }
+.intro-feats { margin: -6px 0 2px; text-align: center; font-size: 11.5px; color: var(--mist); opacity: .85; }
 .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pick-card { border: 0; padding: 0 0 10px; border-radius: 18px; background: var(--lacquer-2); display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: inset 0 0 0 2px transparent; transition: transform .15s, box-shadow .15s; }
 .pick-card canvas { width: 100%; height: 190px; display: block; }
@@ -609,3 +610,57 @@ body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none
 input { -webkit-user-select: text; user-select: text; }
 
 .tile.can-ench::before { content: ""; position: absolute; left: 5px; top: 5px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 7px solid var(--jade); filter: drop-shadow(0 1px 1px #000); }
+
+/* отключённые яркие кнопки не должны выглядеть активными */
+.buy.pink:disabled, .buy.pink.poor, .buy.ad:disabled, .buy.ad.poor, .buy.ghost:disabled { background: #3a3160; color: #8a80b5; }
+.buy.pink:disabled::before, .buy.ad:disabled::before { display: none; }
+
+/* ====== версия 3: главы, грань, башня, подземелья, пробуждение ====== */
+.chapter-card { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--petal) 14%, var(--lacquer-2)), var(--lacquer-2) 65%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--petal) 35%, transparent); }
+.chapter-card > img { width: 44px; height: 44px; }
+.chapter-card.done { box-shadow: inset 0 0 0 2px var(--leaf); }
+.chapter-card .meta { overflow-wrap: anywhere; }
+
+.opts-block { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 12px; background: var(--night); }
+.opts-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.opts-head b { font: 13px/1 var(--font-display); color: var(--mist); }
+.opt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt-chip { font: 800 12px/1 var(--font-ui); padding: 5px 9px; border-radius: 8px; background: var(--lacquer-2); color: var(--mist); }
+.opt-chip b { color: var(--jade); font-family: var(--font-display); font-weight: 400; margin-left: 2px; }
+.opts-block .buy { align-self: flex-start; }
+
+.tower-card { background: radial-gradient(circle at 50% -10%, #3b2f72, var(--lacquer-2) 70%); }
+.tower-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.tower-num { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 10px 0 6px; }
+.tower-num b { font: 44px/1 var(--font-display); color: var(--petal); text-shadow: 0 0 20px rgba(255, 143, 193, .55); }
+.tower-num span { font: 800 10.5px/1 var(--font-ui); color: var(--mist); letter-spacing: .08em; }
+
+.dungeon-head { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px 12px; align-items: center; }
+.dungeon-head > img { width: 44px; height: 44px; }
+.dungeon-head .btn-row { grid-column: 1 / -1; }
+
+.awaken-hero { background: radial-gradient(circle at 85% -10%, rgba(255, 143, 193, .3), var(--lacquer-2) 68%); }
+.awaken-tree .row-main em { font-style: normal; color: var(--jade); }
+.awaken-tree .row { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.awaken-tree .row > img { width: 40px; height: 40px; }
+
+.duel { position: relative; height: 236px; border-radius: 16px; overflow: hidden; background: #120e26; }
+.duel canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.duel-bars { position: absolute; left: 10px; right: 10px; top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.duel-bars span { display: block; font: 800 11.5px/1.2 var(--font-ui); text-shadow: 0 1px 2px #000; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.duel-bars .r { text-align: right; }
+.duel-bars .r .bar > i { left: auto; right: 0; }
+.duel .forge-result { bottom: 10px; }
+.duel-sheet .forge-result { bottom: 8px; }
+.duel-sheet .btn-row .buy { flex: 1 1 90px; }
+
+.gem-pack { position: relative; }
+.pack-badge { position: absolute; right: 6px; top: 6px; font: 900 10px/1 var(--font-display); font-style: normal; padding: 3px 5px; border-radius: 6px; background: var(--leaf); color: #2b1532; }
+.quests-sheet .seg button { font-size: 10.5px; }
+@media (max-width: 380px) {
+  #tabs button { font-size: 9.5px; }
+  #tabs img { width: 24px; height: 24px; }
+  .tower-num b { font-size: 36px; }
+}

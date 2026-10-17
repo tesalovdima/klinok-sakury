@@ -4,7 +4,7 @@ const gameParts = fs.readdirSync(path.join(__dirname, 'src/game')).filter(f => f
 const game = "(() => {\n'use strict';\n" + gameParts.map(f => `/* --- ${f} --- */\n` + r('game/' + f)).join('\n') + "\n})();";
 const scripts = [
   r('balance.js').replace("if (typeof module !== 'undefined') module.exports = BAL;", ''),
-  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('audio.js'), r('platform.js'), game,
+  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), game,
 ].join('\n');
 const GOOGLE = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,5 +34,6 @@ ${page('').replace(/<title>[^<]*<\/title>\n?/, '').replace(/<meta name="claude:v
 fs.mkdirSync(path.join(__dirname, 'dist/yandex'), { recursive: true });
 fs.writeFileSync(path.join(__dirname, 'dist/yandex/index.html'), ya);
 fs.mkdirSync(path.join(__dirname, 'dist/yandex/fonts'), { recursive: true });
-fs.copyFileSync(path.join(__dirname, 'fonts/fonts.css'), path.join(__dirname, 'dist/yandex/fonts/fonts.css'));
+// шрифты лежат локально: на Яндекс Играх внешние запросы запрещены
+fs.cpSync(path.join(__dirname, 'fonts'), path.join(__dirname, 'dist/yandex/fonts'), { recursive: true });
 console.log('artifact', fs.statSync(path.join(__dirname, 'dist/klinok-sakury.html')).size, 'yandex', ya.length);

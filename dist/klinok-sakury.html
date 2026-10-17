@@ -1,4 +1,5 @@
 <title>Клинок Сакуры</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%231f1a3e'/%3E%3Cg fill='%23ff8fc1'%3E%3Cellipse cx='32' cy='18' rx='7' ry='10'/%3E%3Cellipse cx='45' cy='27' rx='7' ry='10' transform='rotate(72 45 27)'/%3E%3Cellipse cx='40' cy='42' rx='7' ry='10' transform='rotate(144 40 42)'/%3E%3Cellipse cx='24' cy='42' rx='7' ry='10' transform='rotate(216 24 42)'/%3E%3Cellipse cx='19' cy='27' rx='7' ry='10' transform='rotate(288 19 27)'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='6' fill='%23ffd760'/%3E%3C/svg%3E">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -304,7 +305,7 @@ img { -webkit-user-drag: none; user-select: none; }
 /* ---------- таб-бар ---------- */
 #tabs {
   flex: 0 0 auto;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   padding: 6px var(--gutter-r) 6px var(--gutter-l);
   background: var(--night);
   box-shadow: 0 -1px 0 var(--seam);
@@ -312,9 +313,9 @@ img { -webkit-user-drag: none; user-select: none; }
 #tabs button {
   position: relative; border: 0; background: none; padding: 4px 0 2px;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 11px; font-weight: 800; color: var(--mist);
+  font-size: 10.5px; font-weight: 800; color: var(--mist);
 }
-#tabs img { width: 30px; height: 30px; transition: transform .15s; }
+#tabs img { width: 27px; height: 27px; transition: transform .15s; }
 #tabs button[aria-selected="true"] { color: var(--ink); }
 #tabs button[aria-selected="true"] img { transform: translateY(-3px) scale(1.08); filter: drop-shadow(0 0 6px rgba(255, 143, 193, .7)); }
 #tabs button[aria-selected="true"]::after { content: ""; position: absolute; bottom: -6px; width: 26px; height: 3px; border-radius: 3px; background: var(--petal); }
@@ -585,6 +586,7 @@ button.cur { border: 0; cursor: pointer; }
   text-shadow: 0 3px 0 var(--petal-deep), 0 6px 0 #2b1532, 0 0 30px rgba(255, 143, 193, .6); display: flex; flex-direction: column; }
 .logo span:last-child { color: var(--petal); text-shadow: 0 3px 0 #9a2a5a, 0 6px 0 #2b1532, 0 0 30px rgba(255, 143, 193, .6); }
 .intro-sub { margin: 0; text-align: center; color: var(--mist); font-weight: 700; }
+.intro-feats { margin: -6px 0 2px; text-align: center; font-size: 11.5px; color: var(--mist); opacity: .85; }
 .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pick-card { border: 0; padding: 0 0 10px; border-radius: 18px; background: var(--lacquer-2); display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: inset 0 0 0 2px transparent; transition: transform .15s, box-shadow .15s; }
 .pick-card canvas { width: 100%; height: 190px; display: block; }
@@ -615,6 +617,60 @@ body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none
 input { -webkit-user-select: text; user-select: text; }
 
 .tile.can-ench::before { content: ""; position: absolute; left: 5px; top: 5px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 7px solid var(--jade); filter: drop-shadow(0 1px 1px #000); }
+
+/* отключённые яркие кнопки не должны выглядеть активными */
+.buy.pink:disabled, .buy.pink.poor, .buy.ad:disabled, .buy.ad.poor, .buy.ghost:disabled { background: #3a3160; color: #8a80b5; }
+.buy.pink:disabled::before, .buy.ad:disabled::before { display: none; }
+
+/* ====== версия 3: главы, грань, башня, подземелья, пробуждение ====== */
+.chapter-card { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--petal) 14%, var(--lacquer-2)), var(--lacquer-2) 65%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--petal) 35%, transparent); }
+.chapter-card > img { width: 44px; height: 44px; }
+.chapter-card.done { box-shadow: inset 0 0 0 2px var(--leaf); }
+.chapter-card .meta { overflow-wrap: anywhere; }
+
+.opts-block { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 12px; background: var(--night); }
+.opts-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.opts-head b { font: 13px/1 var(--font-display); color: var(--mist); }
+.opt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt-chip { font: 800 12px/1 var(--font-ui); padding: 5px 9px; border-radius: 8px; background: var(--lacquer-2); color: var(--mist); }
+.opt-chip b { color: var(--jade); font-family: var(--font-display); font-weight: 400; margin-left: 2px; }
+.opts-block .buy { align-self: flex-start; }
+
+.tower-card { background: radial-gradient(circle at 50% -10%, #3b2f72, var(--lacquer-2) 70%); }
+.tower-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.tower-num { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 10px 0 6px; }
+.tower-num b { font: 44px/1 var(--font-display); color: var(--petal); text-shadow: 0 0 20px rgba(255, 143, 193, .55); }
+.tower-num span { font: 800 10.5px/1 var(--font-ui); color: var(--mist); letter-spacing: .08em; }
+
+.dungeon-head { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px 12px; align-items: center; }
+.dungeon-head > img { width: 44px; height: 44px; }
+.dungeon-head .btn-row { grid-column: 1 / -1; }
+
+.awaken-hero { background: radial-gradient(circle at 85% -10%, rgba(255, 143, 193, .3), var(--lacquer-2) 68%); }
+.awaken-tree .row-main em { font-style: normal; color: var(--jade); }
+.awaken-tree .row { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.awaken-tree .row > img { width: 40px; height: 40px; }
+
+.duel { position: relative; height: 236px; border-radius: 16px; overflow: hidden; background: #120e26; }
+.duel canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.duel-bars { position: absolute; left: 10px; right: 10px; top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.duel-bars span { display: block; font: 800 11.5px/1.2 var(--font-ui); text-shadow: 0 1px 2px #000; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.duel-bars .r { text-align: right; }
+.duel-bars .r .bar > i { left: auto; right: 0; }
+.duel .forge-result { bottom: 10px; }
+.duel-sheet .forge-result { bottom: 8px; }
+.duel-sheet .btn-row .buy { flex: 1 1 90px; }
+
+.gem-pack { position: relative; }
+.pack-badge { position: absolute; right: 6px; top: 6px; font: 900 10px/1 var(--font-display); font-style: normal; padding: 3px 5px; border-radius: 6px; background: var(--leaf); color: #2b1532; }
+.quests-sheet .seg button { font-size: 10.5px; }
+@media (max-width: 380px) {
+  #tabs button { font-size: 9.5px; }
+  #tabs img { width: 24px; height: 24px; }
+  .tower-num b { font-size: 36px; }
+}
 
 </style>
 
@@ -661,9 +717,10 @@ input { -webkit-user-select: text; user-select: text; }
 
   <nav id="tabs" role="tablist" aria-label="Разделы">
     <button role="tab" data-tab="hero" aria-selected="true"><img data-ic="hero" alt=""><span id="heroTabLabel">Героиня</span><i class="dot" id="heroDot" hidden></i></button>
-    <button role="tab" data-tab="gear" aria-selected="false"><img data-ic="bag" alt="">Снаряжение<i class="dot" id="gearDot" hidden></i></button>
+    <button role="tab" data-tab="gear" aria-selected="false"><img data-ic="bag" alt="">Вещи<i class="dot" id="gearDot" hidden></i></button>
     <button role="tab" data-tab="pets" aria-selected="false"><img data-ic="paw" alt="">Питомцы<i class="dot" id="petDot" hidden></i></button>
     <button role="tab" data-tab="arena" aria-selected="false"><img data-ic="arena" alt="">Арена<i class="dot" id="arenaDot" hidden></i></button>
+    <button role="tab" data-tab="trials" aria-selected="false"><img data-ic="tower" alt="">Башня<i class="dot" id="trialDot" hidden></i></button>
     <button role="tab" data-tab="shop" aria-selected="false"><img data-ic="shop" alt="">Магазин<i class="dot" id="shopDot" hidden></i></button>
   </nav>
 
@@ -671,6 +728,7 @@ input { -webkit-user-select: text; user-select: text; }
     <div class="intro-inner">
       <h1 class="logo"><span>Клинок</span><span>Сакуры</span></h1>
       <p class="intro-sub" id="introSub">Выберите героя для своего пути</p>
+      <p class="intro-feats">Автобой · грейды и заточка в духе Lineage 2 · питомцы · башня · пробуждение</p>
       <div class="pick">
         <button class="pick-card" data-body="girl" aria-pressed="true"><canvas></canvas><b>Героиня</b></button>
         <button class="pick-card" data-body="boy" aria-pressed="false"><canvas></canvas><b>Герой</b></button>
@@ -691,11 +749,11 @@ const BAL = (() => {
   const GRADES = [
     { id: 'NG', label: 'Без грейда', short: 'NG', lvl: 1,  color: '#cfc5b0' },
     { id: 'D',  label: 'Грейд D',    short: 'D',  lvl: 8,  color: '#7fe07c' },
-    { id: 'C',  label: 'Грейд C',    short: 'C',  lvl: 20, color: '#5cbcff' },
-    { id: 'B',  label: 'Грейд B',    short: 'B',  lvl: 32, color: '#bd8aff' },
-    { id: 'A',  label: 'Грейд A',    short: 'A',  lvl: 44, color: '#ff9156' },
-    { id: 'S',  label: 'Грейд S',    short: 'S',  lvl: 56, color: '#ffd760' },
-    { id: 'R',  label: 'Грейд R',    short: 'R',  lvl: 66, color: '#ff5fd2' },
+    { id: 'C',  label: 'Грейд C',    short: 'C',  lvl: 19, color: '#5cbcff' },
+    { id: 'B',  label: 'Грейд B',    short: 'B',  lvl: 30, color: '#bd8aff' },
+    { id: 'A',  label: 'Грейд A',    short: 'A',  lvl: 41, color: '#ff9156' },
+    { id: 'S',  label: 'Грейд S',    short: 'S',  lvl: 51, color: '#ffd760' },
+    { id: 'R',  label: 'Грейд R',    short: 'R',  lvl: 60, color: '#ff5fd2' },
   ];
   const GM = [1, 5, 22, 90, 360, 1400, 5500];                     // множитель статов грейда
   const GP = [30, 300, 2500, 18000, 130000, 800000, 3.6e6];        // цена оружия грейда
@@ -726,10 +784,11 @@ const BAL = (() => {
     ring:   ['Медное кольцо', 'Серебряное кольцо', 'Сапфировое кольцо', 'Аметистовое кольцо', 'Рубиновое кольцо', 'Звёздное кольцо', 'Кольцо бездны'],
   };
 
-  /* Заточка в духе Lineage 2: до +3 безопасно, дальше риск разрушения */
-  const SAFE = 3, MAX_ENCH = 16;
-  const CHANCE = { 4: .70, 5: .66, 6: .62, 7: .58, 8: .54, 9: .50, 10: .46, 11: .42, 12: .38, 13: .34, 14: .30, 15: .26, 16: .22 };
-  const enchChance = target => target <= SAFE ? 1 : (CHANCE[target] ?? .2);
+  /* Заточка в духе Lineage 2: до +3 безопасно, дальше риск разрушения.
+     Выше +16 открывается «легендарная» зона: шансы ниже, но и прирост крупнее. */
+  const SAFE = 3, MAX_ENCH = 20;
+  const CHANCE = { 4: .70, 5: .66, 6: .62, 7: .58, 8: .54, 9: .50, 10: .46, 11: .42, 12: .38, 13: .34, 14: .30, 15: .26, 16: .22, 17: .18, 18: .15, 19: .12, 20: .09 };
+  const enchChance = target => target <= SAFE ? 1 : (CHANCE[target] ?? .08);
   const enchMult = e => 1 + .1 * Math.min(e, SAFE) + .2 * Math.max(0, e - SAFE);
 
   function itemStats(slot, g, e = 0) {
@@ -750,6 +809,7 @@ const BAL = (() => {
   const price = (slot, g) => Math.round(GP[g] * SLOT[slot].pf);
   const sellPrice = (slot, g) => Math.floor(price(slot, g) * .2);
   const CRY = [2, 20, 60, 160, 420, 1100, 2800];
+  const crMul = g => [1, 1, 2, 4, 8, 16, 32][Math.min(6, Math.max(0, g))];
   const crystalYield = (slot, g, e = 0) => Math.round(CRY[g] * (slot === 'weapon' ? 2 : 1) * (1 + .15 * e));
   // стоимость свитков в кристаллах (NG свитков нет)
   const SCROLL_COST = {
@@ -766,7 +826,7 @@ const BAL = (() => {
   const mGold = s => 2.2 * curve(s, 1.172, 1.085);
   const mXp   = s => 3 * curve(s, 1.13, 1.06);
   const defK  = s => 12 * curve(s, 1.17, 1.07);
-  const BOSS = { hp: 15, atk: 2.2, gold: 10, xp: 8, time: 30 };
+  const BOSS = { hp: 12, atk: 1.45, gold: 10, xp: 8, time: 30 };
 
   /* Рост за золото */
   const GROWTH = [
@@ -782,32 +842,46 @@ const BAL = (() => {
   const xpNeed = L => Math.round(10 * Math.pow(1.14, L - 1));
   const BASE = { atk: 8, hp: 100, crit: .05, critDmg: 1.5, aspd: 1, regen: 1 };
 
-  /* Итоговые характеристики героя. gear: [{slot,g,e}] */
+  /* Итоговые характеристики героя. gear: [{slot,g,e,opts}] */
   function heroStats(level, growth, gear, extra = {}) {
     const gv = id => GROWTH_BY[id].val(growth[id] || 0);
     let atkFlat = BASE.atk + gv('atk'), hpFlat = BASE.hp + gv('hp'), def = 0;
-    let atkPct = extra.atkPct || 0, hpPct = extra.hpPct || 0;
+    let atkPct = extra.atkPct || 0, hpPct = extra.hpPct || 0, defPct = 0;
     let crit = BASE.crit + gv('crit') + (extra.crit || 0), critDmg = BASE.critDmg + gv('critDmg') + (extra.critDmg || 0);
     let regenFlat = BASE.regen + gv('regen'), regenPct = 0;
+    let goldPct = extra.goldPct || 0, xpPct = extra.xpPct || 0, dropPct = extra.dropPct || 0;
     const bySlot = {};
     for (const it of gear) {
       bySlot[it.slot] = it;
       const st = itemStats(it.slot, it.g, it.e);
+      const os = optStats(it.opts);
       atkFlat += st.atk || 0; hpFlat += st.hp || 0; def += st.def || 0;
       atkPct += st.atkPct || 0; hpPct += st.hpPct || 0; crit += st.crit || 0;
       critDmg += st.critDmg || 0; regenPct += st.regenPct || 0;
+      for (const k in os) {
+        if (k === 'atkPct') atkPct += os[k];
+        else if (k === 'hpPct') hpPct += os[k];
+        else if (k === 'defPct') defPct += os[k];
+        else if (k === 'crit') crit += os[k];
+        else if (k === 'critDmg') critDmg += os[k];
+        else if (k === 'goldPct') goldPct += os[k];
+        else if (k === 'xpPct') xpPct += os[k];
+        else if (k === 'dropPct') dropPct += os[k];
+      }
     }
     const set = armorSet(bySlot);
-    if (set) { hpPct += .15; def *= 1.1; }
+    if (set) { hpPct += .15; defPct += .1; }
     if (set && set.glow) atkPct += .1;
     const lvA = 1 + .04 * (level - 1), lvH = 1 + .04 * (level - 1);
     const atk = atkFlat * lvA * (1 + atkPct) * (1 + (extra.atkBuff || 0));
     const hp = hpFlat * lvH * (1 + hpPct);
+    def *= (1 + defPct);
     return {
       atk, hp, def,
       crit: Math.min(.8, crit), critDmg,
       aspd: BASE.aspd + gv('aspd'),
       regen: regenFlat * lvH + hp * regenPct,
+      goldPct, xpPct, dropPct,
       set,
     };
   }
@@ -872,7 +946,7 @@ const BAL = (() => {
   const COLLECTION_SHARE = .2;
   const GACHA = {
     rates: [.55, .30, .115, .03, .005],
-    cost1: 150, cost10: 1350,
+    cost1: 150, cost10: 1350, first10: 490,   // первый десяток со скидкой — крючок на старте
     pity: 50,               // гарантированный легендарный или выше
     urInPity: .15,
   };
@@ -918,30 +992,36 @@ const BAL = (() => {
     { id: 'growth',  name: 'Улучшить рост 20 раз',        goal: 20,  gems: 40 },
     { id: 'arena',   name: 'Провести 3 боя на арене',     goal: 3,   gems: 60 },
     { id: 'summon',  name: 'Призвать питомца',            goal: 1,   gems: 40 },
+    { id: 'dungeon', name: 'Пройти подземелье',           goal: 1,   gems: 60, crystalsK: 1 },
+    { id: 'tower',   name: 'Пройти ярус башни',           goal: 1,   gems: 50, petals: 2 },
     { id: 'ad',      name: 'Получить бонус за рекламу',   goal: 1,   gems: 50 },
   ];
   const DAILY_CHEST = { gems: 150, xp: 200 };
   const QUEST_XP = 120;
   const ACH = [
-    { id: 'stage',  stat: 'maxStage', name: v => `Дойти до этапа ${Math.floor(v / 10) + 1}-${v % 10 + 1}`, tiers: [10, 20, 30, 40, 50, 60, 80, 100, 150], gems: [50, 80, 100, 150, 200, 250, 300, 400, 500] },
+    { id: 'stage',  stat: 'bestStage', name: v => `Дойти до этапа ${Math.floor(v / 10) + 1}-${v % 10 + 1}`, tiers: [10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300], gems: [50, 80, 100, 150, 200, 250, 300, 400, 500, 700, 1000] },
     { id: 'level',  stat: 'level',    name: v => `Достичь ${v} уровня`, tiers: [10, 20, 30, 40, 50, 60, 70, 90], gems: [40, 60, 80, 100, 150, 200, 300, 400] },
-    { id: 'kills',  stat: 'kills',    name: v => `Победить ${v.toLocaleString('ru-RU')} монстров`, tiers: [500, 2000, 10000, 50000, 200000], gems: [40, 80, 150, 250, 400] },
-    { id: 'ench',   stat: 'best',     name: v => `Заточить вещь до +${v}`, tiers: [4, 7, 10, 13, 16], gems: [30, 80, 150, 300, 600] },
+    { id: 'kills',  stat: 'kills',    name: v => `Победить ${v.toLocaleString('ru-RU')} монстров`, tiers: [500, 2000, 10000, 50000, 200000, 1000000], gems: [40, 80, 150, 250, 400, 800] },
+    { id: 'ench',   stat: 'best',     name: v => `Заточить вещь до +${v}`, tiers: [4, 7, 10, 13, 16, 18, 20], gems: [30, 80, 150, 300, 600, 900, 1500] },
     { id: 'summon', stat: 'summons',  name: v => `Призвать питомцев ${v} раз`, tiers: [10, 50, 150, 400], gems: [50, 120, 250, 500] },
     { id: 'arena',  stat: 'arenaWins', name: v => `Победить на арене ${v} раз`, tiers: [5, 25, 100, 300], gems: [50, 120, 250, 500] },
     { id: 'pets',   stat: 'petsOwned', name: v => `Собрать ${v} разных питомцев`, tiers: [3, 6, 10, 14], gems: [60, 150, 300, 600] },
+    { id: 'tower',  stat: 'towerBest', name: v => `Пройти ${v} ярусов башни`, tiers: [1, 10, 25, 50, 80, 120], gems: [50, 120, 250, 450, 700, 1200] },
+    { id: 'awaken', stat: 'awakenings', name: v => `Совершить пробуждение ${v} раз`, tiers: [1, 3, 6, 10], gems: [200, 400, 700, 1200] },
+    { id: 'dungeon',stat: 'dungeonRuns', name: v => `Пройти подземелий ${v} раз`, tiers: [1, 10, 40, 120], gems: [40, 100, 220, 450] },
   ];
   const LOGIN = [
-    { gems: 50 }, { goldKills: 250 }, { scrollsA: 3 }, { gems: 100 }, { blessedA: 1 }, { summon: 1 }, { gems: 300 },
+    { gems: 50 }, { goldKills: 250 }, { scrollsA: 3 }, { gems: 100 }, { blessedA: 1 }, { summon: 1 }, { gems: 300, petals: 5 },
   ];
   const PASS = { tiers: 30, xpPer: 1000, seasonDays: 28, epoch: Date.UTC(2026, 9, 1), bossXp: 15, arenaXp: 30 };
   function passReward(tier, prem) {          // tier: 1..30
     if (prem) {
-      if (tier === 30) return { pet: 'tenryu', cosmetic: 'petals' };
-      if (tier % 10 === 0) return { summon: 3 };
+      if (tier === 30) return { pet: 'tenryu', cosmetic: 'petals', petals: 20 };
+      if (tier % 10 === 0) return { summon: 2, petals: 8 };
       if (tier % 5 === 0) return { blessedA: 2, blessedW: 1 };
       return tier % 2 ? { gems: 60 } : { scrollsA: 3, scrollsW: 1 };
     }
+    if (tier === 30) return { petals: 10 };
     if (tier % 10 === 0) return { summon: 1 };
     if (tier % 5 === 0) return { gems: 100 };
     return [{ goldKills: 150 }, { scrollsA: 2 }, { crystalsK: 1 }, { scrollsW: 1 }][tier % 4];
@@ -949,16 +1029,23 @@ const BAL = (() => {
   const seasonOf = now => Math.floor((now - PASS.epoch) / (PASS.seasonDays * 864e5));
   const seasonEnd = season => PASS.epoch + (season + 1) * PASS.seasonDays * 864e5;
 
+  /* ===== Фонд сакуры: покупка, которая возвращает самоцветы за уровни ===== */
+  const FUND = { id: 'fund', rub: 399, gems: 150, bonus: 900, levels: [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60] };
+  const FUND_REWARD = FUND.gems;
+  const FUND_TOTAL = FUND.gems * FUND.levels.length + FUND.bonus;
+
   /* ===== Магазин: покупки и самоцветы ===== */
   const IAP = [
-    { id: 'starter', name: 'Стартовый набор', rub: 149, once: true, gems: 1000, pet: 'hibana', scrollsA: 10, blessedA: 2, tag: 'Один раз' },
-    { id: 'monthly', name: 'Лунная карта',    rub: 199, gems: 300, daily: 100, days: 30, tag: '100 💎 каждый день' },
+    { id: 'starter', name: 'Стартовый набор', rub: 99, once: true, gems: 800, pet: 'hibana', scrollsA: 10, blessedA: 2, tag: 'Один раз' },
+    { id: 'monthly', name: 'Лунная карта',    rub: 299, gems: 300, daily: 100, days: 30, tag: '3300 💎 за месяц' },
+    { id: 'fund',    name: 'Фонд сакуры',     rub: 399, tag: `${FUND_TOTAL} 💎 за уровни` },
     { id: 'pass',    name: 'Пропуск сакуры',  rub: 399, tag: 'Сезон' },
-    { id: 'noads',   name: 'Без рекламы',     rub: 299, once: true, tag: 'Навсегда' },
-    { id: 'gems_s',  name: 'Горсть самоцветов',  rub: 79,   gems: 300 },
+    { id: 'noads',   name: 'Без рекламы',     rub: 249, once: true, tag: 'Навсегда' },
+    { id: 'gems_s',  name: 'Горсть самоцветов',  rub: 99,   gems: 300 },
     { id: 'gems_m',  name: 'Мешочек самоцветов', rub: 249,  gems: 1100, bonus: 100 },
     { id: 'gems_l',  name: 'Сундук самоцветов',  rub: 649,  gems: 3200, bonus: 400 },
     { id: 'gems_xl', name: 'Сокровищница',       rub: 1490, gems: 8000, bonus: 1500 },
+    { id: 'gems_xxl',name: 'Сакура бездны',      rub: 2990, gems: 17000, bonus: 4000 },
   ];
   const IAP_BY = Object.fromEntries(IAP.map(p => [p.id, p]));
   const GEM_SHOP = {
@@ -966,16 +1053,138 @@ const BAL = (() => {
     scrollsA5: { gems: 100 },
     blessedA: { gems: 150 },
     blessedW: { gems: 380 },
+    key: { gems: 30 },
   };
   const ADS = { gems: 40, gemsPerDay: 3, goldBoostMin: 20, interstitialGap: 180 };
+
+  /* Заточка без излишней жестокости: до +7 неудача лишь откатывает к +3,
+     разрушение начинается с +8. Каждая неудача даёт «искру» +6% к следующей попытке. */
+  const ENCH = { destroyFrom: 8, fallback: 3, pityStep: .06, pityMax: .36 };
+
+  /* ===== Грань предмета: случайные свойства, которые перековываются =====
+     Как «атрибуты» в Lineage 2: одна и та же вещь грейда может быть лучше или хуже.
+     Это даёт смысл фармить свой грейд и тратить кристаллы на перековку. */
+  const ITEM_OPTS = [
+    { k: 'atkPct',  lo: .02,  hi: .05,  name: 'Атака' },
+    { k: 'hpPct',   lo: .03,  hi: .07,  name: 'Здоровье' },
+    { k: 'defPct',  lo: .03,  hi: .07,  name: 'Защита' },
+    { k: 'crit',    lo: .006, hi: .02,  name: 'Шанс крита' },
+    { k: 'critDmg', lo: .03,  hi: .10,  name: 'Урон крита' },
+    { k: 'goldPct', lo: .03,  hi: .08,  name: 'Золото' },
+    { k: 'xpPct',   lo: .03,  hi: .08,  name: 'Опыт' },
+    { k: 'dropPct', lo: .02,  hi: .06,  name: 'Свитки' },
+  ];
+  const OPT_BY = Object.fromEntries(ITEM_OPTS.map(o => [o.k, o]));
+  const optCount = g => g >= 4 ? 2 : g >= 1 ? 1 : 0;
+  const OPT_ROLL = [1, 1, 2, 4, 8, 16, 32];
+  function rollOpts(rnd, g) {
+    const n = optCount(g), used = new Set(), out = [];
+    for (let i = 0; i < n; i++) {
+      const pool = ITEM_OPTS.filter(o => !used.has(o.k));
+      if (!pool.length) break;
+      const o = pool[Math.floor(rnd() * pool.length)];
+      used.add(o.k);
+      const base = o.lo + (o.hi - o.lo) * rnd();
+      out.push({ k: o.k, v: +(base * (1 + .35 * g)).toFixed(4) });
+    }
+    return out;
+  }
+  function optStats(opts) {
+    const out = {};
+    for (const o of opts || []) out[o.k] = (out[o.k] || 0) + o.v;
+    return out;
+  }
+  const rerollCost = g => Math.round(22 * OPT_ROLL[Math.min(6, Math.max(0, g))]);
+
+  /* ===== Пробуждение (перерождение) =====
+     Сброс этапа, уровня и роста за золото, но снаряжение, питомцы и коллекции остаются.
+     Лепестки сакуры покупают вечные бонусы — так игра не заканчивается на последнем этапе. */
+  const AW = {
+    unlockStage: 50,
+    gain: peak => Math.floor(3 * Math.pow(Math.max(0, peak) / 10, 1.45)),
+  };
+  const AW_NODES = [
+    { id: 'atk',     name: 'Сила клинка',  desc: 'Атака',              max: 20, base: 2, val: l => .06 * l, fmt: 'pct' },
+    { id: 'hp',      name: 'Стойкость',    desc: 'Здоровье',           max: 20, base: 2, val: l => .06 * l, fmt: 'pct' },
+    { id: 'gold',    name: 'Дар сакуры',   desc: 'Золото',             max: 15, base: 2, val: l => .12 * l, fmt: 'pct' },
+    { id: 'xp',      name: 'Озарение',     desc: 'Опыт',               max: 15, base: 2, val: l => .12 * l, fmt: 'pct' },
+    { id: 'drop',    name: 'Зов лепестков',desc: 'Шанс свитков',       max: 10, base: 3, val: l => .08 * l, fmt: 'pct' },
+    { id: 'crit',    name: 'Точность',     desc: 'Шанс крита',         max: 10, base: 3, val: l => .015 * l, fmt: 'pct' },
+    { id: 'start',   name: 'Память пути',  desc: 'Старт после пробуждения', max: 25, base: 2, val: l => 4 * l, fmt: 'int' },
+    { id: 'offline', name: 'Тишина',       desc: 'Офлайн-доход',       max: 8,  base: 4, val: l => 2 * l, fmt: 'hours' },
+    { id: 'ench',    name: 'Мастерство',   desc: 'Шанс заточки',       max: 8,  base: 4, val: l => .015 * l, fmt: 'pct' },
+    { id: 'bossTime',name: 'Терпение',     desc: 'Время на босса',     max: 5,  base: 5, val: l => 3 * l, fmt: 'sec' },
+    { id: 'pet',     name: 'Единство',     desc: 'Урон питомца',       max: 10, base: 3, val: l => .15 * l, fmt: 'pct' },
+  ];
+  const AW_BY = Object.fromEntries(AW_NODES.map(n => [n.id, n]));
+  const awCost = (node, l) => Math.round(node.base * Math.pow(l + 1, 1.55));
+  function awBonus(lvl) {
+    const l = id => (lvl && lvl[id]) || 0;
+    return {
+      atkPct: .06 * l('atk'), hpPct: .06 * l('hp'), goldPct: .12 * l('gold'), xpPct: .12 * l('xp'),
+      dropPct: .08 * l('drop'), crit: .015 * l('crit'), start: 4 * l('start'),
+      offline: 2 * l('offline'), ench: .015 * l('ench'), bossTime: 3 * l('bossTime'), pet: .15 * l('pet'),
+    };
+  }
+
+  /* ===== Башня сакуры: вечная проверка силы ===== */
+  const TOWER = {
+    floors: 120,
+    stageEq: f => 2 + (f - 1) * 1.35,
+    hp: 7, atk: 1.0, def: .9,
+    weeklyGems: best => 40 + Math.floor(best * 3),
+    reward(f) {
+      const se = this.stageEq(f), g = Math.min(6, 1 + Math.floor(f / 18));
+      const r = { gold: Math.round(mGold(se) * 25), crystals: Math.round(14 * crMul(g) * (1 + f * .06)) };
+      if (f % 5 === 0) r.gems = 25 + (f % 10 === 0 ? 25 : 0);
+      if (f % 3 === 0) r.scrollsA = 1 + Math.floor(f / 30);
+      if (f % 10 === 0) { r.petals = 4 + Math.floor(f / 12); r.summon = 1; }
+      return r;
+    },
+  };
+  function towerGuard(f) {
+    const se = TOWER.stageEq(f), loop = Math.floor((f - 1) / 6);
+    return {
+      stageEq: se, hp: mHp(se) * TOWER.hp, atk: mAtk(se) * TOWER.atk, def: defK(se) * TOWER.def,
+      crit: .03, critDmg: 1.5, aspd: 1, regen: 0,
+      name: `Страж ${f}-го яруса`, loop,
+    };
+  }
+
+  /* ===== Подземелья дня ===== */
+  const DUNGEONS = [
+    { id: 'gold',    name: 'Золотая жила',     icon: 'gold',    desc: 'Золото с монстров' },
+    { id: 'scrolls', name: 'Архив свитков',    icon: 'quests',  desc: 'Свитки заточки топового грейда' },
+    { id: 'crystal', name: 'Кристальная шахта',icon: 'crystal', desc: 'Кристаллы для перековки' },
+    { id: 'xp',      name: 'Зал памяти',       icon: 'hp',      desc: 'Опыт уровня' },
+  ];
+  const DUNGEON_BY = Object.fromEntries(DUNGEONS.map(d => [d.id, d]));
+  const DKEYS = { perDay: 3, adExtra: 2, gemCost: 40, gemMax: 3 };
+  function dungeonGuard(id, stage) {
+    const m = { gold: 1, scrolls: .9, crystal: 1, xp: .8 }[id] || 1;
+    return { hp: mHp(stage) * 9 * m, atk: mAtk(stage) * .85, def: defK(stage) * .7, crit: .05, critDmg: 1.5, aspd: 1, regen: 0 };
+  }
+  function dungeonReward(id, stage) {
+    const g = Math.min(6, 1 + Math.floor(stage / 12));
+    switch (id) {
+      case 'gold':    return { gold: Math.round(mGold(stage) * 140) };
+      case 'scrolls': return { scrollsA: 2 + Math.floor(stage / 25), scrollsW: 1, blessedA: stage >= 30 ? 1 : 0 };
+      case 'crystal': return { crystals: Math.round(38 * crMul(g) * 2) };
+      case 'xp':      return { xp: Math.round(mXp(stage) * 320) };
+    }
+    return {};
+  }
 
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES,
     DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd,
-    IAP, IAP_BY, GEM_SHOP, ADS,
-    GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult,
+    IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
+    GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,
+    ITEM_OPTS, OPT_BY, optCount, optStats, rollOpts, rerollCost,
+    AW, AW_NODES, AW_BY, awCost, awBonus,
+    TOWER, towerGuard, DUNGEONS, DUNGEON_BY, DKEYS, dungeonGuard, dungeonReward,
     mHp, mAtk, mGold, mXp, defK, BOSS, GROWTH, GROWTH_BY, xpNeed, BASE, heroStats, armorSet, power,
     zoneDropGrade, DROP,
   };
@@ -2930,6 +3139,81 @@ const ART = (() => {
   Object.assign(ART, { drawPet, petIcon, RAR_COL });
 })();
 
+/* ===== Дополнительные иконки интерфейса версии 3 ===== */
+(() => {
+  const A = ART;
+  const { ell, rr, fillStroke, OUT, TAU } = A;
+
+  function petal5(ctx, cx, cy, r, c1, c2) {
+    for (let i = 0; i < 5; i++) {
+      ctx.save(); ctx.rotate(i * TAU / 5); ctx.translate(0, -r * .62);
+      ell(ctx, 0, 0, r * .42, r * .58); ctx.fillStyle = i % 2 ? c2 : c1; ctx.fill();
+      ctx.strokeStyle = OUT; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.restore();
+    }
+    ell(ctx, 0, 0, r * .3, r * .3); fillStroke(ctx, '#ffd760', OUT, 1.8);
+    ell(ctx, -r * .1, -r * .12, r * .12, r * .09); ctx.fillStyle = '#fff3c0'; ctx.fill();
+  }
+
+  Object.assign(A.MISC, {
+    petal(ctx) {
+      ctx.save(); ctx.translate(32, 32); petal5(ctx, 0, 0, 26, '#ff8fc1', '#ffb3d6'); ctx.restore();
+    },
+    petalSmall(ctx) {
+      ctx.save(); ctx.translate(32, 32); petal5(ctx, 0, 0, 20, '#ffb3d6', '#ffcbe2'); ctx.restore();
+    },
+    key(ctx) {
+      ctx.save(); ctx.translate(32, 31); ctx.rotate(-.55);
+      ell(ctx, 0, -15, 10.5, 10.5); fillStroke(ctx, '#ffd760', OUT, 3);
+      ell(ctx, 0, -15, 4.6, 4.6); fillStroke(ctx, '#ff8fc1', OUT, 2);
+      ctx.beginPath(); ctx.moveTo(-3.4, -6); ctx.lineTo(3.4, -6); ctx.lineTo(3.4, 20); ctx.lineTo(-3.4, 20); ctx.closePath();
+      fillStroke(ctx, '#ffe08f', OUT, 2.4);
+      ell(ctx, -5, -17.5, 3.4, 2.2, -.5); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(3.4, 12); ctx.lineTo(12, 12); ctx.lineTo(12, 17); ctx.lineTo(7.5, 17); ctx.lineTo(7.5, 21.5); ctx.lineTo(3.4, 21.5); ctx.closePath();
+      fillStroke(ctx, '#ffd760', OUT, 2.2);
+      ctx.restore();
+    },
+    tower(ctx) {
+      ctx.save(); ctx.translate(32, 33);
+      const roof = (y, w, c) => {
+        ctx.beginPath(); ctx.moveTo(-w, y); ctx.quadraticCurveTo(0, y - 10, w, y); ctx.lineTo(w - 5, y + 7); ctx.lineTo(-w + 5, y + 7); ctx.closePath();
+        fillStroke(ctx, c, OUT, 2.2);
+      };
+      // основание
+      ctx.beginPath(); ctx.moveTo(-15, 26); ctx.lineTo(15, 26); ctx.lineTo(11, -2); ctx.lineTo(-11, -2); ctx.closePath();
+      fillStroke(ctx, '#4a3d86', OUT, 2.4);
+      // окна
+      for (const wy of [4, 14]) { rr(ctx, -3.4, wy, 6.8, 7, 2.6); fillStroke(ctx, wy === 4 ? '#ffd760' : '#ff8fc1', OUT, 1.6); }
+      roof(2, 17, '#bd8aff'); roof(-10, 13, '#ff8fc1'); roof(-20, 9, '#ffd760');
+      // шпиль с лепестком
+      ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(3, -22); ctx.lineTo(-3, -22); ctx.closePath(); fillStroke(ctx, '#ffd760', OUT, 1.6);
+      ell(ctx, 0, -33, 3.2, 2.4); ctx.fillStyle = '#ffb3d6'; ctx.fill();
+      ctx.restore();
+    },
+    boss(ctx) {
+      ctx.save(); ctx.translate(32, 33);
+      // рога
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(s * 9, -10); ctx.quadraticCurveTo(s * 25, -26, s * 23, -2); ctx.quadraticCurveTo(s * 18, -9, s * 8, -6); ctx.closePath();
+        fillStroke(ctx, '#c9b8ff', OUT, 2.2);
+      }
+      // череп
+      ctx.beginPath(); ctx.moveTo(-14, -10); ctx.quadraticCurveTo(0, -18, 14, -10); ctx.quadraticCurveTo(16, 6, 7, 14); ctx.lineTo(4, 22); ctx.lineTo(-4, 22); ctx.lineTo(-7, 14); ctx.quadraticCurveTo(-16, 6, -14, -10); ctx.closePath();
+      fillStroke(ctx, '#3a2452', OUT, 2.4);
+      // глаза
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(s * 3, -4); ctx.lineTo(s * 11, -2); ctx.lineTo(s * 9, 3); ctx.lineTo(s * 4, 1); ctx.closePath();
+        ctx.fillStyle = '#ff5d73'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.2; ctx.stroke();
+      }
+      // нос и зубы
+      ctx.beginPath(); ctx.moveTo(0, 3); ctx.lineTo(2, 8); ctx.lineTo(-2, 8); ctx.closePath(); ctx.fillStyle = '#24123a'; ctx.fill();
+      ctx.strokeStyle = '#c9b8ff'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); for (let x = -6; x <= 6; x += 4) { ctx.moveTo(x, 12); ctx.lineTo(x, 17); } ctx.stroke();
+      ctx.restore();
+    },
+  });
+})();
+
 /* ===== Звук: процедурная музыка и эффекты на Web Audio ===== */
 const AUDIO = (() => {
   let ctx = null, master, comp, musicBus, musicFilter, sfxBus, delay, delayFb, delaySend, noiseBuf;
@@ -3197,6 +3481,7 @@ const PLATFORM = (() => {
   const listeners = { pause: [], resume: [] };
   let catalog = {};
   let localUI = null;          // окно тестовой покупки/награды из игры
+  let safeStore;               // безопасное хранилище Яндекс Игр (нужно на iOS)
 
   async function init() {
     if (typeof window.YaGames === 'undefined') return mode;
@@ -3210,6 +3495,7 @@ const PLATFORM = (() => {
         try { const list = await payments.getCatalog(); for (const p of list) catalog[p.id] = p; } catch (e) { }
       }
     } catch (e) { mode = 'local'; ysdk = null; }
+    safeStore = undefined;                 // после init хранилище площадки можно запросить
     return mode;
   }
   const ready = () => { try { ysdk?.features?.LoadingAPI?.ready(); } catch (e) { } };
@@ -3280,6 +3566,13 @@ const PLATFORM = (() => {
     init, ready, gameplay, lang, rewarded, interstitial, purchase, consume, purchases, price, loadCloud, saveCloud,
     on: (ev, f) => listeners[ev].push(f),
     setLocalUI: f => { localUI = f; },
+    // localStorage-совместимое хранилище площадки; до init() возвращает null
+    getStorage() {
+      if (safeStore !== undefined) return safeStore;
+      try { safeStore = ysdk && typeof ysdk.getStorage === 'function' ? ysdk.getStorage() : null; }
+      catch (e) { safeStore = null; }
+      return safeStore;
+    },
     get mode() { return mode; },
   };
 })();
@@ -3385,51 +3678,104 @@ const SKILL_MAX = 20;
 
 /* ---------- состояние ---------- */
 const SAVE_KEY = 'klinok-sakury-v1';
-// Версия 3: сброс прогресса по просьбе владельца перед тестированием. Сохранения младше обнуляются.
-const SAVE_VERSION = 3;
+// Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
+// Старые сохранения (v3) переводятся без потери прогресса.
+const SAVE_VERSION = 4;
 const zeros = () => Array(NG).fill(0);
+const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
+const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
+function fillDefaults(target, def) {
+  for (const k in def) {
+    if (target[k] === undefined) target[k] = clone(def[k]);
+    else if (isPlain(def[k]) && isPlain(target[k])) fillDefaults(target[k], def[k]);
+  }
+  return target;
+}
 function newState() {
   const equip = {}; B.SLOTS.forEach(s => equip[s.id] = null);
   equip.weapon = 1; equip.upper = 2;
+  const starterOpts = g => B.rollOpts(Math.random, g);
   return {
     v: SAVE_VERSION, savedAt: Date.now(), hero: null,
-    gold: 20, crystals: 0, gems: 200, level: 1, xp: 0, sp: 0,
+    gold: 20, crystals: 0, gems: 300, level: 1, xp: 0, sp: 0,
     growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
     skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
-    items: [{ id: 1, slot: 'weapon', g: 0, e: 0 }, { id: 2, slot: 'upper', g: 0, e: 0 }],
+    items: [{ id: 1, slot: 'weapon', g: 0, e: 0, pt: 0, opts: starterOpts(0) }, { id: 2, slot: 'upper', g: 0, e: 0, pt: 0, opts: starterOpts(0) }],
     equip, nextId: 3,
-    scrolls: { w: zeros(), a: zeros(), bw: zeros(), ba: zeros() },
-    stage: 0, maxStage: 0, kills: 0, autoBoss: true,
-    stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0 },
+    scrolls: { w: [0, 2, 0, 0, 0, 0, 0], a: [0, 3, 0, 0, 0, 0, 0], bw: zeros(), ba: zeros() },
+    stage: 0, maxStage: 0, bestStage: 0, kills: 0, autoBoss: true,
+    stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0, dungeonRuns: 0, awakenings: 0, rerolls: 0 },
     pets: { owned: {}, active: null },
-    gacha: { pity: 0, total: 0, tickets: 1 },
+    gacha: { pity: 0, total: 0, tickets: 1, first10: false },
     arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0 },
     quests: { day: '', prog: {}, claimed: {}, chest: false },
     ach: {},
     login: { idx: 0, last: '' },
     pass: { season: -1, xp: 0, free: [], prem: [], premium: false },
-    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [] },
+    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
     settings: { music: .55, sfx: .75 },
     intro: false,
+    aw: { petals: 0, count: 0, lvl: Object.fromEntries(B.AW_NODES.map(n => [n.id, 0])) },
+    tower: { floor: 0, best: 0, week: '', reward: 0, auto: false },
+    dungeon: { day: '', keys: B.DKEYS.perDay, ads: 0, buys: 0, runs: 0, stage: 0 },
+    fund: { owned: false, claimed: [] },
+    chapter: { idx: 0, claimed: [] },
   };
 }
 function migrate(o) {
+  if (!o || typeof o !== 'object') return newState();
+  if ((o.v || 1) < 3) return newState();          // совсем старые сохранения несовместимы
   const d = newState();
-  if (!o || typeof o !== 'object' || (o.v || 1) < SAVE_VERSION) return d;
-  for (const k in d) if (o[k] === undefined) o[k] = d[k];
-  for (const k of ['w', 'a', 'bw', 'ba']) { o.scrolls[k] = o.scrolls[k] || zeros(); while (o.scrolls[k].length < NG) o.scrolls[k].push(0); }
+  fillDefaults(o, d);
+  o.v = SAVE_VERSION;
+  for (const k of ['w', 'a', 'bw', 'ba']) {
+    o.scrolls[k] = Array.isArray(o.scrolls[k]) ? o.scrolls[k] : zeros();
+    while (o.scrolls[k].length < NG) o.scrolls[k].push(0);
+    o.scrolls[k] = o.scrolls[k].slice(0, NG).map(n => Math.max(0, Math.floor(n) || 0));
+  }
   for (const g of B.GROWTH) o.growth[g.id] = o.growth[g.id] || 0;
   for (const s of SKILLS) o.skills[s.id] = o.skills[s.id] || 0;
   for (const sl of B.SLOTS) if (!(sl.id in o.equip)) o.equip[sl.id] = null;
-  for (const k of ['stats', 'pets', 'gacha', 'arena', 'quests', 'login', 'pass', 'shop', 'boost', 'ads', 'settings'])
-    for (const kk in d[k]) if (o[k][kk] === undefined) o[k][kk] = d[k][kk];
+  if (!Array.isArray(o.items)) o.items = [];
+  for (const it of o.items) {
+    if (!Number.isFinite(it.id)) it.id = o.nextId++;
+    if (!Array.isArray(it.opts)) it.opts = seededOpts(it);
+    if (!Number.isFinite(it.pt)) it.pt = 0;
+    if (!Number.isFinite(it.e)) it.e = 0;
+    if (!Number.isFinite(it.g)) it.g = 0;
+  }
+  o.nextId = Math.max(o.nextId || 3, ...o.items.map(i => i.id + 1), 3);
+  if (!isPlain(o.aw.lvl)) o.aw.lvl = {};
+  for (const n of B.AW_NODES) o.aw.lvl[n.id] = clamp(Math.floor(o.aw.lvl[n.id] || 0), 0, n.max);
+  o.aw.petals = Math.max(0, Math.floor(o.aw.petals || 0));
+  o.bestStage = Math.max(o.bestStage || 0, o.maxStage || 0);
+  o.tower.best = Math.max(o.tower.best || 0, o.tower.floor || 0);
+  if (!Array.isArray(o.fund.claimed)) o.fund.claimed = [];
+  if (!Array.isArray(o.chapter.claimed)) o.chapter.claimed = [];
+  o.chapter.idx = clamp(Math.floor(o.chapter.idx || 0), 0, 40);
+  if (!Array.isArray(o.pass.free)) o.pass.free = [];
+  if (!Array.isArray(o.pass.prem)) o.pass.prem = [];
   return o;
 }
+// свойства предмета из старых сохранений: стабильны, чтобы не менялись при перезагрузке
+function seededOpts(it) {
+  let s = (it.id * 2654435761 + (it.g + 1) * 40503) % 2147483647 || 1;
+  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  return B.rollOpts(r, it.g);
+}
 let S = null;
-function loadLocal() { try { const raw = localStorage.getItem(SAVE_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) { } return null; }
-function saveLocal() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
+function rawGet() {
+  try { const st = P.getStorage && P.getStorage(); const v = st && st.getItem(SAVE_KEY); if (v) return v; } catch (e) { }
+  try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
+}
+function rawSet(v) {
+  try { const st = P.getStorage && P.getStorage(); if (st) st.setItem(SAVE_KEY, v); } catch (e) { }
+  try { localStorage.setItem(SAVE_KEY, v); } catch (e) { }
+}
+function loadLocal() { try { const raw = rawGet(); if (raw) return migrate(JSON.parse(raw)); } catch (e) { } return null; }
+function saveLocal() { if (!S) return; S.savedAt = Date.now(); try { rawSet(JSON.stringify(S)); } catch (e) { } }
 
 /* ---------- облако: база артефакта или Яндекс ---------- */
 const Cloud = {
@@ -3485,9 +3831,10 @@ const R = {
   hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, phase: 0, run: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
-  st: null, pb: null, look: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
-  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
+  st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
+  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
+  bossCd: 0, bossFails: 0, towerRun: false,
 };
 SKILLS.forEach(s => R.cd[s.id] = 0);
 const isBoy = () => !!(S && S.hero && S.hero.body === 'boy');
@@ -3514,11 +3861,18 @@ const itemById = id => S.items.find(i => i.id === id);
 const isEquipped = it => S.equip[it.slot] === it.id;
 const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
 const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
-const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита' };
-const statStr = (k, v) => ['atkPct', 'hpPct', 'crit', 'critDmg'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
-function itemScore(slot, g, e) {
-  const s = B.itemStats(slot, g, e);
-  return (s.atk || 0) * 3 + (s.def || 0) * 4 + (s.hp || 0) * .3 + (s.atkPct || 0) * 1e4 + (s.hpPct || 0) * 1e4 + (s.crit || 0) * 3e4 + (s.critDmg || 0) * 1e4;
+const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', defPct: 'Защита', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
+const statStr = (k, v) => ['atkPct', 'hpPct', 'defPct', 'crit', 'critDmg', 'goldPct', 'xpPct', 'dropPct'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
+function itemTotals(it) {
+  const s = B.itemStats(it.slot, it.g, it.e || 0);
+  const o = B.optStats(it.opts);
+  for (const k in o) s[k] = (s[k] || 0) + o[k];
+  return s;
+}
+function itemScore(slot, g, e, opts) {
+  const s = itemTotals({ slot, g, e, opts });
+  return (s.atk || 0) * 3 + (s.def || 0) * 4 + (s.hp || 0) * .3 + (s.atkPct || 0) * 1e4 + (s.hpPct || 0) * 1e4
+    + (s.defPct || 0) * 1e4 + (s.crit || 0) * 3e4 + (s.critDmg || 0) * 1e4 + (s.goldPct || 0) * 4e3 + (s.xpPct || 0) * 4e3 + (s.dropPct || 0) * 6e3;
 }
 function canEnchant(it) { if (!it || it.g === 0 || it.e >= B.MAX_ENCH) return false; const k = scrollKind(it.slot); return S.scrolls[k][it.g] + S.scrolls['b' + k][it.g] > 0; }
 function glowClass(e) { return e >= 16 ? 'glow16' : e >= 13 ? 'glow13' : e >= 10 ? 'glow10' : e >= 7 ? 'glow7' : e >= 4 ? 'glow4' : ''; }
@@ -3527,14 +3881,20 @@ function tileHTML(it, attrs = '') {
 }
 function equippedList() {
   const out = [];
-  for (const sl of B.SLOTS) { const id = S.equip[sl.id]; const it = id && itemById(id); if (it) out.push({ slot: it.slot, g: it.g, e: it.e }); }
+  for (const sl of B.SLOTS) { const id = S.equip[sl.id]; const it = id && itemById(id); if (it) out.push({ slot: it.slot, g: it.g, e: it.e, opts: it.opts }); }
   return out;
 }
 function slotGrade(slot) { const id = S.equip[slot]; const it = id && itemById(id); return it ? it.g : -1; }
+const awOf = () => B.awBonus(S && S.aw ? S.aw.lvl : {});
 function recalc() {
   const prevMax = R.st ? R.st.hp : 0;
+  const aw = awOf();
   R.pb = B.petBonuses(S.pets.owned, S.pets.active);
-  R.st = B.heroStats(S.level, S.growth, equippedList(), { atkPct: R.pb.atkPct, hpPct: R.pb.hpPct, crit: R.pb.crit, critDmg: R.pb.critDmg });
+  R.aw = aw;
+  R.st = B.heroStats(S.level, S.growth, equippedList(), {
+    atkPct: R.pb.atkPct + aw.atkPct, hpPct: R.pb.hpPct + aw.hpPct, crit: R.pb.crit + aw.crit, critDmg: R.pb.critDmg,
+    goldPct: aw.goldPct, xpPct: aw.xpPct, dropPct: aw.dropPct,
+  });
   R.power = B.power(R.st);
   const h = R.hero;
   if (prevMax && R.st.hp > prevMax && !h.dead) h.hp += R.st.hp - prevMax;
@@ -3551,8 +3911,20 @@ function recalc() {
 }
 const red = s => R.st.def / (R.st.def + B.defK(s));
 const spiritBonus = () => R.buffs.spirit > 0 ? SK.spirit.mult(S.skills.spirit) : 0;
-const goldMul = () => (1 + R.pb.goldPct) * (Date.now() < S.boost.goldUntil ? 2 : 1);
+const goldMul = () => (1 + R.pb.goldPct + (R.st.goldPct || 0)) * (Date.now() < S.boost.goldUntil ? 2 : 1);
+const xpMul = () => (1 + R.pb.xpPct + (R.st.xpPct || 0));
+const dropMul = () => 1 + R.pb.dropPct + (R.st.dropPct || 0);
+const offlineHours = () => Math.min(24, 8 + (R.aw ? R.aw.offline : 0));
+const bossTime = () => B.BOSS.time + (R.aw ? R.aw.bossTime : 0);
 const petsOwnedCount = () => Object.keys(S.pets.owned).length;
+/* шанс заточки с учётом искры неудач и древа пробуждения */
+function enchInfo(it) {
+  const target = it.e + 1;
+  const base = B.enchChance(target);
+  const pity = Math.min(B.ENCH.pityMax, (it.pt || 0) * B.ENCH.pityStep);
+  const aw = R.aw ? R.aw.ench : 0;
+  return { target, base, pity, aw, ch: Math.min(.95, base + pity + aw), safe: target <= B.SAFE, destructive: target >= B.ENCH.destroyFrom };
+}
 
 /* --- 10_battle.js --- */
 /* ===== Бой: монстры, боссы, навыки, питомец, эффекты ===== */
@@ -3603,7 +3975,7 @@ function spawnBoss() {
   const m = makeMonster(true, 0);
   m.x = standX(m) + 18 * R.k;
   R.monsters.push(m);
-  R.boss = { m, time: B.BOSS.time, active: false };
+  R.boss = { m, time: bossTime(), active: false };
   R.bossPending = false;
   updateHudStatic();
 }
@@ -3613,7 +3985,7 @@ function bossLand(m) {
   if (!RM) R.shake = .4;
   R.fx.push({ type: 'ring', x: m.x, y: R.gy - 4 * R.k, r0: 20 * R.k, r1: 190 * R.k, t: 0, life: .55, c: '#ffffff', flat: true });
   for (let i = 0; i < 22; i++) R.fx.push({ type: 'part', x: m.x + (rnd() - .5) * 60 * R.k, y: R.gy - 4 * R.k, vx: (rnd() - .5) * 320 * R.k, vy: -(60 + rnd() * 200) * R.k, g: 500 * R.k, size: (3 + rnd() * 4) * R.k, c: zoneOf(S.stage).ground[1], t: 0, life: .6 + rnd() * .3, shape: 'circle' });
-  banner(m.name, `${B.BOSS.time} секунд на победу`, '#ff6b8a');
+  banner(m.name, `${Math.round(bossTime())} секунд на победу`, '#ff6b8a');
   AU.sfx('land');
   log(`Босс ${m.name} вступает в бой!`, 'boss');
 }
@@ -3699,9 +4071,11 @@ function bossExplode(m) {
 function bossWin() {
   const z0 = zoneOf(S.stage).z, first = S.stage >= S.maxStage;
   S.stats.bosses++;
+  R.bossFails = 0; R.bossCd = 0;
   quest('bosses'); passXp(B.PASS.bossXp);
   S.stage++;
   if (S.stage > S.maxStage) S.maxStage = S.stage;
+  if (S.maxStage > (S.bestStage || 0)) S.bestStage = S.maxStage;
   S.kills = 0;
   R.boss = null;
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
@@ -3722,9 +4096,14 @@ function bossFail(why) {
   R.monsters = R.monsters.filter(x => x !== m);
   R.fx = R.fx.filter(f => !['wave', 'sonic', 'erupt', 'shard', 'fireball', 'dark'].includes(f.type));
   R.boss = null;
-  S.autoBoss = false;
-  banner('Босс устоял', why === 'time' ? 'Время вышло' : `${heroName()} ${G('пала', 'пал')}`, '#ff5d73');
-  log('Босс не побеждён. Усильтесь и вызовите его снова кнопкой «Босс».', 'bad');
+  // Мягкая стена, как в Slayer Legend: никакого штрафа, но и не бесконечные попытки.
+  // Пока игрок фармит и растёт, босс вызывается сам; пауза между попытками растёт.
+  R.bossFails++;
+  R.bossCd = Math.min(300, 20 * Math.pow(1.6, Math.min(5, R.bossFails - 1)));
+  banner('Босс устоял', why === 'time' ? 'Время вышло — фармим и вернёмся' : `${heroName()} ${G('пала', 'пал')} — фармим`, '#ff5d73');
+  log(S.autoBoss
+    ? `Босс не побеждён. ${G('Героиня', 'Герой')} фармит этап и вернётся через ${Math.round(R.bossCd)} с.`
+    : 'Босс не побеждён. Усильтесь и вызовите его снова кнопкой «Босс».', 'bad');
   updateMusic();
   updateHudStatic();
 }
@@ -3759,7 +4138,7 @@ function killMonster(m) {
   m.hp = 0; m.dieT = .001;
   const s = S.stage, z = zoneOf(s);
   const gold = B.mGold(s) * (m.boss ? B.BOSS.gold : 1) * (.9 + rnd() * .2) * goldMul();
-  const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * (1 + R.pb.xpPct);
+  const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * xpMul();
   S.gold += gold; S.stats.kills++;
   quest('kills');
   gainXp(xp);
@@ -3774,7 +4153,7 @@ function killMonster(m) {
   updateHudStatic();
 }
 function rollDrops(m, z, y) {
-  const D = B.DROP, dm = 1 + R.pb.dropPct;
+  const D = B.DROP, dm = dropMul();
   const give = (kind, blessed) => {
     const g = B.zoneDropGrade(z.z, rnd);
     S.scrolls[(blessed ? 'b' : '') + kind][g]++;
@@ -4054,7 +4433,8 @@ function update(dtRaw) {
     if (R.boss.active) { R.boss.time -= dt; if (R.boss.time <= 0 && R.boss.m.hp > 0) bossFail('time'); }
   } else if (!R.bossPending) {
     spawnLogic();
-    if (S.kills >= 10 && S.autoBoss && !h.dead) startBoss();
+    if (R.bossCd > 0) R.bossCd = Math.max(0, R.bossCd - dtRaw);
+    if (S.kills >= 10 && S.autoBoss && !h.dead && R.bossCd <= 0) startBoss();
   }
 
   const alive = R.monsters.filter(m => m.hp > 0).sort((a, b) => a.x - b.x);
@@ -4338,10 +4718,180 @@ function drawFx(c) {
   }
 }
 
+/* --- 15_systems.js --- */
+/* ===== Системы мета-прогресса: пробуждение, башня, подземелья, главы, фонд ===== */
+
+/* ---------- общие помощники ---------- */
+function weekKey(d = new Date()) {
+  const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = (t.getDay() + 6) % 7;                       // понедельник = 0
+  t.setDate(t.getDate() - day);
+  return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`;
+}
+function anyEquippedGrade(min = 1) {
+  return B.SLOTS.some(sl => { const id = S.equip[sl.id]; const it = id && itemById(id); return it && it.g >= min; });
+}
+function rewardSummary(rw) { return rewardText(rw); }
+
+/* ---------- быстрый бой для башни и подземелий ----------
+   Считаем бой по средним значениям: так игрок видит честный прогноз,
+   а не проигрывает из-за одной неудачной серии критов. */
+function simFight(enemy, stageEq) {
+  const st = R.st;
+  const kDef = B.defK(stageEq);
+  const heroRed = st.def / (st.def + kDef);
+  const enemyRed = enemy.def / (enemy.def + kDef);
+  let hp = st.hp, ehp = enemy.hp, t = 0;
+  let hT = 1 / st.aspd, eT = 1.2;
+  const dps = st.atk * (1 - enemyRed) * (1 + st.crit * (st.critDmg - 1)) * st.aspd;
+  const taken = enemy.atk * (1 - heroRed);
+  for (let i = 0; i < 1600 && hp > 0 && ehp > 0; i++) {
+    const step = .05;
+    t += step;
+    hp = Math.min(st.hp, hp + st.regen * step);
+    hT -= step; eT -= step;
+    if (hT <= 0) { hT += 1 / st.aspd; ehp -= st.atk * (1 - enemyRed) * (1 + st.crit * (st.critDmg - 1)); }
+    if (eT <= 0) { eT += 1.25; hp -= taken; }
+  }
+  return { win: ehp <= 0 && hp > 0, t, hp: Math.max(0, hp), ehp: Math.max(0, ehp), heroMax: st.hp, enemyMax: enemy.hp, dps, taken };
+}
+
+/* ---------- башня сакуры ---------- */
+const towerFloor = () => S.tower.floor + 1;
+const towerOpen = () => towerFloor() <= B.TOWER.floors;
+const towerGuardFor = f => B.towerGuard(f);
+function towerRewardFor(f) { return B.TOWER.reward(f); }
+function towerClaimable() { return S.tower.week === weekKey() && !S.tower.reward && S.tower.best > 0; }
+function towerWeeklyGems() { return B.TOWER.weeklyGems(S.tower.best); }
+
+function towerClaim() {
+  if (!towerClaimable()) return;
+  const g = towerWeeklyGems();
+  S.tower.reward = g;
+  grant({ gems: g });
+  saveLocal();
+}
+
+/* ---------- подземелья ---------- */
+function dungeonKeyCap() { return B.DKEYS.perDay + 2; }
+
+/* ---------- пробуждение ---------- */
+const awakenGain = () => B.AW.gain(S.maxStage);
+const canAwaken = () => S.maxStage >= B.AW.unlockStage;
+function awLevel(id) { return S.aw.lvl[id] || 0; }
+function awCostFor(id) {
+  const n = B.AW_BY[id];
+  return B.awCost(n, awLevel(id));
+}
+function buyAw(id) {
+  const n = B.AW_BY[id];
+  if (!n) return false;
+  const l = awLevel(id);
+  if (l >= n.max) return false;
+  const cost = B.awCost(n, l);
+  if (S.aw.petals < cost) { toast('Не хватает лепестков'); return false; }
+  S.aw.petals -= cost; S.aw.lvl[id] = l + 1;
+  recalc(); updateHudStatic();
+  AU.sfx('buy');
+  saveLocal();
+  return true;
+}
+function doAwaken() {
+  if (!canAwaken()) return false;
+  const gain = awakenGain();
+  S.aw.petals += gain;
+  S.aw.count++;
+  S.stats.awakenings++;
+  S.bestStage = Math.max(S.bestStage || 0, S.maxStage);
+  // сброс похода, но не коллекций
+  S.maxStage = 0; S.stage = 0; S.level = 1; S.xp = 0; S.gold = 0; S.sp = 0; S.kills = 0;
+  for (const g of B.GROWTH) S.growth[g.id] = 0;
+  for (const s of SKILLS) S.skills[s.id] = 0;
+  const start = Math.min(B.AW.unlockStage - 10, Math.floor(B.awBonus(S.aw.lvl).start));
+  if (start > 0) { S.stage = start; S.maxStage = start; }
+  R.monsters = []; R.boss = null; R.bossPending = false; R.warn = 0; R.bossCd = 0; R.bossFails = 0; R.fx = [];
+  recalc(); R.hero.hp = R.st.hp; R.hero.dead = 0;
+  updateHudStatic(); updateMusic();
+  checkAch();
+  log(`Пробуждение ${S.aw.count}: получено ${gain} лепестков. Путь начинается заново, но снаряжение и питомцы с вами.`, 'good');
+  saveLocal(); Cloud.push();
+  return true;
+}
+
+/* ---------- фонд сакуры ---------- */
+function fundClaimable() {
+  if (!S.fund.owned) return [];
+  return B.FUND.levels.filter(l => S.level >= l && !S.fund.claimed.includes(l));
+}
+function fundClaim(level) {
+  if (!S.fund.owned || S.level < level || S.fund.claimed.includes(level)) return false;
+  S.fund.claimed.push(level);
+  grant({ gems: B.FUND.gems });
+  saveLocal();
+  return true;
+}
+function fundUi() {
+  const total = B.FUND.levels.length;
+  const got = S.fund.claimed.length;
+  const current = B.FUND.levels.find(l => S.level >= l && !S.fund.claimed.includes(l));
+  const next = B.FUND.levels.find(l => S.level < l) || B.FUND.levels[B.FUND.levels.length - 1];
+  return { total, got, current, next, totalGems: B.FUND_TOTAL };
+}
+
+/* ---------- главы: сюжетный онбординг ---------- */
+const CHAPTERS = [
+  { id: 'kills',  title: 'Первые шаги',    text: 'Монстры гибнут сами — вам нужно лишь направлять силу. Победите 10 монстров.', goal: 10, of: () => S.stats.kills, rw: { gems: 60, scrollsA: 2 } },
+  { id: 'geard',  title: 'Грейд D',        text: 'На 8-м уровне откроется грейд D. Купите и наденьте любой предмет этого грейда.', goal: 1, of: () => anyEquippedGrade(1) ? 1 : 0, rw: { gems: 80, scrollsA: 2 } },
+  { id: 'ench',   title: 'Кузнец',         text: 'Свитки заточки падают из монстров. Заточите надетый предмет — до +3 это безопасно.', goal: 1, of: () => S.stats.enchants, rw: { gems: 60, scrollsA: 3 } },
+  { id: 'boss',   title: 'Первый босс',    text: 'Победив 10 монстров, вызовите босса этапа. Победа откроет новый этап.', goal: 1, of: () => S.stats.bosses, rw: { gems: 100, summon: 1 } },
+  { id: 'pet',    title: 'Спутник',        text: 'Призовите питомца: он бьёт врагов и усиливает героя. Билет уже есть.', goal: 1, of: () => S.stats.summons, rw: { gems: 100, summon: 1 } },
+  { id: 'arena',  title: 'Арена',          text: 'Сразись на арене. Даже поражение даёт самоцветы и опыт пропуска.', goal: 1, of: () => S.arena.fights, rw: { gems: 80, scrollsW: 3 } },
+  { id: 'tower',  title: 'Первый ярус',    text: 'Башня сакуры — проверка силы. Пройдите первый ярус.', goal: 1, of: () => S.tower.best, rw: { gems: 100, keys: 1 } },
+  { id: 'ench6',  title: 'Искра удачи',    text: 'Заточите предмет до +6. С +8 неудача может разрушить вещь — берегите её.', goal: 6, of: () => S.stats.best, rw: { gems: 150, blessedA: 1 } },
+  { id: 'stage3', title: 'Третий круг',    text: 'Дойдите до этапа 3-1. В новых зонах падают свитки высших грейдов.', goal: 20, of: () => Math.max(S.bestStage || 0, S.maxStage), rw: { gems: 180, crystalsK: 2 } },
+  { id: 'dungeon',title: 'Подземелья',     text: 'Подземелья дают золото, свитки и кристаллы. Ключи обновляются каждый день.', goal: 1, of: () => S.stats.dungeonRuns, rw: { gems: 150, keys: 2 } },
+  { id: 'awaken', title: 'Пробуждение',    text: 'Дойдите до 50-го этапа и совершите пробуждение: вечные бонусы останутся навсегда.', goal: 1, of: () => S.stats.awakenings, rw: { gems: 400, petals: 15 } },
+  { id: 'stage7', title: 'Седьмой круг',   text: 'Дойдите до этапа 7-1 и откройте легендарные грейды снаряжения.', goal: 60, of: () => Math.max(S.bestStage || 0, S.maxStage), rw: { gems: 600, summon: 3 } },
+  { id: 'deep',   title: 'Глубина',        text: 'Дойдите до этапа 10-1. Дальше начинается бесконечный путь.', goal: 90, of: () => Math.max(S.bestStage || 0, S.maxStage), rw: { gems: 900, petals: 20 } },
+];
+function chapterCurrent() { return CHAPTERS[S.chapter.idx] || null; }
+function chapterProgress() {
+  const c = chapterCurrent(); if (!c) return null;
+  const v = Math.min(c.goal, c.of() || 0);
+  return { c, v, done: v >= c.goal };
+}
+function chapterClaim() {
+  const p = chapterProgress();
+  if (!p || !p.done) return false;
+  S.chapter.idx++;
+  grant(p.c.rw);
+  log(`Глава «${p.c.title}» завершена.`, 'good');
+  AU.sfx('success');
+  saveLocal();
+  return true;
+}
+function chaptersReady() { const p = chapterProgress(); return p && p.done ? 1 : 0; }
+
+/* ---------- перековка грани ---------- */
+function rerollOpts(it) {
+  if (!it || it.g === 0) return false;
+  const cost = B.rerollCost(it.g);
+  if (S.crystals < cost) { toast(`Нужно ${fmt(cost)} ${plural(cost, CRY_W)}`); return false; }
+  S.crystals -= cost;
+  const before = JSON.stringify(it.opts);
+  for (let i = 0; i < 8; i++) { it.opts = B.rollOpts(rnd, it.g); if (JSON.stringify(it.opts) !== before) break; }
+  it.pt = 0;
+  S.stats.rerolls++;
+  recalc();
+  AU.sfx('charge');
+  saveLocal();
+  return true;
+}
+
 /* --- 20_hud.js --- */
 /* ===== HUD, журнал, всплывашки, модальные окна, музыка ===== */
 const hud = {};
-['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
+['hLvl', 'xpFill', 'hpFill', 'hpText', 'goldText', 'gemText', 'stageNum', 'stageName', 'killFill', 'killText', 'bossBtn', 'autoBtn', 'stageRow', 'bossRow', 'bossName', 'bossFill', 'bossTime', 'skillDock', 'heroDot', 'gearDot', 'petDot', 'arenaDot', 'shopDot', 'trialDot', 'questBtn', 'questDot', 'giftBtn', 'giftDot', 'boostChip', 'boostTime', 'settingsBtn', 'gemBtn', 'heroTabLabel'].forEach(id => hud[id] = $(id));
 
 function updateHudStatic() {
   if (!S) return;
@@ -4358,8 +4908,10 @@ function updateHudStatic() {
   hud.stageRow.hidden = inBoss; hud.bossRow.hidden = !inBoss;
   if (R.boss) hud.bossName.textContent = R.boss.m.name;
   const spReady = S.sp > 0 && SKILLS.some(s => S.level >= s.unlock && S.skills[s.id] < SKILL_MAX);
-  hud.heroDot.hidden = !spReady; hud.heroDot.textContent = S.sp;
+  hud.heroDot.hidden = !(spReady || chaptersReady() || fundClaimable().length);
+  hud.heroDot.textContent = S.sp || '';
   hud.heroTabLabel.textContent = G('Героиня', 'Герой');
+  hud.trialDot.hidden = !(towerClaimable() || chaptersReady() > 0);
   updateSideButtons();
 }
 function updateSideButtons() {
@@ -4368,7 +4920,7 @@ function updateSideButtons() {
   hud.questDot.hidden = !q; hud.questDot.textContent = q;
   const gift = Monet.giftReady();
   hud.giftDot.hidden = !gift;
-  hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()));
+  hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()) || (!S.gacha.first10 && S.gems >= B.GACHA.first10));
   hud.arenaDot.hidden = !(S.arena.tickets > 0 || S.arena.rewardDay !== dayKey());
   hud.shopDot.hidden = !(S.shop.monthlyUntil > Date.now() && S.shop.monthlyDay !== dayKey());
   hud.gearDot.hidden = !S.items.some(it => isEquipped(it) && canEnchant(it));
@@ -4461,8 +5013,8 @@ function updateMusic() {
 const panel = $('panel');
 function renderPanel() {
   if (!S || !S.hero) { panel.innerHTML = ''; return; }
-  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, shop: renderShop }[R.tab];
-  panel.innerHTML = fn();
+  const fn = { hero: renderHero, gear: renderGear, pets: renderPets, arena: renderArena, trials: renderTrials, shop: renderShop }[R.tab];
+  panel.innerHTML = fn ? fn() : '';
   if (R.tab === 'gear') setupDoll();
   if (R.tab === 'pets') setupPetStage();
   if (R.tab === 'arena') Arena.onOpen();
@@ -4497,7 +5049,22 @@ function statCells() {
 }
 function renderHero() {
   const spReady = S.sp > 0 && SKILLS.some(s => S.level >= s.unlock && S.skills[s.id] < SKILL_MAX);
+  const cp = chapterProgress();
+  const chIdx = Math.min(S.chapter.idx + 1, CHAPTERS.length);
+  const chapter = !cp ? '' : `<section class="card chapter-card ${cp.done ? 'done' : ''}">
+      <img src="${A.miscIcon('quests', 64)}" alt="">
+      <div class="row-main"><b>Глава ${chIdx} · ${cp.c.title}</b><span class="meta">${cp.c.text}</span>
+        <div class="bar mini"><i style="width:${Math.min(100, cp.v / cp.c.goal * 100)}%"></i></div>
+        <span class="meta">${fmt(cp.v)} / ${fmt(cp.c.goal)}</span></div>
+      ${cp.done ? `<button class="buy pink" data-act="chapter-claim">Забрать</button>` : ''}
+    </section>`;
+  const f = fundUi();
+  const fundCard = S.fund.owned && f.current ? `<section class="card chest-card"><img src="${A.miscIcon('starter', 64)}" alt="">
+      <div class="row-main"><b>Фонд сакуры</b><span class="meta">Уровень ${f.current} достигнут · ${B.FUND.gems} 💎</span></div>
+      <button class="buy pink" data-act="fund-claim" data-l="${f.current}">Забрать</button></section>` : '';
   return `
+    ${chapter}
+    ${fundCard}
     <section class="card hero-card">
       <img class="portrait" src="${A.heroIcon(S.hero.body, S.hero.hair, 128)}" alt="">
       <div class="hero-meta"><h2>${esc(heroName())}</h2><span class="power">Боевая мощь<b id="powerVal">${fmt(R.power)}</b></span></div>
@@ -4624,28 +5191,38 @@ function drawDoll() {
 }
 
 /* ---------- карточка предмета ---------- */
-function compareRows(slot, g, e, vsSt) {
-  const cur = B.itemStats(slot, g, e);
+function compareRows(slot, g, e, opts, vsSt) {
+  const cur = itemTotals({ slot, g, e, opts });
   return Object.keys(cur).map(k => {
     const v = cur[k], o = vsSt ? (vsSt[k] || 0) : null;
     const cls = o === null ? '' : v > o + 1e-9 ? 'up' : v < o - 1e-9 ? 'down' : '';
-    return `<dt>${STAT_LABEL[k]}</dt><dd class="${cls}">${statStr(k, v)}</dd><dd>${o === null ? '' : 'сейчас ' + statStr(k, o)}</dd>`;
+    return `<dt>${STAT_LABEL[k] || k}</dt><dd class="${cls}">${statStr(k, v)}</dd><dd>${o === null ? '' : 'сейчас ' + statStr(k, o)}</dd>`;
   }).join('');
+}
+function optsHTML(it) {
+  if (it.g === 0) return '<p class="note">Предметы без грейда нельзя заточить или перековать.</p>';
+  const opts = it.opts || [];
+  const cost = B.rerollCost(it.g);
+  const rows = opts.length ? opts.map(o => `<span class="opt-chip">${B.OPT_BY[o.k] ? B.OPT_BY[o.k].name : o.k} <b>${statStr(o.k, o.v)}</b></span>`).join('')
+    : '<span class="note">Грань пуста — перекуйте, чтобы получить свойства.</span>';
+  return `<div class="opts-block"><div class="opts-head"><b>Грань предмета</b><span class="sub">${opts.length} из ${B.optCount(it.g)}</span></div>
+    <div class="opt-chips">${rows}</div>
+    <button class="buy ghost small ${S.crystals >= cost ? '' : 'poor'}" data-act="reroll" data-id="${it.id}">Перековать · <img src="${A.miscIcon('crystal', 32)}" alt="">${fmt(cost)}</button></div>`;
 }
 function openItem(id) {
   const it = itemById(id); if (!it) return;
   const eq = isEquipped(it), gr = B.GRADES[it.g];
   const eqId = S.equip[it.slot], eqIt = !eq && eqId && itemById(eqId);
-  const vs = eqIt ? B.itemStats(eqIt.slot, eqIt.g, eqIt.e) : null;
+  const vs = eqIt ? itemTotals(eqIt) : null;
   const lvOk = S.level >= gr.lvl, k = scrollKind(it.slot), canEnch = it.g > 0 && it.e < B.MAX_ENCH;
   openModal(sheet(`<span class="gtext g${it.g}">${itemName(it)}</span>`, `${B.SLOT[it.slot].name} · ${gr.label}${eq ? ' · надето' : ''}`, `
-    <dl class="compare">${compareRows(it.slot, it.g, it.e, vs)}</dl>
+    <dl class="compare">${compareRows(it.slot, it.g, it.e, it.opts, vs)}</dl>
+    ${optsHTML(it)}
     ${!lvOk ? `<p class="note warn">Нужен уровень ${gr.lvl}, чтобы надеть этот предмет.</p>` : ''}
-    ${it.g === 0 ? '<p class="note">Предметы без грейда нельзя заточить.</p>'
-      : `<p class="note">Свитков ${B.GRADES[it.g].short} для ${k === 'w' ? 'оружия' : 'доспехов'}: обычных ${S.scrolls[k][it.g]}, благословенных ${S.scrolls['b' + k][it.g]}.</p>`}
+    ${it.g === 0 ? '' : `<p class="note">Свитков ${B.GRADES[it.g].short} для ${k === 'w' ? 'оружия' : 'доспехов'}: обычных ${S.scrolls[k][it.g]}, благословенных ${S.scrolls['b' + k][it.g]}.</p>`}
     <div class="btn-row">
       ${eq ? `<button class="buy ghost" data-act="unequip" data-id="${it.id}">Снять</button>` : `<button class="buy" data-act="equip" data-id="${it.id}" ${lvOk ? '' : 'disabled'}>Надеть</button>`}
-      <button class="buy pink" data-act="enchant" data-id="${it.id}" ${canEnch ? '' : 'disabled'}>${it.e >= B.MAX_ENCH ? 'Максимум +16' : 'Заточить'}</button>
+      <button class="buy pink" data-act="enchant" data-id="${it.id}" ${canEnch ? '' : 'disabled'}>${it.e >= B.MAX_ENCH ? `Максимум +${B.MAX_ENCH}` : 'Заточить'}</button>
     </div>
     ${eq ? '' : `<div class="btn-row">
       <button class="buy ghost" data-act="sell" data-id="${it.id}"><img src="${A.miscIcon('gold', 32)}" alt="">Продать за ${fmt(B.sellPrice(it.slot, it.g))}</button>
@@ -4662,27 +5239,29 @@ function removeItem(id) { const it = itemById(id); if (!it) return; if (S.equip[
 
 /* ---------- заточка ---------- */
 function enchantHTML(it, st) {
-  const k = scrollKind(it.slot), target = it.e + 1, ch = B.enchChance(target);
+  const k = scrollKind(it.slot), info = enchInfo(it), target = info.target, ch = info.ch;
   const nN = S.scrolls[k][it.g], nB = S.scrolls['b' + k][it.g];
   if (st.kind === 'n' && !nN && nB) st.kind = 'b';
   if (st.kind === 'b' && !nB && nN) st.kind = 'n';
   const have = st.kind === 'n' ? nN : nB;
-  const cls = ch >= 1 ? 'safe' : ch >= .5 ? 'risky' : 'deadly';
-  const now = B.itemStats(it.slot, it.g, it.e), nxt = B.itemStats(it.slot, it.g, target);
+  const cls = info.safe ? 'safe' : info.destructive ? 'deadly' : 'risky';
+  const now = itemTotals(it), nxt = B.itemStats(it.slot, it.g, target);
   const kindName = k === 'w' ? 'оружие' : 'доспех', cy = B.crystalYield(it.slot, it.g, it.e);
+  const maxed = it.e >= B.MAX_ENCH;
   return sheet('Заточка', `<span class="gtext g${it.g}">${itemName(it)}</span>`, `
     <div class="forge"><canvas id="forgeCv"></canvas>${tileHTML(it, 'id="forgeTile" tabindex="-1"')}<div class="forge-result" id="forgeRes"></div></div>
-    ${it.e >= B.MAX_ENCH ? '<p class="chance safe">Достигнута максимальная заточка <b>+16</b></p>' : `
+    ${maxed ? `<p class="chance safe">Достигнута максимальная заточка <b>+${B.MAX_ENCH}</b></p>` : `
     <div class="ench-line"><span class="gtext g${it.g}">+${it.e}</span><span class="arrow">→</span><span>+${target}</span></div>
-    <p class="chance ${cls}">Шанс успеха <b>${Math.round(ch * 100)}%</b>${ch >= 1 ? ' · безопасно до +3' : ''}</p>
+    <p class="chance ${cls}">Шанс успеха <b>${Math.round(ch * 100)}%</b>${info.safe ? ' · безопасно до +3' : info.pity > 0 ? ` · искра +${Math.round(info.pity * 100)}%` : ''}</p>
     <dl class="compare">${Object.keys(nxt).map(s => `<dt>${STAT_LABEL[s]}</dt><dd>${statStr(s, now[s])}</dd><dd class="up">${statStr(s, nxt[s])}</dd>`).join('')}</dl>
     <div class="scroll-pick" role="group" aria-label="Свиток">
       <button data-act="pick" data-v="n" aria-pressed="${st.kind === 'n'}" ${nN ? '' : 'disabled'}><img src="${A.scrollIcon(k === 'w' ? 'weapon' : 'armor', it.g, false)}" alt=""><b>Свиток: ${kindName} ${B.GRADES[it.g].short}</b><span>Есть ${nN}</span></button>
       <button data-act="pick" data-v="b" aria-pressed="${st.kind === 'b'}" ${nB ? '' : 'disabled'}><img src="${A.scrollIcon(k === 'w' ? 'weapon' : 'armor', it.g, true)}" alt=""><b>Благословенный</b><span>Есть ${nB}</span></button>
     </div>
-    ${ch >= 1 ? '<p class="note">Безопасная заточка: предмет не пострадает.</p>'
+    ${info.safe ? '<p class="note">Безопасная заточка: предмет не пострадает.</p>'
       : st.kind === 'b' ? '<p class="note">Благословенный свиток: при неудаче заточка сбросится до +0, предмет уцелеет.</p>'
-      : `<p class="note warn">При неудаче предмет разрушится и превратится в ${fmt(cy)} ${plural(cy, CRY_W)}. Новый придётся покупать в магазине.</p>`}
+      : info.destructive ? `<p class="note warn">При неудаче предмет разрушится и превратится в ${fmt(cy)} ${plural(cy, CRY_W)}. Выше +7 рискуйте только с запасом.</p>`
+      : `<p class="note">При неудаче заточка откатится до +${B.ENCH.fallback}, предмет уцелеет. Каждая неудача даёт искру: +6% к следующей попытке.</p>`}
     ${have ? '<button class="buy pink wide" data-act="do-enchant">Заточить</button>'
       : `<button class="buy wide" data-act="buy-scrolls" data-g="${it.g}">Нет свитков: купить в магазине</button>`}`}`);
 }
@@ -4743,23 +5322,23 @@ function doEnchant() {
   requestAnimationFrame(ramp);
 }
 function resolveEnchant(st, it, key) {
-  const target = it.e + 1, ch = B.enchChance(target), blessed = key[0] === 'b';
+  const target = it.e + 1, info = enchInfo(it), ch = info.ch, blessed = key[0] === 'b';
   S.stats.enchants++; quest('enchant');
   const res = $('forgeRes'), tile = $('forgeTile');
   const finish = (ms) => setTimeout(() => { if (modalState === st) { st.busy = false; st.power = 0; st.color = '#ff8fc1'; rerenderEnchant(st); } }, RM ? 400 : ms);
   if (rnd() < ch) {
-    it.e = target; S.stats.best = Math.max(S.stats.best, target);
+    it.e = target; it.pt = 0; S.stats.best = Math.max(S.stats.best, target);
     st.color = '#ffd760'; burst(st, ['#ffd760', '#ffffff', '#ff8fc1'], false, 40);
     res.className = 'forge-result ok'; res.innerHTML = `+${target} Успех!`;
     log(`${B.NAMES[it.slot][it.g]} заточен до +${target}.`, 'good');
     AU.sfx('success'); recalc(); checkAch(); updateSideButtons(); finish(1100);
   } else if (blessed) {
-    const was = it.e; it.e = 0;
+    const was = it.e; it.e = 0; it.pt = 0;
     st.color = '#7cc8ff'; burst(st, ['#7cc8ff', '#ffffff'], false, 26);
     res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Благословение спасло предмет. Заточка +${was} сброшена до +0.</small>`;
     log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +0.`, 'bad');
     AU.sfx('fail'); recalc(); finish(1600);
-  } else {
+  } else if (info.destructive) {
     const cry = B.crystalYield(it.slot, it.g, it.e), nm = itemName(it), slot = it.slot, g = it.g;
     removeItem(it.id); S.crystals += cry; S.stats.breaks++;
     recalc();
@@ -4777,6 +5356,13 @@ function resolveEnchant(st, it, key) {
       sh.insertAdjacentHTML('beforeend', `<p class="note">Новый ${B.NAMES[slot][g]} стоит ${fmt(B.price(slot, g))} золота.</p>
         <div class="btn-row"><button class="buy" data-act="goshop" data-g="${g}">Купить заново</button><button class="buy ghost" data-act="close">Закрыть</button></div>`);
     }, RM ? 400 : 1300);
+  } else {
+    const was = it.e;
+    it.e = B.ENCH.fallback; it.pt = (it.pt || 0) + 1;
+    st.color = '#ff9a5c'; burst(st, ['#ff9a5c', '#ffffff'], false, 26);
+    res.className = 'forge-result reset'; res.innerHTML = `Неудача<small>Заточка +${was} откатилась до +${B.ENCH.fallback}. Искра даст +${Math.round(Math.min(B.ENCH.pityMax, it.pt * B.ENCH.pityStep) * 100)}% к следующей попытке.</small>`;
+    log(`Заточка не удалась. ${B.NAMES[it.slot][it.g]}: +${was} → +${B.ENCH.fallback}. Накоплена искра.`, 'bad');
+    AU.sfx('fail'); recalc(); finish(1600);
   }
   if (R.tab === 'gear') renderPanel();
 }
@@ -4837,10 +5423,10 @@ function buyItem(slot, g) {
   const p = B.price(slot, g);
   if (S.gold < p || S.level < B.GRADES[g].lvl) { toast(S.gold < p ? 'Не хватает золота' : `Нужен уровень ${B.GRADES[g].lvl}`); return; }
   S.gold -= p;
-  const it = { id: S.nextId++, slot, g, e: 0 };
+  const it = { id: S.nextId++, slot, g, e: 0, pt: 0, opts: B.rollOpts(rnd, g) };
   S.items.push(it);
   const curId = S.equip[slot], cur = curId && itemById(curId);
-  if (!cur || itemScore(slot, g, 0) > itemScore(cur.slot, cur.g, cur.e)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
+  if (!cur || itemScore(slot, g, 0, it.opts) > itemScore(cur.slot, cur.g, cur.e, cur.opts)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
   else toast(`${itemName(it)} в сумке`);
   log(`Куплено: ${itemName(it)}.`, 'sys');
   AU.sfx('buy');
@@ -4897,7 +5483,273 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 2.0</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.0</p>`));
+}
+
+/* --- 35_trials.js --- */
+/* ===== Панели испытаний: башня, подземелья, пробуждение ===== */
+function renderTrials() {
+  const seg = segHTML('trialseg', R.trialSeg, [['tower', 'Башня'], ['dungeon', 'Подземелья'], ['awaken', 'Пробуждение']]);
+  const body = { tower: renderTower, dungeon: renderDungeons, awaken: renderAwaken }[R.trialSeg]();
+  return seg + body;
+}
+
+/* ---------- башня ---------- */
+const awBadges = () => S.aw.petals > 0 ? `<span class="chip plain"><img src="${A.miscIcon('petal', 32)}" alt="">${fmt(S.aw.petals)}</span>` : '';
+function powerTag(guard) {
+  const gp = B.power(guard), mine = R.power;
+  const r = gp / Math.max(1, mine);
+  return r < .85 ? ['легко', 'easy'] : r > 1.4 ? ['сложно', 'hard'] : ['на равных', 'even'];
+}
+function renderTower() {
+  const f = towerFloor(), open = towerOpen(), guard = towerGuardFor(Math.min(f, B.TOWER.floors));
+  const tag = powerTag(guard), claimable = towerClaimable();
+  const rw = towerRewardFor(Math.min(f, B.TOWER.floors));
+  const canClaim = claimable;
+  return `
+    <section class="card tower-card">
+      <div class="tower-head"><div><h2>Башня сакуры</h2>
+        <p class="sub">Пройдено ярусов: <b>${S.tower.best}</b> из ${B.TOWER.floors}${open ? '' : ' · вершина достигнута'}</p></div>
+        ${awBadges()}</div>
+      <div class="tower-num"><span>ЯРУС</span><b>${open ? f : B.TOWER.floors}</b><span>из ${B.TOWER.floors}</span></div>
+      <p class="sub">${esc(guard.name)} · мощь <b>${fmt(B.power(guard))}</b> · <span class="diff ${tag[1]}">${tag[0]}</span></p>
+      <div class="btn-row">
+        <button class="buy pink" data-act="tower-fight" ${open ? '' : 'disabled'}>${open ? 'В бой' : 'Вершина'}</button>
+        <button class="buy ghost" data-act="tower-auto" ${open ? '' : 'disabled'}>Авто до поражения</button>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h3>Награда за ярус ${open ? f : B.TOWER.floors}</h3></div>
+      <p class="sub">${rewardSummary(rw) || '—'}</p>
+      <p class="note">За каждый 10-й ярус — лепестки сакуры и билеты призыва. Башня проходится один раз навсегда.</p>
+    </section>
+    <section class="card chest-card">
+      <img src="${A.miscIcon('trophy', 64)}" alt="">
+      <div class="row-main"><b>Недельная награда</b><span class="meta">За лучший результат недели: ${B.TOWER.weeklyGems(S.tower.best)} 💎</span></div>
+      <button class="buy ${canClaim ? 'pink' : ''}" data-act="tower-claim" ${canClaim ? '' : 'disabled'}>${canClaim ? 'Забрать' : S.tower.reward ? 'Получено' : 'Пройдите ярус'}</button>
+    </section>`;
+}
+
+/* ---------- подземелья ---------- */
+function renderDungeons() {
+  const d = S.dungeon;
+  return `
+    <section class="card dungeon-head">
+      <img src="${A.miscIcon('key', 64)}" alt="">
+      <div class="row-main"><b>Ключи подземелий: ${d.keys}</b><span class="meta">Каждый день дают ${B.DKEYS.perDay} ключа · обновление через ${left(msToMidnight())}</span></div>
+      <div class="btn-row" style="width:100%">
+        <button class="buy ad small" data-act="dungeon-adkey" ${d.ads >= B.DKEYS.adExtra ? 'disabled' : ''}>+1 за рекламу</button>
+        <button class="buy ghost small" data-act="dungeon-key" data-cost="${B.DKEYS.gemCost}" data-cur="gem" ${d.buys >= B.DKEYS.gemMax || S.gems < B.DKEYS.gemCost ? 'disabled' : ''}><img src="${A.miscIcon('gem', 32)}" alt="">+1 за ${B.DKEYS.gemCost}</button>
+      </div>
+    </section>
+    <ul class="rows">${B.DUNGEONS.map(dn => {
+      const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = powerTag(guard);
+      return `<li class="row"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
+        <div class="row-main"><b>${dn.name}</b><span class="meta">${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span></span>
+        <span class="val">${rewardSummary(rw)}</span></div>
+        <button class="buy ${d.keys > 0 ? 'pink' : ''}" data-act="dungeon-go" data-id="${dn.id}" ${d.keys > 0 ? '' : 'disabled'}>Войти</button></li>`;
+    }).join('')}</ul>
+    <p class="note">Подземелья — быстрый бой без риска: ключ тратится только при победе. Награда растёт вместе с вашим этапом.</p>`;
+}
+
+/* ---------- пробуждение ---------- */
+function renderAwaken() {
+  const gain = awakenGain(), open = canAwaken(), aw = B.awBonus(S.aw.lvl);
+  const startStage = Math.min(B.AW.unlockStage - 10, Math.floor(aw.start));
+  return `
+    <section class="card awaken-hero">
+      <div class="tower-head"><div><h2>Путь сакуры</h2>
+        <p class="sub">Пробуждений: <b>${S.aw.count}</b> · лепестки копятся навсегда</p></div>
+        <span class="chip plain"><img src="${A.miscIcon('petal', 32)}" alt="">${fmt(S.aw.petals)}</span></div>
+      <p class="sub">${open ? `Сейчас вы получите <b>${gain}</b> лепестков. Сбросятся этап, уровень и тренировка; снаряжение, питомцы, самоцветы и кристаллы останутся.` : `Пробуждение открывается на этапе ${B.AW.unlockStage}. Сейчас рекорд: этап ${zoneOf(S.bestStage).num}.`}</p>
+      <div class="btn-row">
+        <button class="buy pink wide" data-act="awaken-ask" ${open ? '' : 'disabled'}>${open ? `Пробудиться · +${gain} лепестков` : 'Ещё не открыто'}</button>
+      </div>
+      <p class="note">После пробуждения вы начнёте с этапа ${startStage + 1}: «Память пути» ведёт вперёд.</p>
+    </section>
+    <div class="card-head" style="margin:0"><h3>Древо вечности</h3><span class="sub">Бонусы навсегда</span></div>
+    <ul class="rows awaken-tree">${B.AW_NODES.map(n => {
+      const l = awLevel(n.id), maxed = l >= n.max, cost = B.awCost(n, l);
+      const cur = n.fmt === 'pct' ? '+' + pct(n.val(l)) : n.fmt === 'hours' ? `${n.val(l)} ч` : n.fmt === 'sec' ? `${n.val(l)} с` : `${n.val(l)}`;
+      const next = maxed ? cur : n.fmt === 'pct' ? '+' + pct(n.val(l + 1)) : n.fmt === 'hours' ? `${n.val(l + 1)} ч` : n.fmt === 'sec' ? `${n.val(l + 1)} с` : `${n.val(l + 1)}`;
+      return `<li class="row"><img src="${A.miscIcon(n.id === 'start' ? 'pass' : n.id === 'offline' ? 'moon' : n.id === 'ench' ? 'quests' : n.id === 'bossTime' ? 'boss' : n.id === 'pet' ? 'paw' : n.id === 'crit' ? 'crit' : 'petal', 64)}" alt="">
+        <div class="row-main"><b>${n.name}</b><span class="meta">${n.desc}: ${cur}${maxed ? ' · максимум' : ` → <em>${next}</em>`}</span></div>
+        <button class="buy ${S.aw.petals < cost || maxed ? 'poor' : ''}" data-act="aw-buy" data-id="${n.id}" ${maxed ? 'disabled' : ''}>
+          <img src="${A.miscIcon('petal', 32)}" alt="">${maxed ? 'Макс' : cost}</button></li>`;
+    }).join('')}</ul>
+    <p class="note">Древо усиливает весь прогресс сразу: атаку, золото, опыт, заточку и офлайн-доход.</p>`;
+}
+
+/* ---------- дуэль на канвасе ---------- */
+function duelMonster(guard) {
+  const z = zoneOf(S.stage), pick = z.mons[Math.floor(rnd() * z.mons.length)];
+  return {
+    type: pick[0], pal: pick[1], name: guard.name, boss: true, x: 0, hp: guard.hp, maxHp: guard.hp, dmg: guard.atk,
+    t: 0, atkT: 0, atk: 0, pend: 0, flash: 0, dieT: 0, scale: 1.65, oy: 0, sq: 0, wind: 0, enr: false, tintA: 0, tintC: '#fff',
+  };
+}
+function openDuel(opt) {
+  const { guard, res, kind, floor, id } = opt;
+  const dm = duelMonster(guard);
+  const gname = guard.name || 'Страж подземелья';
+  const st = { duel: true, kind, floor, id, guard, res, dm, t: 0, hitA: 0, hitB: 0, applied: false, x2: false };
+  const title = kind === 'tower' ? 'Башня сакуры' : B.DUNGEON_BY[id].name;
+  const sub = kind === 'tower' ? `Ярус ${floor} · мощь ${fmt(B.power(guard))}` : `Страж · мощь ${fmt(B.power(guard))}`;
+  openModal(sheet(title, sub, `
+    <div class="duel"><canvas id="duelCv"></canvas>
+      <div class="duel-bars"><div><span>${esc(heroName())}</span><div class="bar hp"><i id="dMe"></i></div></div>
+      <div class="r"><span>${esc(gname)}</span><div class="bar hp"><i id="dOp"></i></div></div></div>
+      <div class="forge-result" id="duelRes"></div></div>
+    <div id="duelBtns" class="btn-row"><button class="buy ghost" data-act="close">Закрыть</button></div>`, { noClose: true, cls: 'duel-sheet' }), st);
+  const cv = $('duelCv');
+  if (!cv) return;
+  const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1);
+  cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+  const c = cv.getContext('2d');
+  let lastT = performance.now();
+  const dur = Math.max(.7, Math.min(2.2, res.t / 3));
+  const loop = now => {
+    if (modalState !== st) return;
+    st.raf = requestAnimationFrame(loop);
+    const dt = Math.min(.05, (now - lastT) / 1000); lastT = now; st.t += dt;
+    const p = Math.min(1, st.t / dur);
+    const hpNow = res.heroMax - (res.heroMax - res.hp) * p;
+    const opNow = res.enemyMax - (res.enemyMax - res.ehp) * p;
+    const me = $('dMe'), op = $('dOp');
+    if (me) me.style.width = clamp(hpNow / res.heroMax * 100, 0, 100) + '%';
+    if (op) op.style.width = clamp(opNow / res.enemyMax * 100, 0, 100) + '%';
+    c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, r.width, r.height);
+    const gy = r.height * .82, k = r.height / 300;
+    A.drawBackground(c, r.width, r.height, gy, ARENA_ZONE, 0, st.t);
+    A.drawHero(c, r.width * .3, gy, k * 1.05, R.look, { t: st.t, run: 0, phase: 0, swing: swingAt(st.t, 2.4), hurt: 0, dead: p >= 1 && !res.win, cast: 0 });
+    c.save(); c.translate(r.width * .72, 0); c.scale(-1, 1);
+    A.drawMonster(c, 0, gy, k, { ...dm, t: st.t, atk: Math.max(0, Math.sin(st.t * 2.4) - .6), flash: 0, dieT: p >= 1 && res.win ? .2 : 0 });
+    c.restore();
+    if (p >= 1 && !st.applied) {
+      st.applied = true;
+      $('duelRes').className = 'forge-result ' + (res.win ? 'ok' : 'bad');
+      $('duelRes').innerHTML = res.win ? 'Победа!' : 'Не хватает сил';
+      applyDuelResult(st);
+    }
+  };
+  st.raf = requestAnimationFrame(loop);
+}
+function swingAt(t, rate) { const m = (t * rate) % 1; return m < .42 ? m / .42 : -1; }
+function applyDuelResult(st) {
+  const b = $('duelBtns');
+  if (st.kind === 'tower') {
+    if (st.res.win) {
+      const rw = towerClear(st.floor);
+      AU.sfx('victory');
+      $('duelRes').innerHTML = `Победа!<small>${rewardSummary(rw)}</small>`;
+      const next = S.tower.floor + 1;
+      b.innerHTML = `<button class="buy ghost" data-act="close">Закрыть</button>${next <= B.TOWER.floors ? `<button class="buy pink" data-act="tower-fight">Ярус ${next}</button>` : ''}`;
+    } else {
+      AU.sfx('fail');
+      $('duelRes').innerHTML = `Страж сильнее<small>Усильте снаряжение, грань и древо пробуждения</small>`;
+      b.innerHTML = `<button class="buy ghost" data-act="close">Закрыть</button><button class="buy" data-act="tower-fight">Ещё раз</button>`;
+    }
+    renderPanel();
+  } else {
+    const d = S.dungeon;
+    if (st.res.win) {
+      d.keys--; d.runs++; S.stats.dungeonRuns++;
+      const rw = B.dungeonReward(st.id, S.stage);
+      grant(rw);
+      quest('dungeon'); passXp(12); checkAch(); saveLocal();
+      st.rw = rw;
+      AU.sfx('victory');
+      $('duelRes').innerHTML = `Победа!<small>${rewardSummary(rw)}</small>`;
+      b.innerHTML = `<button class="buy ghost" data-act="close">Забрать</button><button class="buy ad" data-act="dungeon-x2">×2 за рекламу</button><button class="buy" data-act="dungeon-go" data-id="${st.id}">Ещё</button>`;
+    } else {
+      AU.sfx('fail');
+      $('duelRes').innerHTML = `Страж сильнее<small>Ключ не потрачен: усильте снаряжение</small>`;
+      b.innerHTML = `<button class="buy ghost" data-act="close">Закрыть</button><button class="buy" data-act="dungeon-go" data-id="${st.id}">Ещё раз</button>`;
+    }
+    renderPanel();
+  }
+}
+
+/* очистка яруса: состояние + награда (без всплывашек) */
+function towerClear(f, silent) {
+  const rw = towerRewardFor(f);
+  S.tower.floor = f;
+  S.tower.best = Math.max(S.tower.best, f);
+  grant(rw, silent);
+  quest('tower'); passXp(18);
+  checkAch(); saveLocal();
+  return rw;
+}
+
+/* ---------- запуск боя ---------- */
+function towerFightStart() {
+  if (!towerOpen()) return;
+  const f = towerFloor(), guard = towerGuardFor(f);
+  openDuel({ kind: 'tower', floor: f, guard, res: simFight(guard, guard.stageEq) });
+}
+function towerAuto() {
+  if (!towerOpen()) return;
+  let n = 0, total = {};
+  const from = towerFloor();
+  while (towerOpen() && n < 30) {
+    const f = towerFloor(), g = towerGuardFor(f);
+    const res = simFight(g, g.stageEq);
+    if (!res.win) break;
+    const rw = towerClear(f, true);
+    for (const k in rw) total[k] = (total[k] || 0) + rw[k];
+    n++;
+  }
+  drawTowerSummary(from - 1, n, total);
+}
+function addRewards(a, b) { const o = { ...a }; for (const k in b) o[k] = (o[k] || 0) + b[k]; return o; }
+function drawTowerSummary(from, n, total) {
+  const f = towerFloor(), g = towerGuardFor(Math.min(f, B.TOWER.floors)), tag = powerTag(g);
+  openModal(sheet('Авто-подъём', n ? `Пройдено ${n} ${plural(n, ['ярус', 'яруса', 'ярусов'])}` : 'Ни одного яруса', `
+    <dl class="compare"><dt>Было</dt><dd>ярус ${from + 1}</dd><dd></dd><dt>Стало</dt><dd class="up">ярус ${S.tower.best}</dd><dd></dd>
+      ${Object.keys(total).length ? `<dt>Награды</dt><dd class="up">${rewardSummary(total)}</dd><dd></dd>` : ''}
+      ${f <= B.TOWER.floors ? `<dt>Следующий страж</dt><dd>${fmt(B.power(g))}</dd><dd><span class="diff ${tag[1]}">${tag[0]}</span></dd>` : ''}
+    </dl>
+    ${n ? '' : '<p class="note">Страж очередного яруса сильнее героя. Прокачайте снаряжение, грань и древо пробуждения.</p>'}
+    <div class="btn-row"><button class="buy ghost" data-act="close">Закрыть</button><button class="buy pink" data-act="tower-fight" ${towerOpen() ? '' : 'disabled'}>В бой</button></div>`), { towerSum: true });
+  renderPanel();
+  AU.sfx(n ? 'victory' : 'fail');
+}
+
+/* ---------- подземелье: вход ---------- */
+function dungeonOpen(id) {
+  dailyReset();
+  const d = S.dungeon;
+  if (d.keys <= 0) { toast('Ключи закончились'); return; }
+  const guard = B.dungeonGuard(id, S.stage);
+  openDuel({ kind: 'dungeon', id, guard, res: simFight(guard, S.stage) });
+}
+function dungeonX2(st) {
+  if (!st.rw || st.x2) return;
+  Monet.rewarded('dungeon').then(ok => {
+    if (!ok) return;
+    st.x2 = true;
+    grant(st.rw);
+    toast('Награда удвоена');
+    if (modalState === st) closeModal();
+    renderPanel();
+  });
+}
+
+/* ---------- окно пробуждения ---------- */
+function openAwakenAsk() {
+  const gain = awakenGain();
+  if (!canAwaken()) { toast(`Пробуждение откроется на этапе ${B.AW.unlockStage}`); return; }
+  const startStage = Math.min(B.AW.unlockStage - 10, Math.floor(B.awBonus(S.aw.lvl).start));
+  openModal(sheet('Пробуждение', `Вы получите ${gain} лепестков`, `
+    <dl class="compare">
+      <dt>Лепестки</dt><dd class="up">+${gain}</dd><dd></dd>
+      <dt>Сбросится</dt><dd>этап, уровень, тренировка</dd><dd></dd>
+      <dt>Останется</dt><dd>снаряжение, грань, питомцы</dd><dd></dd>
+      <dt>Останется</dt><dd>самоцветы, кристаллы, свитки</dd><dd></dd>
+      <dt>Новый старт</dt><dd>этап ${startStage + 1}</dd><dd></dd>
+    </dl>
+    <p class="note">Древо вечности даёт вечные бонусы. Каждое пробуждение с более высокого этапа приносит больше лепестков.</p>
+    <div class="btn-row"><button class="buy ghost" data-act="close">Позже</button><button class="buy pink" data-act="awaken-yes">Пробудиться</button></div>`), { awaken: true });
 }
 
 /* --- 40_pets.js --- */
@@ -4907,7 +5759,7 @@ function renderPets() {
   return seg + (R.petSeg === 'summon' ? renderSummon() : renderCollection());
 }
 function renderSummon() {
-  const left = B.GACHA.pity - S.gacha.pity, G1 = B.GACHA.cost1, G10 = B.GACHA.cost10;
+  const left = B.GACHA.pity - S.gacha.pity, G1 = B.GACHA.cost1, G10 = B.GACHA.cost10, F10 = B.GACHA.first10;
   const freeAd = !S.ads.freeSummon && Monet.adsOn();
   return `
     <section class="card summon-card">
@@ -4918,6 +5770,7 @@ function renderSummon() {
       </div>
     </section>
     <div class="summon-btns">
+      ${!S.gacha.first10 ? `<button class="buy pink wide" data-act="summon" data-n="10" data-m="first10" data-cost="${F10}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">Первый ×10 за ${F10} · скидка</button>` : ''}
       ${S.gacha.tickets > 0 ? `<button class="buy pink wide" data-act="summon" data-n="1" data-m="ticket"><img src="${A.miscIcon('summon', 32)}" alt="">Призвать по билету · есть ${S.gacha.tickets}</button>` : ''}
       ${freeAd ? `<button class="buy ad wide" data-act="summon-ad">Бесплатный призыв за рекламу</button>` : ''}
       <div class="btn-row">
@@ -5007,10 +5860,11 @@ function addPet(id) {
   return { dupe: true };
 }
 function summon(n, mode) {
-  if (mode === 'gems') {
-    const cost = n === 10 ? B.GACHA.cost10 : B.GACHA.cost1;
+  if (mode === 'gems' || mode === 'first10') {
+    const cost = mode === 'first10' ? B.GACHA.first10 : n === 10 ? B.GACHA.cost10 : B.GACHA.cost1;
     if (S.gems < cost) { toast('Не хватает самоцветов'); R.shopTab = 'gems'; setTab('shop'); return; }
     S.gems -= cost;
+    if (mode === 'first10') S.gacha.first10 = true;
   } else if (mode === 'ticket') {
     if (S.gacha.tickets <= 0) return;
     S.gacha.tickets--;
@@ -5329,6 +6183,10 @@ function dailyReset() {
   const a = S.arena;
   if (a.day !== today) { a.day = today; a.tickets = Math.max(a.tickets, B.ARENA.tickets); a.buys = 0; }
   if (S.ads.day !== today) { S.ads.day = today; S.ads.gems = 0; S.ads.freeSummon = false; S.ads.boosts = 0; }
+  const d = S.dungeon;
+  if (d.day !== today) { d.day = today; d.keys = B.DKEYS.perDay; d.ads = 0; d.buys = 0; }
+  const wk = weekKey();
+  if (S.tower.week !== wk) { S.tower.week = wk; S.tower.reward = 0; }
   const season = B.seasonOf(Date.now());
   if (S.pass.season !== season) S.pass = { season, xp: 0, free: [], prem: [], premium: false };
 }
@@ -5347,6 +6205,8 @@ function questsReady() {
   for (const d of B.DAILY) if ((S.quests.prog[d.id] || 0) >= d.goal && !S.quests.claimed[d.id]) n++;
   if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) n++;
   n += achReady().length;
+  n += chaptersReady();
+  n += fundClaimable().length;
   if (S.login.last !== dayKey()) n++;
   if (S.shop.monthlyUntil > Date.now() && S.shop.monthlyDay !== dayKey()) n++;
   const lvl = passLevel();
@@ -5363,8 +6223,10 @@ function passXp(n) {
 }
 function statValue(stat) {
   if (stat === 'maxStage') return S.maxStage;
+  if (stat === 'bestStage') return Math.max(S.bestStage || 0, S.maxStage);
   if (stat === 'level') return S.level;
   if (stat === 'petsOwned') return petsOwnedCount();
+  if (stat === 'towerBest') return S.tower.best;
   return S.stats[stat] || 0;
 }
 function achReady() { return B.ACH.filter(a => { const i = S.ach[a.id] || 0; return i < a.tiers.length && statValue(a.stat) >= a.tiers[i]; }); }
@@ -5378,33 +6240,43 @@ function checkAch() {
 function rewardText(rw) {
   const g = dropGradeTop(zoneOf(S.stage).z), out = [];
   if (rw.gems) out.push(`${rw.gems} 💎`);
+  if (rw.petals) out.push(`${rw.petals} ${plural(rw.petals, ['лепесток', 'лепестка', 'лепестков'])}`);
+  if (rw.keys) out.push(`${rw.keys} ${plural(rw.keys, ['ключ', 'ключа', 'ключей'])}`);
   if (rw.goldKills) out.push(`${fmt(B.mGold(S.stage) * rw.goldKills)} золота`);
+  if (rw.gold) out.push(`${fmt(rw.gold)} золота`);
+  if (rw.xp) out.push(`${fmt(rw.xp)} опыта`);
   if (rw.scrollsA) out.push(`${rw.scrollsA} св. доспеха ${B.GRADES[g].short}`);
   if (rw.scrollsW) out.push(`${rw.scrollsW} св. оружия ${B.GRADES[g].short}`);
   if (rw.blessedA) out.push(`${rw.blessedA} благ. доспеха ${B.GRADES[g].short}`);
   if (rw.blessedW) out.push(`${rw.blessedW} благ. оружия ${B.GRADES[g].short}`);
+  if (rw.crystals) out.push(`${fmt(rw.crystals)} кристаллов`);
   if (rw.crystalsK) out.push(`${fmt(50 * crystalMul(g))} кристаллов`);
   if (rw.summon) out.push(`${rw.summon} ${plural(rw.summon, ['билет', 'билета', 'билетов'])} призыва`);
   if (rw.pet) out.push(`питомец ${B.PET[rw.pet].name}`);
   if (rw.cosmetic) out.push('аура лепестков');
   return out.join(', ');
 }
-function grant(rw) {
+function grant(rw, silent) {
   const g = dropGradeTop(zoneOf(S.stage).z);
   if (rw.gems) S.gems += rw.gems;
+  if (rw.petals) S.aw.petals += rw.petals;
+  if (rw.keys) S.dungeon.keys += rw.keys;
   if (rw.goldKills) S.gold += B.mGold(S.stage) * rw.goldKills;
+  if (rw.gold) S.gold += rw.gold;
   if (rw.scrollsA) S.scrolls.a[g] += rw.scrollsA;
   if (rw.scrollsW) S.scrolls.w[g] += rw.scrollsW;
   if (rw.blessedA) S.scrolls.ba[g] += rw.blessedA;
   if (rw.blessedW) S.scrolls.bw[g] += rw.blessedW;
+  if (rw.crystals) S.crystals += rw.crystals;
   if (rw.crystalsK) S.crystals += 50 * crystalMul(g);
   if (rw.summon) S.gacha.tickets += rw.summon;
   if (rw.pet) addPet(rw.pet);
   if (rw.cosmetic && !S.shop.cosmetics.includes(rw.cosmetic)) { S.shop.cosmetics.push(rw.cosmetic); S.shop.cosmetic = rw.cosmetic; }
+  if (rw.xp) gainXp(rw.xp);
   R.dirtyBank = true;
   recalc(); checkAch(); saveLocal(); updateSideButtons();
   const t = rewardText(rw);
-  if (t) toast('Получено: ' + t);
+  if (t && !silent) toast('Получено: ' + t);
   AU.sfx('success');
 }
 
@@ -5413,9 +6285,26 @@ let questTab = 'daily';
 function openQuests(tab) {
   if (tab) questTab = tab;
   dailyReset();
-  const tabs = segHTML('qtab', questTab, [['daily', 'Задания'], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
-  const body = { daily: questsDaily, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
+  const tabs = segHTML('qtab', questTab, [['story', 'Сюжет', chaptersReady() > 0 || fundClaimable().length > 0], ['daily', 'Задания'], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
+  const body = { story: questsStory, daily: questsDaily, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
   openModal(sheet('Задания и награды', `Обновление через ${left(msToMidnight())}`, tabs + body, { cls: 'quests-sheet' }), { quests: true });
+}
+function questsStory() {
+  const cur = chapterProgress(), f = fundUi();
+  const list = CHAPTERS.map((c, i) => {
+    const done = i < S.chapter.idx, now = i === S.chapter.idx;
+    const v = now && cur ? cur.v : done ? c.goal : 0;
+    return `<li class="row quest ${done ? 'got' : ''}"><img src="${A.miscIcon(done ? 'trophy' : 'quests', 64)}" alt="">
+      <div class="row-main"><b>Глава ${i + 1} · ${c.title}</b>
+        <div class="bar mini"><i style="width:${Math.min(100, v / c.goal * 100)}%"></i></div>
+        <span class="meta">${done ? 'Пройдена' : `${fmt(v)}/${fmt(c.goal)} · ${rewardText(c.rw)}`}</span></div>
+      ${done ? '<button class="buy" disabled>Готово</button>' : now && cur && cur.done ? `<button class="buy pink" data-act="chapter-claim">Забрать</button>` : `<button class="buy" disabled>${now ? 'В процессе' : 'Впереди'}</button>`}</li>`;
+  }).join('');
+  return `<p class="sub">Сюжет ведёт от первого удара до бесконечного пути. Награды щедрые: они ускоряют старт.</p>
+    ${S.fund.owned ? `<section class="card chest-card"><img src="${A.miscIcon('starter', 64)}" alt="">
+      <div class="row-main"><b>Фонд сакуры</b><span class="meta">${f.current ? `Уровень ${f.current}: ${B.FUND.gems} 💎 ждут` : `Следующая выплата на уровне ${f.next}`} · получено ${f.got} из ${f.total}</span></div>
+      ${f.current ? `<button class="buy pink" data-act="fund-claim" data-l="${f.current}">Забрать</button>` : '<span class="sub">Фонд</span>'}</section>` : ''}
+    <ul class="rows">${list}</ul>`;
 }
 function questsDaily() {
   const q = S.quests;
@@ -5484,6 +6373,7 @@ const Monet = {
   async maybeInterstitial() {
     if (!S || S.shop.noAds || P.mode !== 'yandex') return;
     if (S.maxStage < 10) return;                                  // не мешаем в начале игры
+    if (Date.now() - R.sessionStart < 240000) return;             // первые 4 минуты сессии — без рекламы
     if (Date.now() - R.lastInter < B.ADS.interstitialGap * 1000) return;
     R.lastInter = Date.now();
     await P.interstitial();
@@ -5501,6 +6391,7 @@ const Monet = {
     refreshAfterReward();
   },
   async adBoost() {
+    if (S.ads.boosts >= 6) { toast('На сегодня хватит: возвращайтесь завтра'); return; }
     if (!await this.rewarded('boost')) return;
     S.boost.goldUntil = Math.max(Date.now(), S.boost.goldUntil) + B.ADS.goldBoostMin * 60000;
     S.ads.boosts++;
@@ -5528,11 +6419,24 @@ const Monet = {
     switch (id) {
       case 'starter': S.shop.starter = true; grant({ gems: p.gems, pet: p.pet, scrollsA: p.scrollsA, blessedA: p.blessedA }); break;
       case 'monthly': S.shop.monthlyUntil = Math.max(Date.now(), S.shop.monthlyUntil) + p.days * 864e5; grant({ gems: p.gems }); break;
+      case 'fund': S.fund.owned = true; grant({ gems: B.FUND.bonus }); toast(`Фонд сакуры открыт: ${B.FUND.gems} 💎 за каждый уровень`); break;
       case 'pass': S.pass.premium = true; toast('Премиум-дорожка пропуска открыта'); AU.sfx('legend'); break;
       case 'noads': S.shop.noAds = true; toast('Межэкранная реклама отключена навсегда'); AU.sfx('success'); break;
-      default: grant({ gems: p.gems + (p.bonus || 0) });
+      default: {
+        // первая покупка самоцветов удваивается
+        let gems = p.gems + (p.bonus || 0);
+        if (!S.shop.firstTopup && p.gems) { gems *= 2; S.shop.firstTopup = true; toast('Первая покупка самоцветов удвоена!'); }
+        grant({ gems });
+      }
     }
     log(`Покупка: ${p.name}. Спасибо за поддержку!`, 'good');
+    refreshAfterReward();
+  },
+  async adKey() {
+    if (S.dungeon.ads >= B.DKEYS.adExtra) { toast('Сегодня больше нельзя'); return; }
+    if (!await this.rewarded('key')) return;
+    S.dungeon.ads++; S.dungeon.keys++;
+    toast('+1 ключ подземелья');
     refreshAfterReward();
   },
   // незавершённые покупки и постоянные права при запуске
@@ -5552,13 +6456,15 @@ const Monet = {
     };
     const I = B.IAP_BY;
     if (!S.shop.starter) offers.push(card(I.starter, 'starter', `${I.starter.gems} 💎, эпический питомец ${B.PET[I.starter.pet].name}, ${I.starter.scrollsA} свитков доспеха и ${I.starter.blessedA} благословенных.`));
+    if (!S.fund.owned) offers.push(card(I.fund, 'starter', `${B.FUND.gems} 💎 за каждый из ${B.FUND.levels.length} рубежей уровня, всего ${B.FUND_TOTAL} 💎. Плюс ${B.FUND.bonus} 💎 сразу.`, `<span class="meta">Выплаты на уровнях ${B.FUND.levels[0]}–${B.FUND.levels[B.FUND.levels.length - 1]}</span>`));
     const mLeft = S.shop.monthlyUntil - Date.now();
     offers.push(card(I.monthly, 'moon', `${I.monthly.gems} 💎 сразу и ещё 100 💎 каждый день 30 дней: всего ${I.monthly.gems + 3000} 💎.`, mLeft > 0 ? `<span class="meta">Активна ещё ${left(mLeft)}</span>` : ''));
     if (!S.pass.premium) offers.push(card(I.pass, 'pass', 'Премиум-дорожка текущего сезона: самоцветы за каждый уровень, свитки, билеты и мифический дракон.'));
     if (!S.shop.noAds) offers.push(card(I.noads, 'noads', 'Убирает рекламу между этапами. Бонусы за просмотр остаются по желанию.'));
     const packs = B.IAP.filter(p => p.id.startsWith('gems_')).map(p => {
       const pr = P.price(p.id, p.rub);
-      return `<button class="gem-pack" data-act="iap" data-id="${p.id}"><img src="${A.miscIcon('gem', 64)}" alt=""><b>${fmt(p.gems)}${p.bonus ? `<small>+${p.bonus}</small>` : ''}</b><span>${pr.icon ? `<img src="${pr.icon}" alt="">` : ''}${pr.text}</span></button>`;
+      const dbl = !S.shop.firstTopup && p.gems ? `<i class="pack-badge">×2</i>` : '';
+      return `<button class="gem-pack" data-act="iap" data-id="${p.id}">${dbl}<img src="${A.miscIcon('gem', 64)}" alt=""><b>${fmt(p.gems)}${p.bonus ? `<small>+${p.bonus}</small>` : ''}</b><span>${pr.icon ? `<img src="${pr.icon}" alt="">` : ''}${pr.text}</span></button>`;
     }).join('');
     const g = dropGradeTop(zoneOf(S.stage).z), GS = B.GEM_SHOP;
     const spend = [
@@ -5566,6 +6472,7 @@ const Monet = {
       ['scrollsA5', 'quests', `5 свитков доспеха ${B.GRADES[g].short}`, 'Грейд вашей текущей зоны', GS.scrollsA5.gems],
       ['blessedA', 'quests', `Благословенный свиток доспеха ${B.GRADES[g].short}`, 'При неудаче вещь не ломается', GS.blessedA.gems],
       ['blessedW', 'quests', `Благословенный свиток оружия ${B.GRADES[g].short}`, 'При неудаче вещь не ломается', GS.blessedW.gems],
+      ['key', 'key', 'Ключ подземелья', 'Ещё один заход в любое подземелье', GS.key.gems],
     ].map(([id, icon, name, desc, cost]) => `<li class="row"><img src="${id.startsWith('blessed') ? A.scrollIcon(id === 'blessedW' ? 'weapon' : 'armor', g, true) : id === 'scrollsA5' ? A.scrollIcon('armor', g, false) : A.miscIcon(icon, 64)}" alt="">
       <div class="row-main"><b>${name}</b><span class="meta">${desc}</span></div>
       <button class="buy ${cost > S.gems ? 'poor' : ''}" data-act="gemshop" data-id="${id}" data-cost="${cost}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">${cost}</button></li>`).join('');
@@ -5587,6 +6494,7 @@ const Monet = {
     if (id === 'scrollsA5') S.scrolls.a[g] += 5;
     if (id === 'blessedA') S.scrolls.ba[g] += 1;
     if (id === 'blessedW') S.scrolls.bw[g] += 1;
+    if (id === 'key') S.dungeon.keys += 1;
     R.dirtyBank = true; AU.sfx('buy'); toast('Готово'); saveLocal();
   },
 };
@@ -5683,11 +6591,11 @@ function finishIntro() {
   if (first) {
     S.intro = true;
     if (S.stats.kills > 0) {
-      log(`С возвращением, ${name}! Появились питомцы, арена, задания и пропуск сезона.`, 'good');
-      log('Загляните в «Задания»: там подарок за вход и награды за достижения.', 'sys');
+      log(`С возвращением, ${name}! Башня, подземелья и пробуждение уже доступны.`, 'good');
+      log('Загляните в «Задания»: сюжет, подарок за вход и награды за достижения.', 'sys');
     } else {
       log(`Добро пожаловать, ${name}! ${G('Героиня сражается', 'Герой сражается')} сам${G('а', '')}, а вы растите силу.`, 'good');
-      log('Из монстров падают свитки заточки. Точите вещи во вкладке «Снаряжение».', 'sys');
+      log('Сюжет начнётся с первой главы: победите 10 монстров и загляните в «Героя».', 'sys');
     }
     banner(name, 'Путь начинается', '#ff8fc1');
     P.gameplay(true);
@@ -5718,16 +6626,16 @@ $('heroNameIn').addEventListener('keydown', e => { if (e.key === 'Enter') finish
 /* ===== Ввод, офлайн-доход, запуск ===== */
 function offline() {
   const from = R.offlineFrom || S.savedAt || Date.now(); R.offlineFrom = 0;
-  const sec = Math.min(8 * 3600, (Date.now() - from) / 1000);
+  const sec = Math.min(offlineHours() * 3600, (Date.now() - from) / 1000);
   if (sec < 90) return;
   const st = R.st, s = S.stage, z = zoneOf(s);
   const dps = st.atk * (1 + st.crit * (st.critDmg - 1)) * st.aspd * 1.3;
   const ttk = Math.max(1 / st.aspd, B.mHp(s) / dps) + 1.2;
   const kills = Math.floor(sec / ttk * .5);
   if (kills < 1) return;
-  const rw = { gold: kills * B.mGold(s) * (1 + R.pb.goldPct), xp: kills * B.mXp(s) * (1 + R.pb.xpPct), top: dropGradeTop(z.z) };
+  const rw = { gold: kills * B.mGold(s) * (1 + R.pb.goldPct + (st.goldPct || 0)), xp: kills * B.mXp(s) * xpMul(), top: dropGradeTop(z.z) };
   const roll = x => Math.floor(x) + (rnd() < x % 1 ? 1 : 0);
-  rw.a = roll(kills * B.DROP.armorScroll); rw.w = roll(kills * B.DROP.weaponScroll);
+  rw.a = roll(kills * B.DROP.armorScroll * dropMul()); rw.w = roll(kills * B.DROP.weaponScroll * dropMul());
   rw.cry = Math.floor(kills * B.DROP.crystals * 2 * crystalMul(rw.top));
   const give = mul => {
     S.gold += rw.gold * mul; S.scrolls.a[rw.top] += rw.a * mul; S.scrolls.w[rw.top] += rw.w * mul; S.crystals += rw.cry * mul;
@@ -5782,6 +6690,34 @@ document.addEventListener('click', async e => {
     case 'mult': R.mult = b.dataset.v === 'max' ? 'max' : +b.dataset.v; renderPanel(); break;
     case 'heroseg': R.heroSeg = b.dataset.v; renderPanel(); break;
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
+    case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
+    // испытания
+    case 'tower-fight': towerFightStart(); break;
+    case 'tower-auto': towerAuto(); break;
+    case 'tower-claim': towerClaim(); renderPanel(); break;
+    case 'dungeon-go': dungeonOpen(b.dataset.id); break;
+    case 'dungeon-x2': if (modalState && modalState.duel) dungeonX2(modalState); break;
+    case 'dungeon-adkey': await Monet.adKey(); if (R.tab === 'trials') renderPanel(); break;
+    case 'dungeon-key': {
+      if (S.gems < B.DKEYS.gemCost || S.dungeon.buys >= B.DKEYS.gemMax) break;
+      S.gems -= B.DKEYS.gemCost; S.dungeon.buys++; S.dungeon.keys++;
+      AU.sfx('buy'); renderPanel(); break;
+    }
+    case 'awaken-ask': openAwakenAsk(); break;
+    case 'awaken-yes': {
+      closeModal();
+      const gain = awakenGain();
+      if (doAwaken()) { banner('Пробуждение', `+${gain} лепестков`, '#ff8fc1'); renderPanel(); }
+      break;
+    }
+    case 'aw-buy': if (buyAw(b.dataset.id)) renderPanel(); break;
+    case 'reroll': {
+      const it = itemById(+b.dataset.id);
+      if (it && rerollOpts(it)) { openItem(it.id); toast('Грань перекована'); }
+      break;
+    }
+    case 'chapter-claim': if (chapterClaim()) { if (modalState && modalState.quests) openQuests('story'); else renderPanel(); updateSideButtons(); } break;
+    case 'fund-claim': if (fundClaim(+b.dataset.l)) { if (modalState && modalState.quests) openQuests(); else renderPanel(); } break;
     case 'look': openIntro(true); break;
     case 'item': openItem(+b.dataset.id); break;
     case 'slot': R.shopTab = 'gear'; R.shopGrade = unlockedGrade(); setTab('shop'); toast(`${B.SLOT[b.dataset.slot].name}: выберите в магазине`); break;
@@ -5905,11 +6841,13 @@ function applyState(o) {
 }
 async function start(hot) {
   const isHot = !!(hot && hot.S);
+  // Платформу инициализируем до чтения сохранения: на iOS нужен safeStorage из SDK.
+  await Promise.race([P.init(), new Promise(r => setTimeout(r, 4000))]);
   const local = isHot ? null : loadLocal();
   R.hadLocal = isHot || !!local;
   S = (isHot && migrate(hot.S)) || local || newState();
   R.offlineFrom = local ? S.savedAt : 0;
-  if (isHot && ['hero', 'gear', 'pets', 'arena', 'shop'].includes(hot.tab)) R.tab = hot.tab;
+  if (isHot && ['hero', 'gear', 'pets', 'arena', 'trials', 'shop'].includes(hot.tab)) R.tab = hot.tab;
   dailyReset();
   for (const el of document.querySelectorAll('[data-ic]')) el.src = A.miscIcon(el.dataset.ic, 64);
   $('icGold').src = A.miscIcon('gold', 40); $('icGem').src = A.miscIcon('gem', 40);
@@ -5932,7 +6870,6 @@ async function start(hot) {
   requestAnimationFrame(frame);
   window.claude?.hot?.snapshot?.(() => ({ S, tab: R.tab }));
 
-  await P.init();
   P.ready();
   if (P.mode === 'yandex') Monet.restore();
   await Cloud.init();
@@ -5944,6 +6881,14 @@ async function start(hot) {
   }
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? null);
+
+/* ---------- отладочный доступ для проверки и поддержки: ?debug ---------- */
+if (/[?&]debug\b/.test(location.search)) {
+  window.__KS = {
+    get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
+    addPet, summon, startBoss, bossWin, dailyReset,
+  };
+}
 
 })();
 </script>

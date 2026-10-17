@@ -7,6 +7,10 @@ function dailyReset() {
   const a = S.arena;
   if (a.day !== today) { a.day = today; a.tickets = Math.max(a.tickets, B.ARENA.tickets); a.buys = 0; }
   if (S.ads.day !== today) { S.ads.day = today; S.ads.gems = 0; S.ads.freeSummon = false; S.ads.boosts = 0; }
+  const d = S.dungeon;
+  if (d.day !== today) { d.day = today; d.keys = B.DKEYS.perDay; d.ads = 0; d.buys = 0; }
+  const wk = weekKey();
+  if (S.tower.week !== wk) { S.tower.week = wk; S.tower.reward = 0; }
   const season = B.seasonOf(Date.now());
   if (S.pass.season !== season) S.pass = { season, xp: 0, free: [], prem: [], premium: false };
 }
@@ -25,6 +29,8 @@ function questsReady() {
   for (const d of B.DAILY) if ((S.quests.prog[d.id] || 0) >= d.goal && !S.quests.claimed[d.id]) n++;
   if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) n++;
   n += achReady().length;
+  n += chaptersReady();
+  n += fundClaimable().length;
   if (S.login.last !== dayKey()) n++;
   if (S.shop.monthlyUntil > Date.now() && S.shop.monthlyDay !== dayKey()) n++;
   const lvl = passLevel();
@@ -41,8 +47,10 @@ function passXp(n) {
 }
 function statValue(stat) {
   if (stat === 'maxStage') return S.maxStage;
+  if (stat === 'bestStage') return Math.max(S.bestStage || 0, S.maxStage);
   if (stat === 'level') return S.level;
   if (stat === 'petsOwned') return petsOwnedCount();
+  if (stat === 'towerBest') return S.tower.best;
   return S.stats[stat] || 0;
 }
 function achReady() { return B.ACH.filter(a => { const i = S.ach[a.id] || 0; return i < a.tiers.length && statValue(a.stat) >= a.tiers[i]; }); }
@@ -56,33 +64,43 @@ function checkAch() {
 function rewardText(rw) {
   const g = dropGradeTop(zoneOf(S.stage).z), out = [];
   if (rw.gems) out.push(`${rw.gems} 💎`);
+  if (rw.petals) out.push(`${rw.petals} ${plural(rw.petals, ['лепесток', 'лепестка', 'лепестков'])}`);
+  if (rw.keys) out.push(`${rw.keys} ${plural(rw.keys, ['ключ', 'ключа', 'ключей'])}`);
   if (rw.goldKills) out.push(`${fmt(B.mGold(S.stage) * rw.goldKills)} золота`);
+  if (rw.gold) out.push(`${fmt(rw.gold)} золота`);
+  if (rw.xp) out.push(`${fmt(rw.xp)} опыта`);
   if (rw.scrollsA) out.push(`${rw.scrollsA} св. доспеха ${B.GRADES[g].short}`);
   if (rw.scrollsW) out.push(`${rw.scrollsW} св. оружия ${B.GRADES[g].short}`);
   if (rw.blessedA) out.push(`${rw.blessedA} благ. доспеха ${B.GRADES[g].short}`);
   if (rw.blessedW) out.push(`${rw.blessedW} благ. оружия ${B.GRADES[g].short}`);
+  if (rw.crystals) out.push(`${fmt(rw.crystals)} кристаллов`);
   if (rw.crystalsK) out.push(`${fmt(50 * crystalMul(g))} кристаллов`);
   if (rw.summon) out.push(`${rw.summon} ${plural(rw.summon, ['билет', 'билета', 'билетов'])} призыва`);
   if (rw.pet) out.push(`питомец ${B.PET[rw.pet].name}`);
   if (rw.cosmetic) out.push('аура лепестков');
   return out.join(', ');
 }
-function grant(rw) {
+function grant(rw, silent) {
   const g = dropGradeTop(zoneOf(S.stage).z);
   if (rw.gems) S.gems += rw.gems;
+  if (rw.petals) S.aw.petals += rw.petals;
+  if (rw.keys) S.dungeon.keys += rw.keys;
   if (rw.goldKills) S.gold += B.mGold(S.stage) * rw.goldKills;
+  if (rw.gold) S.gold += rw.gold;
   if (rw.scrollsA) S.scrolls.a[g] += rw.scrollsA;
   if (rw.scrollsW) S.scrolls.w[g] += rw.scrollsW;
   if (rw.blessedA) S.scrolls.ba[g] += rw.blessedA;
   if (rw.blessedW) S.scrolls.bw[g] += rw.blessedW;
+  if (rw.crystals) S.crystals += rw.crystals;
   if (rw.crystalsK) S.crystals += 50 * crystalMul(g);
   if (rw.summon) S.gacha.tickets += rw.summon;
   if (rw.pet) addPet(rw.pet);
   if (rw.cosmetic && !S.shop.cosmetics.includes(rw.cosmetic)) { S.shop.cosmetics.push(rw.cosmetic); S.shop.cosmetic = rw.cosmetic; }
+  if (rw.xp) gainXp(rw.xp);
   R.dirtyBank = true;
   recalc(); checkAch(); saveLocal(); updateSideButtons();
   const t = rewardText(rw);
-  if (t) toast('Получено: ' + t);
+  if (t && !silent) toast('Получено: ' + t);
   AU.sfx('success');
 }
 
@@ -91,9 +109,26 @@ let questTab = 'daily';
 function openQuests(tab) {
   if (tab) questTab = tab;
   dailyReset();
-  const tabs = segHTML('qtab', questTab, [['daily', 'Задания'], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
-  const body = { daily: questsDaily, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
+  const tabs = segHTML('qtab', questTab, [['story', 'Сюжет', chaptersReady() > 0 || fundClaimable().length > 0], ['daily', 'Задания'], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
+  const body = { story: questsStory, daily: questsDaily, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
   openModal(sheet('Задания и награды', `Обновление через ${left(msToMidnight())}`, tabs + body, { cls: 'quests-sheet' }), { quests: true });
+}
+function questsStory() {
+  const cur = chapterProgress(), f = fundUi();
+  const list = CHAPTERS.map((c, i) => {
+    const done = i < S.chapter.idx, now = i === S.chapter.idx;
+    const v = now && cur ? cur.v : done ? c.goal : 0;
+    return `<li class="row quest ${done ? 'got' : ''}"><img src="${A.miscIcon(done ? 'trophy' : 'quests', 64)}" alt="">
+      <div class="row-main"><b>Глава ${i + 1} · ${c.title}</b>
+        <div class="bar mini"><i style="width:${Math.min(100, v / c.goal * 100)}%"></i></div>
+        <span class="meta">${done ? 'Пройдена' : `${fmt(v)}/${fmt(c.goal)} · ${rewardText(c.rw)}`}</span></div>
+      ${done ? '<button class="buy" disabled>Готово</button>' : now && cur && cur.done ? `<button class="buy pink" data-act="chapter-claim">Забрать</button>` : `<button class="buy" disabled>${now ? 'В процессе' : 'Впереди'}</button>`}</li>`;
+  }).join('');
+  return `<p class="sub">Сюжет ведёт от первого удара до бесконечного пути. Награды щедрые: они ускоряют старт.</p>
+    ${S.fund.owned ? `<section class="card chest-card"><img src="${A.miscIcon('starter', 64)}" alt="">
+      <div class="row-main"><b>Фонд сакуры</b><span class="meta">${f.current ? `Уровень ${f.current}: ${B.FUND.gems} 💎 ждут` : `Следующая выплата на уровне ${f.next}`} · получено ${f.got} из ${f.total}</span></div>
+      ${f.current ? `<button class="buy pink" data-act="fund-claim" data-l="${f.current}">Забрать</button>` : '<span class="sub">Фонд</span>'}</section>` : ''}
+    <ul class="rows">${list}</ul>`;
 }
 function questsDaily() {
   const q = S.quests;

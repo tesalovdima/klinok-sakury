@@ -1,16 +1,16 @@
 /* ===== Ввод, офлайн-доход, запуск ===== */
 function offline() {
   const from = R.offlineFrom || S.savedAt || Date.now(); R.offlineFrom = 0;
-  const sec = Math.min(8 * 3600, (Date.now() - from) / 1000);
+  const sec = Math.min(offlineHours() * 3600, (Date.now() - from) / 1000);
   if (sec < 90) return;
   const st = R.st, s = S.stage, z = zoneOf(s);
   const dps = st.atk * (1 + st.crit * (st.critDmg - 1)) * st.aspd * 1.3;
   const ttk = Math.max(1 / st.aspd, B.mHp(s) / dps) + 1.2;
   const kills = Math.floor(sec / ttk * .5);
   if (kills < 1) return;
-  const rw = { gold: kills * B.mGold(s) * (1 + R.pb.goldPct), xp: kills * B.mXp(s) * (1 + R.pb.xpPct), top: dropGradeTop(z.z) };
+  const rw = { gold: kills * B.mGold(s) * (1 + R.pb.goldPct + (st.goldPct || 0)), xp: kills * B.mXp(s) * xpMul(), top: dropGradeTop(z.z) };
   const roll = x => Math.floor(x) + (rnd() < x % 1 ? 1 : 0);
-  rw.a = roll(kills * B.DROP.armorScroll); rw.w = roll(kills * B.DROP.weaponScroll);
+  rw.a = roll(kills * B.DROP.armorScroll * dropMul()); rw.w = roll(kills * B.DROP.weaponScroll * dropMul());
   rw.cry = Math.floor(kills * B.DROP.crystals * 2 * crystalMul(rw.top));
   const give = mul => {
     S.gold += rw.gold * mul; S.scrolls.a[rw.top] += rw.a * mul; S.scrolls.w[rw.top] += rw.w * mul; S.crystals += rw.cry * mul;
@@ -65,6 +65,34 @@ document.addEventListener('click', async e => {
     case 'mult': R.mult = b.dataset.v === 'max' ? 'max' : +b.dataset.v; renderPanel(); break;
     case 'heroseg': R.heroSeg = b.dataset.v; renderPanel(); break;
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
+    case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
+    // испытания
+    case 'tower-fight': towerFightStart(); break;
+    case 'tower-auto': towerAuto(); break;
+    case 'tower-claim': towerClaim(); renderPanel(); break;
+    case 'dungeon-go': dungeonOpen(b.dataset.id); break;
+    case 'dungeon-x2': if (modalState && modalState.duel) dungeonX2(modalState); break;
+    case 'dungeon-adkey': await Monet.adKey(); if (R.tab === 'trials') renderPanel(); break;
+    case 'dungeon-key': {
+      if (S.gems < B.DKEYS.gemCost || S.dungeon.buys >= B.DKEYS.gemMax) break;
+      S.gems -= B.DKEYS.gemCost; S.dungeon.buys++; S.dungeon.keys++;
+      AU.sfx('buy'); renderPanel(); break;
+    }
+    case 'awaken-ask': openAwakenAsk(); break;
+    case 'awaken-yes': {
+      closeModal();
+      const gain = awakenGain();
+      if (doAwaken()) { banner('Пробуждение', `+${gain} лепестков`, '#ff8fc1'); renderPanel(); }
+      break;
+    }
+    case 'aw-buy': if (buyAw(b.dataset.id)) renderPanel(); break;
+    case 'reroll': {
+      const it = itemById(+b.dataset.id);
+      if (it && rerollOpts(it)) { openItem(it.id); toast('Грань перекована'); }
+      break;
+    }
+    case 'chapter-claim': if (chapterClaim()) { if (modalState && modalState.quests) openQuests('story'); else renderPanel(); updateSideButtons(); } break;
+    case 'fund-claim': if (fundClaim(+b.dataset.l)) { if (modalState && modalState.quests) openQuests(); else renderPanel(); } break;
     case 'look': openIntro(true); break;
     case 'item': openItem(+b.dataset.id); break;
     case 'slot': R.shopTab = 'gear'; R.shopGrade = unlockedGrade(); setTab('shop'); toast(`${B.SLOT[b.dataset.slot].name}: выберите в магазине`); break;
@@ -188,11 +216,13 @@ function applyState(o) {
 }
 async function start(hot) {
   const isHot = !!(hot && hot.S);
+  // Платформу инициализируем до чтения сохранения: на iOS нужен safeStorage из SDK.
+  await Promise.race([P.init(), new Promise(r => setTimeout(r, 4000))]);
   const local = isHot ? null : loadLocal();
   R.hadLocal = isHot || !!local;
   S = (isHot && migrate(hot.S)) || local || newState();
   R.offlineFrom = local ? S.savedAt : 0;
-  if (isHot && ['hero', 'gear', 'pets', 'arena', 'shop'].includes(hot.tab)) R.tab = hot.tab;
+  if (isHot && ['hero', 'gear', 'pets', 'arena', 'trials', 'shop'].includes(hot.tab)) R.tab = hot.tab;
   dailyReset();
   for (const el of document.querySelectorAll('[data-ic]')) el.src = A.miscIcon(el.dataset.ic, 64);
   $('icGold').src = A.miscIcon('gold', 40); $('icGem').src = A.miscIcon('gem', 40);
@@ -215,7 +245,6 @@ async function start(hot) {
   requestAnimationFrame(frame);
   window.claude?.hot?.snapshot?.(() => ({ S, tab: R.tab }));
 
-  await P.init();
   P.ready();
   if (P.mode === 'yandex') Monet.restore();
   await Cloud.init();
@@ -227,3 +256,11 @@ async function start(hot) {
   }
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? null);
+
+/* ---------- отладочный доступ для проверки и поддержки: ?debug ---------- */
+if (/[?&]debug\b/.test(location.search)) {
+  window.__KS = {
+    get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
+    addPet, summon, startBoss, bossWin, dailyReset,
+  };
+}

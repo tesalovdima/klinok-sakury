@@ -4,7 +4,7 @@ function renderPets() {
   return seg + (R.petSeg === 'summon' ? renderSummon() : renderCollection());
 }
 function renderSummon() {
-  const left = B.GACHA.pity - S.gacha.pity, G1 = B.GACHA.cost1, G10 = B.GACHA.cost10;
+  const left = B.GACHA.pity - S.gacha.pity, G1 = B.GACHA.cost1, G10 = B.GACHA.cost10, F10 = B.GACHA.first10;
   const freeAd = !S.ads.freeSummon && Monet.adsOn();
   return `
     <section class="card summon-card">
@@ -15,6 +15,7 @@ function renderSummon() {
       </div>
     </section>
     <div class="summon-btns">
+      ${!S.gacha.first10 ? `<button class="buy pink wide" data-act="summon" data-n="10" data-m="first10" data-cost="${F10}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">Первый ×10 за ${F10} · скидка</button>` : ''}
       ${S.gacha.tickets > 0 ? `<button class="buy pink wide" data-act="summon" data-n="1" data-m="ticket"><img src="${A.miscIcon('summon', 32)}" alt="">Призвать по билету · есть ${S.gacha.tickets}</button>` : ''}
       ${freeAd ? `<button class="buy ad wide" data-act="summon-ad">Бесплатный призыв за рекламу</button>` : ''}
       <div class="btn-row">
@@ -104,10 +105,11 @@ function addPet(id) {
   return { dupe: true };
 }
 function summon(n, mode) {
-  if (mode === 'gems') {
-    const cost = n === 10 ? B.GACHA.cost10 : B.GACHA.cost1;
+  if (mode === 'gems' || mode === 'first10') {
+    const cost = mode === 'first10' ? B.GACHA.first10 : n === 10 ? B.GACHA.cost10 : B.GACHA.cost1;
     if (S.gems < cost) { toast('Не хватает самоцветов'); R.shopTab = 'gems'; setTab('shop'); return; }
     S.gems -= cost;
+    if (mode === 'first10') S.gacha.first10 = true;
   } else if (mode === 'ticket') {
     if (S.gacha.tickets <= 0) return;
     S.gacha.tickets--;

@@ -46,7 +46,7 @@ function spawnBoss() {
   const m = makeMonster(true, 0);
   m.x = standX(m) + 18 * R.k;
   R.monsters.push(m);
-  R.boss = { m, time: B.BOSS.time, active: false };
+  R.boss = { m, time: bossTime(), active: false };
   R.bossPending = false;
   updateHudStatic();
 }
@@ -56,7 +56,7 @@ function bossLand(m) {
   if (!RM) R.shake = .4;
   R.fx.push({ type: 'ring', x: m.x, y: R.gy - 4 * R.k, r0: 20 * R.k, r1: 190 * R.k, t: 0, life: .55, c: '#ffffff', flat: true });
   for (let i = 0; i < 22; i++) R.fx.push({ type: 'part', x: m.x + (rnd() - .5) * 60 * R.k, y: R.gy - 4 * R.k, vx: (rnd() - .5) * 320 * R.k, vy: -(60 + rnd() * 200) * R.k, g: 500 * R.k, size: (3 + rnd() * 4) * R.k, c: zoneOf(S.stage).ground[1], t: 0, life: .6 + rnd() * .3, shape: 'circle' });
-  banner(m.name, `${B.BOSS.time} секунд на победу`, '#ff6b8a');
+  banner(m.name, `${Math.round(bossTime())} секунд на победу`, '#ff6b8a');
   AU.sfx('land');
   log(`Босс ${m.name} вступает в бой!`, 'boss');
 }
@@ -142,9 +142,11 @@ function bossExplode(m) {
 function bossWin() {
   const z0 = zoneOf(S.stage).z, first = S.stage >= S.maxStage;
   S.stats.bosses++;
+  R.bossFails = 0; R.bossCd = 0;
   quest('bosses'); passXp(B.PASS.bossXp);
   S.stage++;
   if (S.stage > S.maxStage) S.maxStage = S.stage;
+  if (S.maxStage > (S.bestStage || 0)) S.bestStage = S.maxStage;
   S.kills = 0;
   R.boss = null;
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
@@ -165,9 +167,14 @@ function bossFail(why) {
   R.monsters = R.monsters.filter(x => x !== m);
   R.fx = R.fx.filter(f => !['wave', 'sonic', 'erupt', 'shard', 'fireball', 'dark'].includes(f.type));
   R.boss = null;
-  S.autoBoss = false;
-  banner('Босс устоял', why === 'time' ? 'Время вышло' : `${heroName()} ${G('пала', 'пал')}`, '#ff5d73');
-  log('Босс не побеждён. Усильтесь и вызовите его снова кнопкой «Босс».', 'bad');
+  // Мягкая стена, как в Slayer Legend: никакого штрафа, но и не бесконечные попытки.
+  // Пока игрок фармит и растёт, босс вызывается сам; пауза между попытками растёт.
+  R.bossFails++;
+  R.bossCd = Math.min(300, 20 * Math.pow(1.6, Math.min(5, R.bossFails - 1)));
+  banner('Босс устоял', why === 'time' ? 'Время вышло — фармим и вернёмся' : `${heroName()} ${G('пала', 'пал')} — фармим`, '#ff5d73');
+  log(S.autoBoss
+    ? `Босс не побеждён. ${G('Героиня', 'Герой')} фармит этап и вернётся через ${Math.round(R.bossCd)} с.`
+    : 'Босс не побеждён. Усильтесь и вызовите его снова кнопкой «Босс».', 'bad');
   updateMusic();
   updateHudStatic();
 }
@@ -202,7 +209,7 @@ function killMonster(m) {
   m.hp = 0; m.dieT = .001;
   const s = S.stage, z = zoneOf(s);
   const gold = B.mGold(s) * (m.boss ? B.BOSS.gold : 1) * (.9 + rnd() * .2) * goldMul();
-  const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * (1 + R.pb.xpPct);
+  const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * xpMul();
   S.gold += gold; S.stats.kills++;
   quest('kills');
   gainXp(xp);
@@ -217,7 +224,7 @@ function killMonster(m) {
   updateHudStatic();
 }
 function rollDrops(m, z, y) {
-  const D = B.DROP, dm = 1 + R.pb.dropPct;
+  const D = B.DROP, dm = dropMul();
   const give = (kind, blessed) => {
     const g = B.zoneDropGrade(z.z, rnd);
     S.scrolls[(blessed ? 'b' : '') + kind][g]++;
@@ -497,7 +504,8 @@ function update(dtRaw) {
     if (R.boss.active) { R.boss.time -= dt; if (R.boss.time <= 0 && R.boss.m.hp > 0) bossFail('time'); }
   } else if (!R.bossPending) {
     spawnLogic();
-    if (S.kills >= 10 && S.autoBoss && !h.dead) startBoss();
+    if (R.bossCd > 0) R.bossCd = Math.max(0, R.bossCd - dtRaw);
+    if (S.kills >= 10 && S.autoBoss && !h.dead && R.bossCd <= 0) startBoss();
   }
 
   const alive = R.monsters.filter(m => m.hp > 0).sort((a, b) => a.x - b.x);

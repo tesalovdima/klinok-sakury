@@ -4,6 +4,7 @@ const PLATFORM = (() => {
   const listeners = { pause: [], resume: [] };
   let catalog = {};
   let localUI = null;          // окно тестовой покупки/награды из игры
+  let safeStore;               // безопасное хранилище Яндекс Игр (нужно на iOS)
 
   async function init() {
     if (typeof window.YaGames === 'undefined') return mode;
@@ -17,6 +18,7 @@ const PLATFORM = (() => {
         try { const list = await payments.getCatalog(); for (const p of list) catalog[p.id] = p; } catch (e) { }
       }
     } catch (e) { mode = 'local'; ysdk = null; }
+    safeStore = undefined;                 // после init хранилище площадки можно запросить
     return mode;
   }
   const ready = () => { try { ysdk?.features?.LoadingAPI?.ready(); } catch (e) { } };
@@ -87,6 +89,13 @@ const PLATFORM = (() => {
     init, ready, gameplay, lang, rewarded, interstitial, purchase, consume, purchases, price, loadCloud, saveCloud,
     on: (ev, f) => listeners[ev].push(f),
     setLocalUI: f => { localUI = f; },
+    // localStorage-совместимое хранилище площадки; до init() возвращает null
+    getStorage() {
+      if (safeStore !== undefined) return safeStore;
+      try { safeStore = ysdk && typeof ysdk.getStorage === 'function' ? ysdk.getStorage() : null; }
+      catch (e) { safeStore = null; }
+      return safeStore;
+    },
     get mode() { return mode; },
   };
 })();
