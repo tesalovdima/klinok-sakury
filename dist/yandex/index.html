@@ -1043,6 +1043,8 @@ const BAL = (() => {
     { id: 'midori',  name: 'Мидори',   sp: 'dragon', r: 3, bonus: 'critDmg', pal: { a: '#3fbf8a', b: '#d8ffe8', e: '#ffd760' }, el: '#74e0a8' },
     { id: 'tenryu',  name: 'Тэнрю',    sp: 'dragon', r: 4, bonus: 'atkPct',  pal: { a: '#ffd760', b: '#fff8de', e: '#d9434f' }, el: '#fff0a0' },
     { id: 'yami',    name: 'Ями',      sp: 'fox',    r: 4, bonus: 'critDmg', pal: { a: '#2b1a40', b: '#ff62d4', e: '#ff62d4' }, el: '#ff62d4' },
+    { id: 'kitsune', name: 'Кицунэ',   sp: 'fox',    r: 3, bonus: 'crit',    pal: { a: '#ffd760', b: '#fff8e0', e: '#d9437f' }, el: '#ffd760' },
+    { id: 'tsuru',   name: 'Цуру',     sp: 'dragon', r: 3, bonus: 'hpPct',   pal: { a: '#ffffff', b: '#ffd0e4', e: '#d9434f' }, el: '#ffffff' },
     { id: 'sakura',  name: 'Сакура-тян', sp: 'fox',  r: 2, bonus: 'atkPct',  pal: { a: '#ffb7d5', b: '#fff0f6', e: '#d9437f' }, el: '#ffd0e4', event: true },
   ];
   const PET = Object.fromEntries(PETS.map(p => [p.id, p]));
@@ -3941,6 +3943,16 @@ const ZONES = [
     prop: 'tower', propC: ['#120a1e', '#ffcf5a'], seed: 17, ground: ['#2a1a3a', '#5a3a7a', '#1e1230', '#7a4a9a'], amb: 'mote', ui: '#ff62d4',
     mons: [['skull', { a: '#3a2452', b: '#4a3a6a', e: '#ff4f73' }], ['imp', { a: '#5a2a7a', b: '#2a1238', c: '#ff62d4', e: '#fff' }], ['ghost', { a: '#8a5ad8', b: '#d8b8ff', e: '#fff' }]],
     boss: ['skull', { a: '#ff62d4', b: '#2a1838', e: '#ff62d4' }, 'Рыцарь бездны'] },
+  { id: 'z7', name: 'Небесный сад', sky: ['#1a1030', '#4a1f5c', '#ff9ad0'], stars: true, orb: { x: .78, y: .24, r: 22, c: '#ffe8f4', glow: '#ff8fc1' },
+    far: [{ c: '#3a2452', p: .06, f: .012, base: 80, amp: 40 }, { c: '#2a1840', p: .14, f: .02, base: 44, amp: 28 }],
+    prop: 'sakura', propC: ['#6a3a7a', '#ffb3d6'], seed: 23, ground: ['#5a3a6a', '#ffb3d6', '#4a2a5a', '#8a5a9a'], amb: 'petal', ui: '#ff9ad0',
+    mons: [['crystal', { a: '#c58aff', b: '#ffe0ff', e: '#fff' }], ['ghost', { a: '#ffb3e8', b: '#fff0fa', e: '#fff' }], ['slime', { a: '#ff9ad0', b: '#ffe0f0', e: '#fff' }]],
+    boss: ['crystal', { a: '#ff8fc1', b: '#ffe0f4', e: '#fff' }, 'Садовница звёзд'] },
+  { id: 'z8', name: 'Храм времени', sky: ['#0a1f24', '#1f5a4a', '#ffd760'], orb: { x: .2, y: .26, r: 24, c: '#fff3c0', glow: '#ffd760' },
+    far: [{ c: '#1a3a3a', p: .06, f: .012, base: 78, amp: 42 }, { c: '#122a2a', p: .14, f: .02, base: 42, amp: 28 }],
+    prop: 'tower', propC: ['#102a2a', '#ffd760'], seed: 29, ground: ['#2a4a4a', '#d8c08a', '#1a3030', '#b8a06a'], amb: 'mote', ui: '#8fe0c0',
+    mons: [['golem', { a: '#c9b07a', b: '#8a7040', e: '#ffd760' }], ['skull', { a: '#8a5a3a', b: '#d8b07a', e: '#8fe0c0' }], ['wisp', { a: '#8fe0c0', b: '#ffd760', e: '#fff' }]],
+    boss: ['golem', { a: '#d8c08a', b: '#8a6a3a', e: '#ffd760' }, 'Хранитель часов'] },
 ];
 const ARENA_ZONE = { id: 'arena', name: 'Арена', sky: ['#2a1a4a', '#7a3a6a', '#ffb07a'], orb: { x: .5, y: .3, r: 24, c: '#ffe8b0', glow: '#ffb07a' },
   far: [{ c: '#4a2a5a', p: .06, f: .012, base: 60, amp: 20 }, { c: '#3a2048', p: .14, f: .02, base: 34, amp: 12 }],
@@ -4157,7 +4169,7 @@ const R = {
   hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0, dodgeT: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
-  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0, dodge: .05, dodgeCount: 0, castLog: [],
+  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0, dodge: .05, dodgeCount: 0, dodgeCd: 0, castLog: [],
   st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
   imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', socialSeg: 'chat', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
@@ -4482,13 +4494,13 @@ function frontMonster() {
   for (const m of R.monsters) if (m.hp > 0 && m.phase !== 'enter' && (!best || m.x < best.x)) best = m;
   return best;
 }
-function heroStrike() {
+function heroStrike(mult = 1) {
   const tgt = frontMonster();
   if (!tgt) return;
   const h = R.hero, heavy = h.combo === 2;
   R.mp = Math.min(R.mpMax, (R.mp || 0) + 1.5);
   const crit = rnd() < R.st.crit;
-  const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1);
+  const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1) * mult;
   const sx = tgt.x - 6 * R.k, sy = R.gy - 34 * R.k * Math.min(1.6, tgt.scale);
   R.fx.push({ type: 'slash', x: sx, y: sy, r: (heavy ? 46 : 34) * R.k * Math.max(1, tgt.scale * .8), a: (heavy ? -1.25 : -.9) + rnd() * .3, life: .2, t: 0, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', w: crit ? 8 : heavy ? 7 : 5 });
   R.fx.push({ type: 'impact', x: sx, y: sy, t: 0, life: .2, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', big: crit || heavy });
@@ -4585,20 +4597,21 @@ function damageHero(raw, special) {
 }
 function monsterHit(m) {
   if (R.hero.dead || m.hp <= 0) return;
-  if (rnd() < (R.dodge || 0)) { heroDodge(m); return; }
+  if (R.dodgeCd <= 0 && rnd() < (R.dodge || 0)) { heroDodge(m); return; }
   damageHero(m.dmg * (m.enr ? 1.25 : 1), false);
   if (m.boss && !RM) R.shake = Math.max(R.shake, .14);
 }
 function heroDodge(m) {
   const h = R.hero, k = R.k, gy = R.gy;
   h.dodgeT = .32; h.hurt = 0; h.cast = 0;
+  R.dodgeCd = 1.2;
   R.dodgeCount = (R.dodgeCount || 0) + 1;
   R.hitStop = Math.max(R.hitStop, .035);
   R.fx.push({ type: 'num', x: R.heroX, y: gy - 132 * k, vy: -24 * k, t: 0, life: .7, text: 'Уклонение', c: '#8fe0c0', size: 12 * Math.sqrt(k) });
   R.fx.push({ type: 'ring', x: R.heroX, y: gy - 46 * k, r0: 14 * k, r1: 74 * k, t: 0, life: .35, c: '#8fe0c0' });
   for (let i = 0; i < 10; i++) R.fx.push({ type: 'part', x: R.heroX + (rnd() - .5) * 30 * k, y: gy - 40 * k - rnd() * 50 * k, vx: (rnd() - .8) * 140 * k, vy: (rnd() - .5) * 80 * k, g: 40 * k, size: (1.5 + rnd() * 2) * k, c: '#8fe0c0', t: 0, life: .3 + rnd() * .2, shape: 'star' });
   AU.sfx('dodge');
-  setTimeout(() => { if (!R.hero.dead && m.hp > 0) { R.hero.combo = 0; heroStrike(); } }, 150);
+  setTimeout(() => { if (!R.hero.dead && m.hp > 0) { R.hero.combo = 0; heroStrike(.7); } }, 150);
 }
 function heroDie() {
   const h = R.hero;
@@ -4881,6 +4894,7 @@ function update(dtRaw) {
   if (R.hitStop > 0) { R.hitStop = Math.max(0, R.hitStop - dtRaw); dt = dtRaw * .12; }
   if (R.cut) { R.cut.t += dtRaw; if (R.cut.t >= R.cut.life) R.cut = null; }
   if (R.zoom > 0) R.zoom = Math.max(0, R.zoom - dtRaw);
+  if (R.dodgeCd > 0) R.dodgeCd = Math.max(0, R.dodgeCd - dtRaw);
   if (R.slow > 0) { R.slow = Math.max(0, R.slow - dtRaw); dt = dtRaw * .3; }
   R.t += dt;
   const h = R.hero, st = R.st, k = R.k;
@@ -6193,7 +6207,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.8</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.9</p>`));
 }
 
 /* --- 35_trials.js --- */

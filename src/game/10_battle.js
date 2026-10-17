@@ -191,13 +191,13 @@ function frontMonster() {
   for (const m of R.monsters) if (m.hp > 0 && m.phase !== 'enter' && (!best || m.x < best.x)) best = m;
   return best;
 }
-function heroStrike() {
+function heroStrike(mult = 1) {
   const tgt = frontMonster();
   if (!tgt) return;
   const h = R.hero, heavy = h.combo === 2;
   R.mp = Math.min(R.mpMax, (R.mp || 0) + 1.5);
   const crit = rnd() < R.st.crit;
-  const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1);
+  const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1) * mult;
   const sx = tgt.x - 6 * R.k, sy = R.gy - 34 * R.k * Math.min(1.6, tgt.scale);
   R.fx.push({ type: 'slash', x: sx, y: sy, r: (heavy ? 46 : 34) * R.k * Math.max(1, tgt.scale * .8), a: (heavy ? -1.25 : -.9) + rnd() * .3, life: .2, t: 0, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', w: crit ? 8 : heavy ? 7 : 5 });
   R.fx.push({ type: 'impact', x: sx, y: sy, t: 0, life: .2, c: crit ? '#ffd760' : heavy ? '#ffb3d6' : '#ffffff', big: crit || heavy });
@@ -294,20 +294,21 @@ function damageHero(raw, special) {
 }
 function monsterHit(m) {
   if (R.hero.dead || m.hp <= 0) return;
-  if (rnd() < (R.dodge || 0)) { heroDodge(m); return; }
+  if (R.dodgeCd <= 0 && rnd() < (R.dodge || 0)) { heroDodge(m); return; }
   damageHero(m.dmg * (m.enr ? 1.25 : 1), false);
   if (m.boss && !RM) R.shake = Math.max(R.shake, .14);
 }
 function heroDodge(m) {
   const h = R.hero, k = R.k, gy = R.gy;
   h.dodgeT = .32; h.hurt = 0; h.cast = 0;
+  R.dodgeCd = 1.2;
   R.dodgeCount = (R.dodgeCount || 0) + 1;
   R.hitStop = Math.max(R.hitStop, .035);
   R.fx.push({ type: 'num', x: R.heroX, y: gy - 132 * k, vy: -24 * k, t: 0, life: .7, text: 'Уклонение', c: '#8fe0c0', size: 12 * Math.sqrt(k) });
   R.fx.push({ type: 'ring', x: R.heroX, y: gy - 46 * k, r0: 14 * k, r1: 74 * k, t: 0, life: .35, c: '#8fe0c0' });
   for (let i = 0; i < 10; i++) R.fx.push({ type: 'part', x: R.heroX + (rnd() - .5) * 30 * k, y: gy - 40 * k - rnd() * 50 * k, vx: (rnd() - .8) * 140 * k, vy: (rnd() - .5) * 80 * k, g: 40 * k, size: (1.5 + rnd() * 2) * k, c: '#8fe0c0', t: 0, life: .3 + rnd() * .2, shape: 'star' });
   AU.sfx('dodge');
-  setTimeout(() => { if (!R.hero.dead && m.hp > 0) { R.hero.combo = 0; heroStrike(); } }, 150);
+  setTimeout(() => { if (!R.hero.dead && m.hp > 0) { R.hero.combo = 0; heroStrike(.7); } }, 150);
 }
 function heroDie() {
   const h = R.hero;
@@ -590,6 +591,7 @@ function update(dtRaw) {
   if (R.hitStop > 0) { R.hitStop = Math.max(0, R.hitStop - dtRaw); dt = dtRaw * .12; }
   if (R.cut) { R.cut.t += dtRaw; if (R.cut.t >= R.cut.life) R.cut = null; }
   if (R.zoom > 0) R.zoom = Math.max(0, R.zoom - dtRaw);
+  if (R.dodgeCd > 0) R.dodgeCd = Math.max(0, R.dodgeCd - dtRaw);
   if (R.slow > 0) { R.slow = Math.max(0, R.slow - dtRaw); dt = dtRaw * .3; }
   R.t += dt;
   const h = R.hero, st = R.st, k = R.k;

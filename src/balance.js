@@ -199,6 +199,8 @@ const BAL = (() => {
     { id: 'midori',  name: 'Мидори',   sp: 'dragon', r: 3, bonus: 'critDmg', pal: { a: '#3fbf8a', b: '#d8ffe8', e: '#ffd760' }, el: '#74e0a8' },
     { id: 'tenryu',  name: 'Тэнрю',    sp: 'dragon', r: 4, bonus: 'atkPct',  pal: { a: '#ffd760', b: '#fff8de', e: '#d9434f' }, el: '#fff0a0' },
     { id: 'yami',    name: 'Ями',      sp: 'fox',    r: 4, bonus: 'critDmg', pal: { a: '#2b1a40', b: '#ff62d4', e: '#ff62d4' }, el: '#ff62d4' },
+    { id: 'kitsune', name: 'Кицунэ',   sp: 'fox',    r: 3, bonus: 'crit',    pal: { a: '#ffd760', b: '#fff8e0', e: '#d9437f' }, el: '#ffd760' },
+    { id: 'tsuru',   name: 'Цуру',     sp: 'dragon', r: 3, bonus: 'hpPct',   pal: { a: '#ffffff', b: '#ffd0e4', e: '#d9434f' }, el: '#ffffff' },
     { id: 'sakura',  name: 'Сакура-тян', sp: 'fox',  r: 2, bonus: 'atkPct',  pal: { a: '#ffb7d5', b: '#fff0f6', e: '#d9437f' }, el: '#ffd0e4', event: true },
   ];
   const PET = Object.fromEntries(PETS.map(p => [p.id, p]));
