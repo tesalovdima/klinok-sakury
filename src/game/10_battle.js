@@ -153,6 +153,7 @@ function bossWin() {
   }
   S.kills = 0;
   R.boss = null;
+  addEventCoins(B.EVENT.boss, 'boss');
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
   if (S.stats.bosses === 1) setTimeout(() => { if (S && S.hero && !modalState) Monet.openStarterOffer(); }, 2600);
   const z = zoneOf(S.stage);
@@ -216,6 +217,7 @@ function killMonster(m) {
   const gold = B.mGold(s) * (m.boss ? B.BOSS.gold : 1) * (.9 + rnd() * .2) * goldMul();
   const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * xpMul();
   S.gold += gold; S.stats.kills++;
+  if (!m.boss && rnd() < B.EVENT.killChance) addEventCoins(1, 'kill');
   quest('kills');
   gainXp(xp);
   const y = R.gy - A.monTop(m.type) * m.scale * R.k * .5;

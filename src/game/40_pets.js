@@ -121,7 +121,7 @@ function summon(n, mode) {
     const minR = n === 10 && i === n - 1 && !results.some(x => x.pet.r >= 2) ? 2 : 0;
     const r = B.rollRarity(rnd, pityHit, minR);
     if (r >= 3) S.gacha.pity = 0; else S.gacha.pity++;
-    const pet = pick(B.PETS.filter(p => p.r === r));
+    const pet = pick(B.PETS.filter(p => p.r === r && !p.event));
     results.push({ pet, ...addPet(pet.id) });
   }
   S.gacha.total += n; S.stats.summons += n;

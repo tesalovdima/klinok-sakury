@@ -67,6 +67,11 @@ document.addEventListener('click', async e => {
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
     case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
     case 'socialseg': R.socialSeg = b.dataset.v; renderPanel(); Social.enter(); break;
+    case 'event-open': openEvent(); break;
+    case 'event-tab': R.eventTab = b.dataset.v; openEvent(R.eventTab); break;
+    case 'event-claim': eventClaim(+b.dataset.i); break;
+    case 'event-claim-all': eventClaimAll(); break;
+    case 'event-buy': eventBuy(b.dataset.id); break;
     case 'chat-send': Social.send(); break;
     case 'board-refresh': Social.loadBoard(); break;
     case 'chat-retry': NET.probe(true).then(ok => { renderPanel(); Social.enter(); if (!ok) toast('Сервер недоступен'); }); break;
@@ -245,6 +250,7 @@ async function start(hot) {
   R.hadLocal = isHot || !!local;
   S = (isHot && migrate(hot.S)) || local || newState();
   equipBestAll();
+  ensureEvent();
   R.offlineFrom = local ? S.savedAt : 0;
   if (isHot && ['hero', 'gear', 'pets', 'arena', 'trials', 'shop'].includes(hot.tab)) R.tab = hot.tab;
   dailyReset();
@@ -286,5 +292,6 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent,
   };
 }

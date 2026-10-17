@@ -75,6 +75,7 @@ function doAwaken() {
   S.aw.petals += gain;
   S.aw.count++;
   S.stats.awakenings++;
+  addEventCoins(B.EVENT.awaken, 'awaken');
   S.bestStage = Math.max(S.bestStage || 0, S.maxStage);
   // сброс похода, но не коллекций
   S.maxStage = 0; S.stage = 0; S.level = 1; S.xp = 0; S.gold = 0; S.sp = 0; S.kills = 0;

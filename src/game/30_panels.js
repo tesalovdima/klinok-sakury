@@ -55,6 +55,7 @@ function renderHero() {
   return `
     ${chapter}
     ${fundCard}
+    ${eventBannerHTML()}
     <section class="card hero-card">
       <img class="portrait" src="${A.heroIcon(S.hero.body, S.hero.hair, 128)}" alt="">
       <div class="hero-meta"><h2>${esc(heroName())}</h2><span class="power">Боевая мощь<b id="powerVal">${fmt(R.power)}</b></span></div>
@@ -585,5 +586,5 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.1</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.2</p>`));
 }

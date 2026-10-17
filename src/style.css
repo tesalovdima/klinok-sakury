@@ -696,3 +696,22 @@ input { -webkit-user-select: text; user-select: text; }
 .chat-input { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .chat-input input { min-width: 0; border: 0; border-radius: 10px; padding: 10px 12px; background: var(--night); color: var(--ink); font: 800 14px/1.2 var(--font-ui); }
 .server-board .lg { color: var(--mist); }
+/* ===== сезонное событие ===== */
+.event-card { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: linear-gradient(135deg, rgba(255,127,176,.18), rgba(255,215,96,.06)), var(--lacquer-2); }
+.event-card .ev-badge { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,127,176,.16); }
+.event-card .ev-badge img { width: 40px; height: 40px; }
+.ev-coins { display: inline-flex; align-items: center; gap: 5px; font: 900 13px/1 var(--font-display); color: var(--petal); }
+.ev-balance { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.ev-balance img { width: 32px; height: 32px; }
+.ev-balance b { font: 900 24px/1 var(--font-display); color: var(--petal); }
+.ev-balance span { color: var(--mist); font-size: 12px; }
+.ev-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 0 10px; }
+.ev-tabs button { border: 0; padding: 9px 6px; border-radius: 10px; background: var(--night); color: var(--mist); font: 800 12px/1 var(--font-ui); }
+.ev-tabs button[aria-pressed="true"] { background: var(--petal); color: #2b1532; }
+.ev-row .bar { margin: 4px 0 3px; }
+.ev-row.ready { box-shadow: inset 0 0 0 1px var(--petal); }
+.ev-row.done { opacity: .62; }
+.val.ok { color: #8fe08a; font-size: 11px; }
+
+.ev-all { width: 100%; margin: 10px 0 4px; }

@@ -703,6 +703,25 @@ input { -webkit-user-select: text; user-select: text; }
 .chat-input { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .chat-input input { min-width: 0; border: 0; border-radius: 10px; padding: 10px 12px; background: var(--night); color: var(--ink); font: 800 14px/1.2 var(--font-ui); }
 .server-board .lg { color: var(--mist); }
+/* ===== сезонное событие ===== */
+.event-card { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: linear-gradient(135deg, rgba(255,127,176,.18), rgba(255,215,96,.06)), var(--lacquer-2); }
+.event-card .ev-badge { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,127,176,.16); }
+.event-card .ev-badge img { width: 40px; height: 40px; }
+.ev-coins { display: inline-flex; align-items: center; gap: 5px; font: 900 13px/1 var(--font-display); color: var(--petal); }
+.ev-balance { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.ev-balance img { width: 32px; height: 32px; }
+.ev-balance b { font: 900 24px/1 var(--font-display); color: var(--petal); }
+.ev-balance span { color: var(--mist); font-size: 12px; }
+.ev-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 0 10px; }
+.ev-tabs button { border: 0; padding: 9px 6px; border-radius: 10px; background: var(--night); color: var(--mist); font: 800 12px/1 var(--font-ui); }
+.ev-tabs button[aria-pressed="true"] { background: var(--petal); color: #2b1532; }
+.ev-row .bar { margin: 4px 0 3px; }
+.ev-row.ready { box-shadow: inset 0 0 0 1px var(--petal); }
+.ev-row.done { opacity: .62; }
+.val.ok { color: #8fe08a; font-size: 11px; }
+
+.ev-all { width: 100%; margin: 10px 0 4px; }
 
 </style>
 
@@ -978,6 +997,7 @@ const BAL = (() => {
     { id: 'midori',  name: 'Мидори',   sp: 'dragon', r: 3, bonus: 'critDmg', pal: { a: '#3fbf8a', b: '#d8ffe8', e: '#ffd760' }, el: '#74e0a8' },
     { id: 'tenryu',  name: 'Тэнрю',    sp: 'dragon', r: 4, bonus: 'atkPct',  pal: { a: '#ffd760', b: '#fff8de', e: '#d9434f' }, el: '#fff0a0' },
     { id: 'yami',    name: 'Ями',      sp: 'fox',    r: 4, bonus: 'critDmg', pal: { a: '#2b1a40', b: '#ff62d4', e: '#ff62d4' }, el: '#ff62d4' },
+    { id: 'sakura',  name: 'Сакура-тян', sp: 'fox',  r: 2, bonus: 'atkPct',  pal: { a: '#ffb7d5', b: '#fff0f6', e: '#d9437f' }, el: '#ffd0e4', event: true },
   ];
   const PET = Object.fromEntries(PETS.map(p => [p.id, p]));
   const PET_ATK = [.4, .6, .9, 1.4, 2.2];          // урон питомца в долях атаки героя
@@ -1056,7 +1076,39 @@ const BAL = (() => {
     { gems: 50 }, { goldKills: 250 }, { scrollsA: 3 }, { gems: 100 }, { blessedA: 1 }, { summon: 1 }, { gems: 300, petals: 5 },
   ];
   const PASS = { tiers: 30, xpPer: 1000, seasonDays: 28, epoch: Date.UTC(2026, 9, 1), bossXp: 15, arenaXp: 30 };
-  function passReward(tier, prem) {          // tier: 1..30
+
+  /* ---------- сезонное событие ---------- */
+  const EVENT = {
+    id: 'hanami',
+    name: 'Праздник сакуры',
+    seasonDays: 14,
+    epoch: Date.UTC(2026, 9, 15),
+    killChance: .12,
+    killCap: 900,
+    boss: 10,
+    dungeon: 40,
+    arena: 15,
+    tower: 12,
+    awaken: 150,
+    milestones: [
+      { at: 300,  rw: { gems: 40 } },
+      { at: 700,  rw: { crystals: 300 } },
+      { at: 1200, rw: { scrollsW: 2, summon: 1 } },
+      { at: 1800, rw: { petals: 5 } },
+      { at: 2600, rw: { gems: 100, crystals: 600 } },
+      { at: 3600, rw: { scrollsA: 3, scrollsW: 2 } },
+      { at: 4800, rw: { petals: 10, gems: 150 } },
+      { at: 6000, rw: { pet: 'sakura', gems: 100 } },
+    ],
+    shop: [
+      { id: 'gems',    name: 'Самоцветы ×50',   ico: 'gem',     cost: 150, limit: 5,  rw: { gems: 50 } },
+      { id: 'crystal', name: 'Кристаллы ×250',  ico: 'crystal', cost: 100, limit: 10, rw: { crystals: 250 } },
+      { id: 'scroll',  name: 'Свитки оружия ×2', ico: 'scroll',  cost: 180, limit: 5,  rw: { scrollsW: 2 } },
+      { id: 'ticket',  name: 'Билет призыва',   ico: 'ticket',  cost: 90,  limit: 10, rw: { summon: 1 } },
+      { id: 'petal',   name: 'Лепестки ×6',     ico: 'petal',   cost: 450, limit: 3,  rw: { petals: 6 } },
+      { id: 'gold',    name: 'Золото',          ico: 'gold',    cost: 80,  limit: 20, rw: { goldKills: 30 } },
+    ],
+  };  function passReward(tier, prem) {          // tier: 1..30
     if (prem) {
       if (tier === 30) return { pet: 'tenryu', cosmetic: 'petals', petals: 20 };
       if (tier % 10 === 0) return { summon: 2, petals: 8 };
@@ -1230,7 +1282,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP,
-    DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd,
+    DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,
@@ -3790,7 +3842,7 @@ const SKILL_MAX = 20;
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 4;
+const SAVE_VERSION = 5;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -3833,6 +3885,7 @@ function newState() {
     dungeon: { day: '', keys: B.DKEYS.perDay, ads: 0, buys: 0, runs: 0, stage: 0 },
     fund: { owned: false, claimed: [] },
     chapter: { idx: 0, claimed: [] },
+    event: { season: -1, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 },
     codex: { 'weapon:0': 1, 'upper:0': 1 },
   };
 }
@@ -4235,6 +4288,7 @@ function bossWin() {
   }
   S.kills = 0;
   R.boss = null;
+  addEventCoins(B.EVENT.boss, 'boss');
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
   if (S.stats.bosses === 1) setTimeout(() => { if (S && S.hero && !modalState) Monet.openStarterOffer(); }, 2600);
   const z = zoneOf(S.stage);
@@ -4298,6 +4352,7 @@ function killMonster(m) {
   const gold = B.mGold(s) * (m.boss ? B.BOSS.gold : 1) * (.9 + rnd() * .2) * goldMul();
   const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * xpMul();
   S.gold += gold; S.stats.kills++;
+  if (!m.boss && rnd() < B.EVENT.killChance) addEventCoins(1, 'kill');
   quest('kills');
   gainXp(xp);
   const y = R.gy - A.monTop(m.type) * m.scale * R.k * .5;
@@ -4959,6 +5014,7 @@ function doAwaken() {
   S.aw.petals += gain;
   S.aw.count++;
   S.stats.awakenings++;
+  addEventCoins(B.EVENT.awaken, 'awaken');
   S.bestStage = Math.max(S.bestStage || 0, S.maxStage);
   // сброс похода, но не коллекций
   S.maxStage = 0; S.stage = 0; S.level = 1; S.xp = 0; S.gold = 0; S.sp = 0; S.kills = 0;
@@ -5230,6 +5286,7 @@ function renderHero() {
   return `
     ${chapter}
     ${fundCard}
+    ${eventBannerHTML()}
     <section class="card hero-card">
       <img class="portrait" src="${A.heroIcon(S.hero.body, S.hero.hair, 128)}" alt="">
       <div class="hero-meta"><h2>${esc(heroName())}</h2><span class="power">Боевая мощь<b id="powerVal">${fmt(R.power)}</b></span></div>
@@ -5760,7 +5817,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.1</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.2</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -5935,6 +5992,7 @@ function applyDuelResult(st) {
       d.keys--; d.runs++; S.stats.dungeonRuns++;
       const rw = B.dungeonReward(st.id, S.stage);
       grant(rw);
+      addEventCoins(B.EVENT.dungeon, 'dungeon');
       quest('dungeon'); passXp(12); checkAch(); saveLocal();
       st.rw = rw;
       AU.sfx('victory');
@@ -5955,6 +6013,7 @@ function towerClear(f, silent) {
   S.tower.floor = f;
   S.tower.best = Math.max(S.tower.best, f);
   grant(rw, silent);
+  addEventCoins(B.EVENT.tower, 'tower');
   quest('tower'); passXp(18);
   checkAch(); saveLocal();
   return rw;
@@ -6154,7 +6213,7 @@ function summon(n, mode) {
     const minR = n === 10 && i === n - 1 && !results.some(x => x.pet.r >= 2) ? 2 : 0;
     const r = B.rollRarity(rnd, pityHit, minR);
     if (r >= 3) S.gacha.pity = 0; else S.gacha.pity++;
-    const pet = pick(B.PETS.filter(p => p.r === r));
+    const pet = pick(B.PETS.filter(p => p.r === r && !p.event));
     results.push({ pet, ...addPet(pet.id) });
   }
   S.gacha.total += n; S.stats.summons += n;
@@ -6369,6 +6428,154 @@ function paintBoard() {
     li.append(place, nm, lg, b);
     el.append(li);
   });
+}
+
+/* --- 47_event.js --- */
+/* ---------- сезонное событие «Праздник сакуры» ----------
+   Валюта события — ханами. Она копится с убийств, боссов, подземелий,
+   арены и башни, тратится в магазине события. Сезон длится 14 дней и
+   начинается заново, поэтому событие всегда доступно новым игрокам. */
+
+function eventInfo() {
+  const span = B.EVENT.seasonDays * 864e5, now = Date.now();
+  let idx = Math.floor((now - B.EVENT.epoch) / span);
+  if (!Number.isFinite(idx) || idx < 0) idx = 0;
+  const start = B.EVENT.epoch + idx * span;
+  return { idx, start, end: start + span, left: start + span - now };
+}
+
+function ensureEvent() {
+  const info = eventInfo();
+  if (!S.event || typeof S.event !== 'object') S.event = { season: info.idx, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 };
+  if (S.event.season !== info.idx) {
+    S.event.season = info.idx;
+    S.event.coins = 0;
+    S.event.total = 0;
+    S.event.claimed = [];
+    S.event.bought = {};
+    S.event.day = '';
+    S.event.today = 0;
+  }
+  if (!Array.isArray(S.event.claimed)) S.event.claimed = [];
+  if (!S.event.bought || typeof S.event.bought !== 'object') S.event.bought = {};
+  return info;
+}
+
+function addEventCoins(n, src) {
+  if (!S || !n) return;
+  ensureEvent();
+  if (src === 'kill') {
+    const d = dayKey();
+    if (S.event.day !== d) { S.event.day = d; S.event.today = 0; }
+    if (S.event.today >= B.EVENT.killCap) return;
+    n = Math.min(n, B.EVENT.killCap - S.event.today);
+    if (n <= 0) return;
+    S.event.today += n;
+  }
+  S.event.coins += n;
+  S.event.total += n;
+  if (Date.now() - (R.evSave || 0) > 5000) { R.evSave = Date.now(); saveLocal(); }
+}
+
+function eventReadyCount() {
+  ensureEvent();
+  return B.EVENT.milestones.reduce((n, m, i) => n + (!S.event.claimed.includes(i) && S.event.total >= m.at ? 1 : 0), 0);
+}
+
+function eventBannerHTML() {
+  const info = ensureEvent();
+  const ready = eventReadyCount();
+  const readyTxt = ready ? ` · ${ready} ${plural(ready, ['награда', 'награды', 'наград'])}` : '';
+  return `<section class="card event-card">
+    <div class="ev-badge"><img src="${A.miscIcon('petal', 64)}" alt=""></div>
+    <div class="row-main"><b>${B.EVENT.name}${readyTxt}</b>
+      <span class="meta">Сезон ${info.idx + 1} · до конца ${left(info.left)}</span>
+      <span class="ev-coins">${fmt(S.event.coins)} ханами</span></div>
+    <button class="buy pink small" data-act="event-open">Открыть</button>
+  </section>`;
+}
+
+function trackHTML() {
+  return `<ul class="rows ev-track">${B.EVENT.milestones.map((m, i) => {
+    const claimed = S.event.claimed.includes(i), ready = S.event.total >= m.at;
+    const w = Math.min(100, S.event.total / m.at * 100);
+    return `<li class="row ev-row ${claimed ? 'done' : ready ? 'ready' : ''}">
+      <img src="${A.miscIcon('petal', 48)}" alt="">
+      <div class="row-main"><b>${rewardText(m.rw)}</b>
+        <div class="bar mini"><i style="width:${w}%"></i></div>
+        <span class="meta">${fmt(Math.min(S.event.total, m.at))} / ${fmt(m.at)} ханами</span></div>
+      ${claimed ? '<span class="val ok">получено</span>' : ready
+        ? `<button class="buy pink small" data-act="event-claim" data-i="${i}">Забрать</button>`
+        : '<span class="val">🔒</span>'}
+    </li>`;
+  }).join('')}</ul>`;
+}
+
+function shopHTML() {
+  return `<ul class="rows">${B.EVENT.shop.map(s => {
+    const used = S.event.bought[s.id] || 0, leftN = s.limit - used;
+    const can = leftN > 0 && S.event.coins >= s.cost;
+    return `<li class="row"><img src="${A.miscIcon(s.ico, 48)}" alt="">
+      <div class="row-main"><b>${s.name}</b><span class="meta">${rewardText(s.rw)} · осталось ${leftN} из ${s.limit}</span></div>
+      <button class="buy ${can ? 'pink' : 'ghost'}" data-act="event-buy" data-id="${s.id}" ${can ? '' : 'disabled'}>
+        <img src="${A.miscIcon('petal', 28)}" alt="">${s.cost}</button>
+    </li>`;
+  }).join('')}</ul>`;
+}
+
+function openEvent(tab) {
+  const info = ensureEvent();
+  R.eventTab = tab || R.eventTab || 'track';
+  const ready = B.EVENT.milestones.map((m, i) => i).filter(i => !S.event.claimed.includes(i) && S.event.total >= B.EVENT.milestones[i].at);
+  const tabs = [['track', `Награды${ready.length ? ' · ' + ready.length : ''}`], ['shop', 'Магазин']]
+    .map(([v, l]) => `<button data-act="event-tab" data-v="${v}" aria-pressed="${R.eventTab === v}">${l}</button>`).join('');
+  openModal(sheet(B.EVENT.name, `Сезон ${info.idx + 1} · до конца ${left(info.left)}`, `
+    <div class="ev-balance"><img src="${A.miscIcon('petal', 40)}" alt=""><b>${fmt(S.event.coins)}</b><span>ханами</span></div>
+    <div class="ev-tabs" role="group">${tabs}</div>
+    ${R.eventTab === 'shop' ? shopHTML() : trackHTML()}
+    ${R.eventTab === 'track' && ready.length > 1 ? `<button class="buy pink ev-all" data-act="event-claim-all">Забрать всё · ${ready.length}</button>` : ''}
+    <p class="note">Ханами падают с монстров (до ${B.EVENT.killCap} в день), боссов, подземелий, арены и башни. Сезон меняется каждые ${B.EVENT.seasonDays} дней.</p>
+  `));
+}
+
+function eventClaim(i) {
+  ensureEvent();
+  const m = B.EVENT.milestones[i];
+  if (!m || S.event.claimed.includes(i) || S.event.total < m.at) return;
+  S.event.claimed.push(i);
+  grant(m.rw, true);
+  toast('Награда праздника: ' + rewardText(m.rw));
+  saveLocal();
+  openEvent('track');
+}
+
+function eventClaimAll() {
+  ensureEvent();
+  const got = [];
+  B.EVENT.milestones.forEach((m, i) => {
+    if (S.event.claimed.includes(i) || S.event.total < m.at) return;
+    S.event.claimed.push(i);
+    grant(m.rw, true);
+    got.push(rewardText(m.rw));
+  });
+  if (!got.length) return;
+  toast('Праздник: ' + got.join(', '));
+  saveLocal();
+  openEvent('track');
+}
+
+function eventBuy(id) {
+  ensureEvent();
+  const s = B.EVENT.shop.find(x => x.id === id);
+  if (!s) return;
+  const used = S.event.bought[id] || 0;
+  if (used >= s.limit || S.event.coins < s.cost) return;
+  S.event.coins -= s.cost;
+  S.event.bought[id] = used + 1;
+  grant(s.rw, true);
+  toast('Куплено: ' + rewardText(s.rw));
+  saveLocal();
+  openEvent('shop');
 }
 
 /* --- 50_arena.js --- */
@@ -6613,7 +6820,7 @@ function arenaResult(st) {
   a.rating = Math.max(0, a.rating + delta);
   const gems = F.win ? B.ARENA.winGems : B.ARENA.loseGems;
   S.gems += gems;
-  if (F.win) { a.wins++; S.stats.arenaWins++; } else a.losses++;
+  if (F.win) { a.wins++; S.stats.arenaWins++; addEventCoins(B.EVENT.arena, 'arena'); } else a.losses++;
   a.seed++;
   quest('arena'); passXp(B.PASS.arenaXp); checkAch();
   const res = $('fightRes');
@@ -7172,6 +7379,11 @@ document.addEventListener('click', async e => {
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
     case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
     case 'socialseg': R.socialSeg = b.dataset.v; renderPanel(); Social.enter(); break;
+    case 'event-open': openEvent(); break;
+    case 'event-tab': R.eventTab = b.dataset.v; openEvent(R.eventTab); break;
+    case 'event-claim': eventClaim(+b.dataset.i); break;
+    case 'event-claim-all': eventClaimAll(); break;
+    case 'event-buy': eventBuy(b.dataset.id); break;
     case 'chat-send': Social.send(); break;
     case 'board-refresh': Social.loadBoard(); break;
     case 'chat-retry': NET.probe(true).then(ok => { renderPanel(); Social.enter(); if (!ok) toast('Сервер недоступен'); }); break;
@@ -7350,6 +7562,7 @@ async function start(hot) {
   R.hadLocal = isHot || !!local;
   S = (isHot && migrate(hot.S)) || local || newState();
   equipBestAll();
+  ensureEvent();
   R.offlineFrom = local ? S.savedAt : 0;
   if (isHot && ['hero', 'gear', 'pets', 'arena', 'trials', 'shop'].includes(hot.tab)) R.tab = hot.tab;
   dailyReset();
@@ -7391,6 +7604,7 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent,
   };
 }
 

@@ -199,6 +199,7 @@ const BAL = (() => {
     { id: 'midori',  name: 'Мидори',   sp: 'dragon', r: 3, bonus: 'critDmg', pal: { a: '#3fbf8a', b: '#d8ffe8', e: '#ffd760' }, el: '#74e0a8' },
     { id: 'tenryu',  name: 'Тэнрю',    sp: 'dragon', r: 4, bonus: 'atkPct',  pal: { a: '#ffd760', b: '#fff8de', e: '#d9434f' }, el: '#fff0a0' },
     { id: 'yami',    name: 'Ями',      sp: 'fox',    r: 4, bonus: 'critDmg', pal: { a: '#2b1a40', b: '#ff62d4', e: '#ff62d4' }, el: '#ff62d4' },
+    { id: 'sakura',  name: 'Сакура-тян', sp: 'fox',  r: 2, bonus: 'atkPct',  pal: { a: '#ffb7d5', b: '#fff0f6', e: '#d9437f' }, el: '#ffd0e4', event: true },
   ];
   const PET = Object.fromEntries(PETS.map(p => [p.id, p]));
   const PET_ATK = [.4, .6, .9, 1.4, 2.2];          // урон питомца в долях атаки героя
@@ -277,7 +278,39 @@ const BAL = (() => {
     { gems: 50 }, { goldKills: 250 }, { scrollsA: 3 }, { gems: 100 }, { blessedA: 1 }, { summon: 1 }, { gems: 300, petals: 5 },
   ];
   const PASS = { tiers: 30, xpPer: 1000, seasonDays: 28, epoch: Date.UTC(2026, 9, 1), bossXp: 15, arenaXp: 30 };
-  function passReward(tier, prem) {          // tier: 1..30
+
+  /* ---------- сезонное событие ---------- */
+  const EVENT = {
+    id: 'hanami',
+    name: 'Праздник сакуры',
+    seasonDays: 14,
+    epoch: Date.UTC(2026, 9, 15),
+    killChance: .12,
+    killCap: 900,
+    boss: 10,
+    dungeon: 40,
+    arena: 15,
+    tower: 12,
+    awaken: 150,
+    milestones: [
+      { at: 300,  rw: { gems: 40 } },
+      { at: 700,  rw: { crystals: 300 } },
+      { at: 1200, rw: { scrollsW: 2, summon: 1 } },
+      { at: 1800, rw: { petals: 5 } },
+      { at: 2600, rw: { gems: 100, crystals: 600 } },
+      { at: 3600, rw: { scrollsA: 3, scrollsW: 2 } },
+      { at: 4800, rw: { petals: 10, gems: 150 } },
+      { at: 6000, rw: { pet: 'sakura', gems: 100 } },
+    ],
+    shop: [
+      { id: 'gems',    name: 'Самоцветы ×50',   ico: 'gem',     cost: 150, limit: 5,  rw: { gems: 50 } },
+      { id: 'crystal', name: 'Кристаллы ×250',  ico: 'crystal', cost: 100, limit: 10, rw: { crystals: 250 } },
+      { id: 'scroll',  name: 'Свитки оружия ×2', ico: 'scroll',  cost: 180, limit: 5,  rw: { scrollsW: 2 } },
+      { id: 'ticket',  name: 'Билет призыва',   ico: 'ticket',  cost: 90,  limit: 10, rw: { summon: 1 } },
+      { id: 'petal',   name: 'Лепестки ×6',     ico: 'petal',   cost: 450, limit: 3,  rw: { petals: 6 } },
+      { id: 'gold',    name: 'Золото',          ico: 'gold',    cost: 80,  limit: 20, rw: { goldKills: 30 } },
+    ],
+  };  function passReward(tier, prem) {          // tier: 1..30
     if (prem) {
       if (tier === 30) return { pet: 'tenryu', cosmetic: 'petals', petals: 20 };
       if (tier % 10 === 0) return { summon: 2, petals: 8 };
@@ -451,7 +484,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP,
-    DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd,
+    DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,

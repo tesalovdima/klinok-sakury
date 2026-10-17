@@ -98,7 +98,7 @@ const SKILL_MAX = 20;
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 4;
+const SAVE_VERSION = 5;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -141,6 +141,7 @@ function newState() {
     dungeon: { day: '', keys: B.DKEYS.perDay, ads: 0, buys: 0, runs: 0, stage: 0 },
     fund: { owned: false, claimed: [] },
     chapter: { idx: 0, claimed: [] },
+    event: { season: -1, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 },
     codex: { 'weapon:0': 1, 'upper:0': 1 },
   };
 }
