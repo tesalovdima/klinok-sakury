@@ -104,6 +104,8 @@ const AUDIO = (() => {
     boss:   { bpm: 158, root: 52, mode: 'hmin', prog: [[0, 'm'], [8, 'M'], [10, 'M'], [7, 'M']], lead: 'saw',   drums: 2, arp: 0, seed: 29, bass16: true },
     arena:  { bpm: 150, root: 50, mode: 'min',  prog: [[0, 'm'], [10, 'M'], [8, 'M'], [10, 'M']], lead: 'square', drums: 2, arp: 0, seed: 31, bass16: true },
     summon: { bpm: 100, root: 60, mode: 'maj',  prog: [[0, 'M'], [5, 'M'], [9, 'm'], [7, 'M']], lead: 'bell',   drums: 0, arp: 1, seed: 37 },
+    hanami: { bpm: 104, root: 57, mode: 'maj',  prog: [[0, 'M'], [5, 'M'], [7, 'M'], [9, 'm']], lead: 'bell',   drums: 1, arp: 1, seed: 47 },
+    lantern:{ bpm: 96,  root: 52, mode: 'hmin', prog: [[0, 'm'], [5, 'm'], [7, 'M'], [8, 'M']], lead: 'tri',    drums: 1, arp: 1, seed: 53 },
   };
   const RHYTHMS = [
     [0, 4, 6, 8, 12], [0, 2, 4, 8, 10, 12, 14], [0, 3, 6, 8, 12, 14], [0, 4, 8, 10, 12],

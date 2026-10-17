@@ -3600,6 +3600,8 @@ const AUDIO = (() => {
     boss:   { bpm: 158, root: 52, mode: 'hmin', prog: [[0, 'm'], [8, 'M'], [10, 'M'], [7, 'M']], lead: 'saw',   drums: 2, arp: 0, seed: 29, bass16: true },
     arena:  { bpm: 150, root: 50, mode: 'min',  prog: [[0, 'm'], [10, 'M'], [8, 'M'], [10, 'M']], lead: 'square', drums: 2, arp: 0, seed: 31, bass16: true },
     summon: { bpm: 100, root: 60, mode: 'maj',  prog: [[0, 'M'], [5, 'M'], [9, 'm'], [7, 'M']], lead: 'bell',   drums: 0, arp: 1, seed: 37 },
+    hanami: { bpm: 104, root: 57, mode: 'maj',  prog: [[0, 'M'], [5, 'M'], [7, 'M'], [9, 'm']], lead: 'bell',   drums: 1, arp: 1, seed: 47 },
+    lantern:{ bpm: 96,  root: 52, mode: 'hmin', prog: [[0, 'm'], [5, 'm'], [7, 'M'], [8, 'M']], lead: 'tri',    drums: 1, arp: 1, seed: 53 },
   };
   const RHYTHMS = [
     [0, 4, 6, 8, 12], [0, 2, 4, 8, 10, 12, 14], [0, 3, 6, 8, 12, 14], [0, 4, 8, 10, 12],
@@ -6256,7 +6258,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.3</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.4</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -6981,7 +6983,7 @@ function openEvent(tab) {
     ${R.eventTab === 'shop' ? shopHTML() : trackHTML()}
     ${R.eventTab === 'track' && ready.length > 1 ? `<button class="buy pink ev-all" data-act="event-claim-all">Забрать всё · ${ready.length}</button>` : ''}
     <p class="note">Ханами падают с монстров (до ${B.EVENT.killCap} в день), боссов, подземелий, арены и башни. Сезон меняется каждые ${B.EVENT.seasonDays} дней.</p>
-  `));
+  `), { music: 'hanami' });
 }
 
 function eventClaim(i) {
@@ -7112,7 +7114,7 @@ function openLantern(tab) {
     ${R.lanternTab === 'shop' ? lanternShopHTML() : lanternTrackHTML()}
     ${R.lanternTab === 'track' && ready.length > 1 ? `<button class="buy pink ev-all" data-act="lantern-claim-all">Забрать всё · ${ready.length}</button>` : ''}
     <p class="note">Фонарики падают с монстров (до ${B.LANTERN.killCap} в день), боссов, подземелий, арены и башни. Сезон меняется каждые ${B.LANTERN.seasonDays} дней.</p>
-  `));
+  `), { music: 'lantern' });
 }
 function lanternClaim(i) {
   ensureLantern();

@@ -107,7 +107,7 @@ function openEvent(tab) {
     ${R.eventTab === 'shop' ? shopHTML() : trackHTML()}
     ${R.eventTab === 'track' && ready.length > 1 ? `<button class="buy pink ev-all" data-act="event-claim-all">Забрать всё · ${ready.length}</button>` : ''}
     <p class="note">Ханами падают с монстров (до ${B.EVENT.killCap} в день), боссов, подземелий, арены и башни. Сезон меняется каждые ${B.EVENT.seasonDays} дней.</p>
-  `));
+  `), { music: 'hanami' });
 }
 
 function eventClaim(i) {
@@ -238,7 +238,7 @@ function openLantern(tab) {
     ${R.lanternTab === 'shop' ? lanternShopHTML() : lanternTrackHTML()}
     ${R.lanternTab === 'track' && ready.length > 1 ? `<button class="buy pink ev-all" data-act="lantern-claim-all">Забрать всё · ${ready.length}</button>` : ''}
     <p class="note">Фонарики падают с монстров (до ${B.LANTERN.killCap} в день), боссов, подземелий, арены и башни. Сезон меняется каждые ${B.LANTERN.seasonDays} дней.</p>
-  `));
+  `), { music: 'lantern' });
 }
 function lanternClaim(i) {
   ensureLantern();
