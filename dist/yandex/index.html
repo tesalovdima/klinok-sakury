@@ -5609,7 +5609,7 @@ function renderAwaken() {
       <div class="tower-head"><div><h2>Путь сакуры</h2>
         <p class="sub">Пробуждений: <b>${S.aw.count}</b> · лепестки копятся навсегда</p></div>
         <span class="chip plain"><img src="${A.miscIcon('petal', 32)}" alt="">${fmt(S.aw.petals)}</span></div>
-      <p class="sub">${open ? `Сейчас вы получите <b>${gain}</b> лепестков. Сбросятся этап, уровень и тренировка; снаряжение, питомцы, самоцветы и кристаллы останутся.` : `Пробуждение открывается на этапе ${B.AW.unlockStage}. Сейчас рекорд: этап ${zoneOf(S.bestStage).num}.`}</p>
+      <p class="sub">${open ? `Сейчас вы получите <b>${gain}</b> лепестков. Сбросятся этап, уровень и тренировка; снаряжение, питомцы, самоцветы и кристаллы останутся.` : `Пробуждение открывается на этапе ${B.AW.unlockStage}. Сейчас рекорд: этап ${zoneOf(Math.max(S.bestStage || 0, S.maxStage)).num}.`}</p>
       <div class="btn-row">
         <button class="buy pink wide" data-act="awaken-ask" ${open ? '' : 'disabled'}>${open ? `Пробудиться · +${gain} лепестков` : 'Ещё не открыто'}</button>
       </div>
