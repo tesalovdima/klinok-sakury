@@ -281,6 +281,7 @@ const BAL = (() => {
     { id: 'dungeon', name: 'Пройти 5 подземелий',            goal: 5,    rw: { crystals: 500 } },
     { id: 'tower',   name: 'Пройти 5 ярусов башни',          goal: 5,    rw: { petals: 3 } },
     { id: 'enchant', name: 'Заточить снаряжение 15 раз',     goal: 15,   rw: { gems: 90, scrollsA: 2 } },
+    { id: 'exped',   name: 'Завершить 3 экспедиции',         goal: 3,    rw: { petals: 3 } },
   ];
   const WEEKLY_CHEST = { gems: 300, crystals: 1000, summon: 3, petals: 5 };
   const EXPO = [

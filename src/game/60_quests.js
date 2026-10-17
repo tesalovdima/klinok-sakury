@@ -18,11 +18,13 @@ function dailyReset() {
 function quest(id, n = 1) {
   if (!S) return;
   dailyReset();
-  const d = B.DAILY.find(x => x.id === id); if (!d) return;
-  const before = S.quests.prog[id] || 0;
-  if (before < d.goal) {
-    S.quests.prog[id] = Math.min(d.goal, before + n);
-    if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+  const d = B.DAILY.find(x => x.id === id);
+  if (d) {
+    const before = S.quests.prog[id] || 0;
+    if (before < d.goal) {
+      S.quests.prog[id] = Math.min(d.goal, before + n);
+      if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+    }
   }
   const w = B.WEEKLY.find(x => x.id === id);
   if (w) {

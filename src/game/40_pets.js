@@ -19,7 +19,7 @@ function renderExpo() {
     const done = Date.now() >= e.until, pet = B.PET[e.pet];
     return `<section class="card">
       <div class="row-main"><b>${cur.name}</b><span class="meta">${pet ? pet.name : 'Питомец'} · ${done ? 'готово' : left(e.until - Date.now())}</span>
-      <p class="sub">${rewardText(cur.rw)}</p></div>
+      <p class="sub">${rewardText(expoReward(cur))}</p></div>
       ${done ? '<button class="buy pink" data-act="expo-claim">Забрать</button>'
         : `<button class="buy ghost" data-act="expo-speed" ${S.gems < EXPO_SPEED ? 'disabled' : ''}>Ускорить · ${EXPO_SPEED} 💎</button>`}
     </section>`;
@@ -28,8 +28,12 @@ function renderExpo() {
   if (!pet) return `<section class="card"><img src="${A.miscIcon('paw', 64)}" alt=""><div class="row-main"><b>Нужен питомец</b><span class="meta">Призовите первого питомца, чтобы отправлять экспедиции.</span></div></section>`;
   return `<section class="card"><div class="row-main"><b>Экспедиции</b><span class="meta">Питомец ${pet.p.name} отправится в путь. Награда придёт по таймеру.</span></div></section>
     <ul class="rows">${B.EXPO.map(x => `<li class="row"><img src="${A.petIcon(pet.p, 64, pet.o.stars)}" alt="">
-      <div class="row-main"><b>${x.name}</b><span class="meta">${x.hours} ч · ${rewardText(x.rw)}</span></div>
+      <div class="row-main"><b>${x.name}</b><span class="meta">${x.hours} ч · ${rewardText(expoReward(x))}</span></div>
       <button class="buy pink" data-act="expo-start" data-id="${x.id}">Отправить</button></li>`).join('')}</ul>`;
+}
+function expoReward(x) {
+  const mul = 1 + (S.maxStage || 0) / 120;
+  return { ...x.rw, crystals: Math.round((x.rw.crystals || 0) * mul) };
 }
 function expoStart(id) {
   const x = B.EXPO.find(v => v.id === id), pet = bestExpoPet();
@@ -41,10 +45,11 @@ function expoStart(id) {
 function expoClaim() {
   const e = S.exped, x = e && B.EXPO.find(v => v.id === e.id);
   if (!x || !e.until || Date.now() < e.until) return;
-  grant(x.rw);
+  grant(expoReward(x));
+  quest('exped');
   S.exped = { id: '', until: 0, pet: null };
   saveLocal(); renderPanel();
-  toast(`Экспедиция: ${rewardText(x.rw)}`);
+  toast(`Экспедиция: ${rewardText(expoReward(x))}`);
 }
 function expoSpeed() {
   const e = S.exped;

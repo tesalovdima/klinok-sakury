@@ -1118,6 +1118,7 @@ const BAL = (() => {
     { id: 'dungeon', name: 'Пройти 5 подземелий',            goal: 5,    rw: { crystals: 500 } },
     { id: 'tower',   name: 'Пройти 5 ярусов башни',          goal: 5,    rw: { petals: 3 } },
     { id: 'enchant', name: 'Заточить снаряжение 15 раз',     goal: 15,   rw: { gems: 90, scrollsA: 2 } },
+    { id: 'exped',   name: 'Завершить 3 экспедиции',         goal: 3,    rw: { petals: 3 } },
   ];
   const WEEKLY_CHEST = { gems: 300, crystals: 1000, summon: 3, petals: 5 };
   const EXPO = [
@@ -6275,7 +6276,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.7</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.8</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -6571,7 +6572,7 @@ function renderExpo() {
     const done = Date.now() >= e.until, pet = B.PET[e.pet];
     return `<section class="card">
       <div class="row-main"><b>${cur.name}</b><span class="meta">${pet ? pet.name : 'Питомец'} · ${done ? 'готово' : left(e.until - Date.now())}</span>
-      <p class="sub">${rewardText(cur.rw)}</p></div>
+      <p class="sub">${rewardText(expoReward(cur))}</p></div>
       ${done ? '<button class="buy pink" data-act="expo-claim">Забрать</button>'
         : `<button class="buy ghost" data-act="expo-speed" ${S.gems < EXPO_SPEED ? 'disabled' : ''}>Ускорить · ${EXPO_SPEED} 💎</button>`}
     </section>`;
@@ -6580,8 +6581,12 @@ function renderExpo() {
   if (!pet) return `<section class="card"><img src="${A.miscIcon('paw', 64)}" alt=""><div class="row-main"><b>Нужен питомец</b><span class="meta">Призовите первого питомца, чтобы отправлять экспедиции.</span></div></section>`;
   return `<section class="card"><div class="row-main"><b>Экспедиции</b><span class="meta">Питомец ${pet.p.name} отправится в путь. Награда придёт по таймеру.</span></div></section>
     <ul class="rows">${B.EXPO.map(x => `<li class="row"><img src="${A.petIcon(pet.p, 64, pet.o.stars)}" alt="">
-      <div class="row-main"><b>${x.name}</b><span class="meta">${x.hours} ч · ${rewardText(x.rw)}</span></div>
+      <div class="row-main"><b>${x.name}</b><span class="meta">${x.hours} ч · ${rewardText(expoReward(x))}</span></div>
       <button class="buy pink" data-act="expo-start" data-id="${x.id}">Отправить</button></li>`).join('')}</ul>`;
+}
+function expoReward(x) {
+  const mul = 1 + (S.maxStage || 0) / 120;
+  return { ...x.rw, crystals: Math.round((x.rw.crystals || 0) * mul) };
 }
 function expoStart(id) {
   const x = B.EXPO.find(v => v.id === id), pet = bestExpoPet();
@@ -6593,10 +6598,11 @@ function expoStart(id) {
 function expoClaim() {
   const e = S.exped, x = e && B.EXPO.find(v => v.id === e.id);
   if (!x || !e.until || Date.now() < e.until) return;
-  grant(x.rw);
+  grant(expoReward(x));
+  quest('exped');
   S.exped = { id: '', until: 0, pet: null };
   saveLocal(); renderPanel();
-  toast(`Экспедиция: ${rewardText(x.rw)}`);
+  toast(`Экспедиция: ${rewardText(expoReward(x))}`);
 }
 function expoSpeed() {
   const e = S.exped;
@@ -7641,11 +7647,13 @@ function dailyReset() {
 function quest(id, n = 1) {
   if (!S) return;
   dailyReset();
-  const d = B.DAILY.find(x => x.id === id); if (!d) return;
-  const before = S.quests.prog[id] || 0;
-  if (before < d.goal) {
-    S.quests.prog[id] = Math.min(d.goal, before + n);
-    if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+  const d = B.DAILY.find(x => x.id === id);
+  if (d) {
+    const before = S.quests.prog[id] || 0;
+    if (before < d.goal) {
+      S.quests.prog[id] = Math.min(d.goal, before + n);
+      if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+    }
   }
   const w = B.WEEKLY.find(x => x.id === id);
   if (w) {
@@ -8130,8 +8138,10 @@ $('heroNameIn').addEventListener('keydown', e => { if (e.key === 'Enter') finish
 /* ===== Ввод, офлайн-доход, запуск ===== */
 function offline() {
   const from = R.offlineFrom || S.savedAt || Date.now(); R.offlineFrom = 0;
-  const sec = Math.min(offlineHours() * 3600, (Date.now() - from) / 1000);
+  const gap = (Date.now() - from) / 1000;
+  const sec = Math.min(offlineHours() * 3600, gap);
   if (sec < 90) return;
+  const comeback = gap >= 3 * 86400;
   const st = R.st, s = S.stage, z = zoneOf(s);
   const dps = st.atk * (1 + st.crit * (st.critDmg - 1)) * st.aspd * 1.3;
   const ttk = Math.max(1 / st.aspd, B.mHp(s) / dps) + 1.2;
@@ -8145,8 +8155,10 @@ function offline() {
     S.gold += rw.gold * mul; S.scrolls.a[rw.top] += rw.a * mul; S.scrolls.w[rw.top] += rw.w * mul; S.crystals += rw.cry * mul;
   };
   give(1); gainXp(rw.xp);
+  if (comeback) grant({ gems: 150, petals: 5, summon: 1 });
   const st2 = { offline: rw };
   openModal(sheet('Пока вас не было', `${dur(sec)} ${heroName()} ${G('сражалась', 'сражался')} в зоне «${z.title}»`, `
+    ${comeback ? '<p class="note">Бонус возвращения: <b>150 самоцветов, 5 лепестков и билет призыва</b>.</p>' : ''}
     <dl class="compare">
       <dt>Побеждено монстров</dt><dd>${fmt(kills)}</dd><dd></dd>
       <dt>Золото</dt><dd class="up">+${fmt(rw.gold)}</dd><dd></dd>
@@ -8465,7 +8477,7 @@ if (/[?&]debug\b/.test(location.search)) {
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
     addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern, AU, updateMusic,
-    expoStart, expoClaim, expoSpeed, renderExpo,
+    expoStart, expoClaim, expoSpeed, renderExpo, offline,
   };
 }
 

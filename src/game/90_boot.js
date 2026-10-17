@@ -1,8 +1,10 @@
 /* ===== Ввод, офлайн-доход, запуск ===== */
 function offline() {
   const from = R.offlineFrom || S.savedAt || Date.now(); R.offlineFrom = 0;
-  const sec = Math.min(offlineHours() * 3600, (Date.now() - from) / 1000);
+  const gap = (Date.now() - from) / 1000;
+  const sec = Math.min(offlineHours() * 3600, gap);
   if (sec < 90) return;
+  const comeback = gap >= 3 * 86400;
   const st = R.st, s = S.stage, z = zoneOf(s);
   const dps = st.atk * (1 + st.crit * (st.critDmg - 1)) * st.aspd * 1.3;
   const ttk = Math.max(1 / st.aspd, B.mHp(s) / dps) + 1.2;
@@ -16,8 +18,10 @@ function offline() {
     S.gold += rw.gold * mul; S.scrolls.a[rw.top] += rw.a * mul; S.scrolls.w[rw.top] += rw.w * mul; S.crystals += rw.cry * mul;
   };
   give(1); gainXp(rw.xp);
+  if (comeback) grant({ gems: 150, petals: 5, summon: 1 });
   const st2 = { offline: rw };
   openModal(sheet('Пока вас не было', `${dur(sec)} ${heroName()} ${G('сражалась', 'сражался')} в зоне «${z.title}»`, `
+    ${comeback ? '<p class="note">Бонус возвращения: <b>150 самоцветов, 5 лепестков и билет призыва</b>.</p>' : ''}
     <dl class="compare">
       <dt>Побеждено монстров</dt><dd>${fmt(kills)}</dd><dd></dd>
       <dt>Золото</dt><dd class="up">+${fmt(rw.gold)}</dd><dd></dd>
@@ -336,6 +340,6 @@ if (/[?&]debug\b/.test(location.search)) {
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
     addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern, AU, updateMusic,
-    expoStart, expoClaim, expoSpeed, renderExpo,
+    expoStart, expoClaim, expoSpeed, renderExpo, offline,
   };
 }
