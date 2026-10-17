@@ -142,6 +142,7 @@ function setLine() {
 }
 function renderGear() {
   const bag = S.items.filter(i => !isEquipped(i)).sort((a, b) => b.g - a.g || b.e - a.e || a.slot.localeCompare(b.slot));
+  const cn = codexCount(), cm = codexMax();
   return `
     <section class="card">
       <div class="doll">
@@ -151,6 +152,11 @@ function renderGear() {
       </div>
       <div class="doll-bottom">${DOLL.bottom.map(slotTile).join('')}</div>
       ${setLine()}
+    </section>
+    <section class="card codex-card">
+      <div class="card-head"><h3>Коллекция снаряжения</h3><span class="sub">${cn} / ${cm}</span></div>
+      <div class="bar mini"><i style="width:${cn / cm * 100}%"></i></div>
+      <p class="note">Каждая новая вещь навсегда даёт +0,2% атаки и здоровья. Сейчас: <b class="cry-text">+${pct(codexBonus())}</b>.</p>
     </section>
     <section class="card">
       <div class="card-head"><h3>Свитки заточки</h3><span class="cur cry inline"><img src="${A.miscIcon('crystal', 40)}" alt=""><b>${fmt(S.crystals)}</b></span></div>
@@ -414,6 +420,7 @@ function buyItem(slot, g) {
   S.gold -= p;
   const it = { id: S.nextId++, slot, g, e: 0, pt: 0, opts: B.rollOpts(rnd, g) };
   S.items.push(it);
+  if (!S.codex[slot + ':' + g]) { S.codex[slot + ':' + g] = 1; log(`Коллекция: ${B.NAMES[slot][g]} (${B.GRADES[g].short}) добавлен.`, 'good'); }
   const curId = S.equip[slot], cur = curId && itemById(curId);
   if (!cur || itemScore(slot, g, 0, it.opts) > itemScore(cur.slot, cur.g, cur.e, cur.opts)) { S.equip[slot] = it.id; recalc(); toast(`Надето: ${itemName(it)}`); }
   else toast(`${itemName(it)} в сумке`);

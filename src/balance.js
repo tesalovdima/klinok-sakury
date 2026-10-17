@@ -364,7 +364,7 @@ const BAL = (() => {
     { id: 'xp',      name: 'Озарение',     desc: 'Опыт',               max: 15, base: 2, val: l => .12 * l, fmt: 'pct' },
     { id: 'drop',    name: 'Зов лепестков',desc: 'Шанс свитков',       max: 10, base: 3, val: l => .08 * l, fmt: 'pct' },
     { id: 'crit',    name: 'Точность',     desc: 'Шанс крита',         max: 10, base: 3, val: l => .015 * l, fmt: 'pct' },
-    { id: 'start',   name: 'Память пути',  desc: 'Старт после пробуждения', max: 25, base: 2, val: l => 4 * l, fmt: 'int' },
+    { id: 'start',   name: 'Память пути',  desc: 'Старт после пробуждения', max: 10, base: 2, val: l => 4 * l, fmt: 'int' },
     { id: 'offline', name: 'Тишина',       desc: 'Офлайн-доход',       max: 8,  base: 4, val: l => 2 * l, fmt: 'hours' },
     { id: 'ench',    name: 'Мастерство',   desc: 'Шанс заточки',       max: 8,  base: 4, val: l => .015 * l, fmt: 'pct' },
     { id: 'bossTime',name: 'Терпение',     desc: 'Время на босса',     max: 5,  base: 5, val: l => 3 * l, fmt: 'sec' },
@@ -421,10 +421,10 @@ const BAL = (() => {
   function dungeonReward(id, stage) {
     const g = Math.min(6, 1 + Math.floor(stage / 12));
     switch (id) {
-      case 'gold':    return { gold: Math.round(mGold(stage) * 140) };
-      case 'scrolls': return { scrollsA: 2 + Math.floor(stage / 25), scrollsW: 1, blessedA: stage >= 30 ? 1 : 0 };
-      case 'crystal': return { crystals: Math.round(38 * crMul(g) * 2) };
-      case 'xp':      return { xp: Math.round(mXp(stage) * 320) };
+      case 'gold':    return { gold: Math.round(mGold(stage) * 60) };
+      case 'scrolls': return { scrollsA: 2 + Math.floor(stage / 30), scrollsW: 1, blessedA: stage >= 30 ? 1 : 0 };
+      case 'crystal': return { crystals: Math.round(30 * crMul(g) * 2) };
+      case 'xp':      return { xp: Math.round(mXp(stage) * 70) };
     }
     return {};
   }

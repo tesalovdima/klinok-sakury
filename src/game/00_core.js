@@ -140,6 +140,7 @@ function newState() {
     dungeon: { day: '', keys: B.DKEYS.perDay, ads: 0, buys: 0, runs: 0, stage: 0 },
     fund: { owned: false, claimed: [] },
     chapter: { idx: 0, claimed: [] },
+    codex: { 'weapon:0': 1, 'upper:0': 1 },
   };
 }
 function migrate(o) {
@@ -172,6 +173,8 @@ function migrate(o) {
   o.tower.best = Math.max(o.tower.best || 0, o.tower.floor || 0);
   if (!Array.isArray(o.fund.claimed)) o.fund.claimed = [];
   if (!Array.isArray(o.chapter.claimed)) o.chapter.claimed = [];
+  if (!isPlain(o.codex)) o.codex = {};
+  for (const it of o.items) if (it && it.slot) o.codex[it.slot + ':' + (it.g | 0)] = 1;
   o.chapter.idx = clamp(Math.floor(o.chapter.idx || 0), 0, 40);
   if (!Array.isArray(o.pass.free)) o.pass.free = [];
   if (!Array.isArray(o.pass.prem)) o.pass.prem = [];
@@ -313,13 +316,18 @@ function equippedList() {
 }
 function slotGrade(slot) { const id = S.equip[slot]; const it = id && itemById(id); return it ? it.g : -1; }
 const awOf = () => B.awBonus(S && S.aw ? S.aw.lvl : {});
+const codexCount = () => Object.keys(S.codex || {}).length;
+const codexMax = () => B.SLOTS.length * NG;
+// коллекция снаряжения: +0,2% атаки и здоровья за каждую новую вещь, максимум +12,6%
+const codexBonus = () => Math.min(.126, codexCount() * .002);
 function recalc() {
   const prevMax = R.st ? R.st.hp : 0;
   const aw = awOf();
+  const cb = codexBonus();
   R.pb = B.petBonuses(S.pets.owned, S.pets.active);
   R.aw = aw;
   R.st = B.heroStats(S.level, S.growth, equippedList(), {
-    atkPct: R.pb.atkPct + aw.atkPct, hpPct: R.pb.hpPct + aw.hpPct, crit: R.pb.crit + aw.crit, critDmg: R.pb.critDmg,
+    atkPct: R.pb.atkPct + aw.atkPct + cb, hpPct: R.pb.hpPct + aw.hpPct + cb, crit: R.pb.crit + aw.crit, critDmg: R.pb.critDmg,
     goldPct: aw.goldPct, xpPct: aw.xpPct, dropPct: aw.dropPct,
   });
   R.power = B.power(R.st);
