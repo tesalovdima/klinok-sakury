@@ -99,6 +99,8 @@ const AUDIO = (() => {
     z3:     { bpm: 128, root: 52, mode: 'min',  prog: [[0, 'm'], [10, 'M'], [8, 'M'], [10, 'M']], lead: 'bell', drums: 1, arp: 1, seed: 17 },
     z4:     { bpm: 140, root: 48, mode: 'min',  prog: [[0, 'm'], [10, 'M'], [8, 'M'], [7, 'M']], lead: 'saw',   drums: 2, arp: 0, seed: 19 },
     z5:     { bpm: 132, root: 54, mode: 'hmin', prog: [[0, 'm'], [5, 'm'], [8, 'M'], [7, 'M']], lead: 'square', drums: 1, arp: 1, seed: 23 },
+    z6:     { bpm: 108, root: 57, mode: 'maj',  prog: [[0, 'M'], [5, 'M'], [7, 'M'], [9, 'm']], lead: 'bell',   drums: 1, arp: 1, seed: 41 },
+    z7:     { bpm: 116, root: 50, mode: 'hmin', prog: [[0, 'm'], [8, 'M'], [5, 'm'], [7, 'M']], lead: 'tri',    drums: 1, arp: 1, seed: 43 },
     boss:   { bpm: 158, root: 52, mode: 'hmin', prog: [[0, 'm'], [8, 'M'], [10, 'M'], [7, 'M']], lead: 'saw',   drums: 2, arp: 0, seed: 29, bass16: true },
     arena:  { bpm: 150, root: 50, mode: 'min',  prog: [[0, 'm'], [10, 'M'], [8, 'M'], [10, 'M']], lead: 'square', drums: 2, arp: 0, seed: 31, bass16: true },
     summon: { bpm: 100, root: 60, mode: 'maj',  prog: [[0, 'M'], [5, 'M'], [9, 'm'], [7, 'M']], lead: 'bell',   drums: 0, arp: 1, seed: 37 },
