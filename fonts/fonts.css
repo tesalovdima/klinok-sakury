@@ -1,0 +1,7 @@
+/* Шрифты игры. Скачайте семейства Russo One и M PLUS Rounded 1c с fonts.google.com (лицензия SIL OFL)
+   и положите файлы .ttf рядом с этим файлом под указанными именами. Без них игра использует системные шрифты. */
+@font-face { font-family: "Russo One"; src: url("RussoOne-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "M PLUS Rounded 1c"; src: url("MPLUSRounded1c-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "M PLUS Rounded 1c"; src: url("MPLUSRounded1c-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "M PLUS Rounded 1c"; src: url("MPLUSRounded1c-ExtraBold.ttf") format("truetype"); font-weight: 800; font-display: swap; }
+@font-face { font-family: "M PLUS Rounded 1c"; src: url("MPLUSRounded1c-Black.ttf") format("truetype"); font-weight: 900; font-display: swap; }

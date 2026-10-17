@@ -1,0 +1,266 @@
+/* ===== Ядро: утилиты, зоны, состояние, сохранения ===== */
+const B = BAL, A = ART, AU = AUDIO, P = PLATFORM;
+const $ = id => document.getElementById(id);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd = Math.random;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const NG = B.GRADES.length;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+
+/* ---------- форматирование ---------- */
+const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+function fmt(n) {
+  if (!isFinite(n)) return '∞';
+  n = Math.floor(n);
+  if (n < 1000) return String(n);
+  let i = 0, v = n;
+  while (v >= 1000 && i < SUF.length - 1) { v /= 1000; i++; }
+  const s = v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+  return s.replace(/\.?0+$/, '') + SUF[i];
+}
+const pct = v => { const p = v * 100; return (p < 10 ? p.toFixed(1).replace(/\.0$/, '') : p.toFixed(0)) + '%'; };
+function plural(n, f) { n = Math.abs(Math.floor(n)) % 100; const d = n % 10; if (n > 10 && n < 20) return f[2]; if (d > 1 && d < 5) return f[1]; if (d === 1) return f[0]; return f[2]; }
+const CRY_W = ['кристалл', 'кристалла', 'кристаллов'];
+const GEM_W = ['самоцвет', 'самоцвета', 'самоцветов'];
+function dur(sec) { const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h ? `${h} ч ${m} мин` : `${Math.max(1, m)} мин`; }
+function left(ms) {
+  if (ms <= 0) return '0:00';
+  const s = Math.ceil(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+  if (d) return `${d} д ${h} ч`;
+  if (h) return `${h} ч ${m} мин`;
+  return `${m}:${String(ss).padStart(2, '0')}`;
+}
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+function msToMidnight() { const d = new Date(); const n = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1); return n - d; }
+
+/* ---------- зоны ---------- */
+const ZONES = [
+  { id: 'z1', name: 'Сакуровый лес', sky: ['#8fd3ff', '#c6e5ff', '#ffe1ef'], orb: { x: .8, y: .26, r: 20, c: '#fff6d8', glow: '#fff2b0' }, clouds: 'rgba(255,255,255,.85)',
+    far: [{ c: '#c3d3f3', p: .06, f: .011, base: 80, amp: 36 }, { c: '#9ab7e6', p: .14, f: .019, base: 44, amp: 26 }],
+    prop: 'sakura', seed: 3, ground: ['#79c66f', '#a3e08e', '#62ab5c', '#4f9a4c'], amb: 'petal', ui: '#ff8fc1',
+    mons: [['slime', { a: '#ff8ec2', b: '#ffc4de', e: '#fff' }], ['mushroom', { a: '#e8485c', b: '#ff9a9a', c: '#fff1e0', e: '#fff' }], ['slime', { a: '#5fd6a8', b: '#b8f5dc', e: '#fff' }]],
+    boss: ['slime', { a: '#ff5fa8', b: '#ffb0d6', e: '#fff' }, 'Королева слизней'] },
+  { id: 'z2', name: 'Лунная долина', sky: ['#141a4a', '#36307a', '#7a5bb0'], stars: true, orb: { x: .78, y: .28, r: 18, c: '#fffbe8', glow: '#cfd8ff', moon: true },
+    far: [{ c: '#2f2a6a', p: .06, f: .012, base: 76, amp: 38 }, { c: '#21305a', p: .14, f: .02, base: 42, amp: 28 }],
+    prop: 'pine', propC: ['#1c3a4a', '#2a1e30'], seed: 5, ground: ['#2d4a54', '#3f6b6b', '#233b42', '#56907f'], amb: 'firefly', ui: '#9a7ad8',
+    mons: [['bat', { a: '#6a4fb5', b: '#9a7ad8', e: '#fff' }], ['ghost', { a: '#7fb2ff', b: '#d6e8ff', e: '#fff' }], ['goblin', { a: '#7fbf5a', b: '#5f9f4a', c: '#8a5a3a', e: '#fff' }]],
+    boss: ['bat', { a: '#4a2f8a', b: '#7a5ad0', e: '#fff' }, 'Князь нетопырей'] },
+  { id: 'z3', name: 'Песчаные руины', sky: ['#ffb26b', '#ffd99a', '#fff0c8'], orb: { x: .2, y: .3, r: 26, c: '#fff3c4', glow: '#ffd27a' },
+    far: [{ c: '#e8b77a', p: .06, f: .01, base: 60, amp: 30 }, { c: '#d39a5c', p: .14, f: .018, base: 34, amp: 20 }],
+    prop: 'ruin', propC: ['#d8b07a', '#b88e5a', '#e9c896'], seed: 7, ground: ['#e6c27e', '#f2d79a', '#c9a462', '#b8954f'], amb: 'sand', ui: '#f2b84b',
+    mons: [['golem', { a: '#c9a46a', b: '#a8834f', c: '#7fbf5a', e: '#7fe3ff' }], ['slime', { a: '#f2b84b', b: '#ffe39a', e: '#fff' }], ['goblin', { a: '#c2a25a', b: '#9a7e3e', c: '#6a4a8a', e: '#fff' }]],
+    boss: ['golem', { a: '#b8935a', b: '#8f6d3c', c: '#5fbf6a', e: '#ff6b6b' }, 'Страж руин'] },
+  { id: 'z4', name: 'Ледяной перевал', sky: ['#7fb6e8', '#bfe0f7', '#eef8ff'], clouds: 'rgba(255,255,255,.7)', orb: { x: .7, y: .22, r: 18, c: '#ffffff', glow: '#dff3ff' },
+    far: [{ c: '#c8dcf0', p: .06, f: .012, base: 84, amp: 44, snow: '#ffffff' }, { c: '#9fbcdc', p: .14, f: .02, base: 46, amp: 30, snow: '#eaf6ff' }],
+    prop: 'pine', propC: ['#3f6d78', '#4a3a3a', '#f4fbff'], seed: 11, ground: ['#e8f3fb', '#ffffff', '#c9deee', '#b4cde2'], amb: 'snow', ui: '#7cc8ff',
+    mons: [['crystal', { a: '#4fa8e8', b: '#bfe9ff', e: '#fff' }], ['slime', { a: '#6fd6ef', b: '#d2f6ff', e: '#fff' }], ['ghost', { a: '#c9d8f2', b: '#ffffff', e: '#fff' }]],
+    boss: ['crystal', { a: '#2f7fd8', b: '#9fdcff', e: '#fff' }, 'Ледяное сердце'] },
+  { id: 'z5', name: 'Огненный вулкан', sky: ['#3a0f1c', '#8a2a2a', '#ff8a4c'], orb: { x: .82, y: .2, r: 20, c: '#ffb36b', glow: '#ff5a3c' },
+    far: [{ c: '#4a1a22', p: .06, f: .012, base: 80, amp: 46 }, { c: '#2e1018', p: .14, f: .02, base: 44, amp: 30 }],
+    prop: 'spire', propC: ['#24101a', '#ff7a3c'], seed: 13, ground: ['#3a1c1c', '#ff6a3c', '#2a1414', '#5a2a20'], amb: 'ember', ui: '#ff7a3c',
+    mons: [['imp', { a: '#d9434f', b: '#7a1e2a', c: '#ffd25c', e: '#fff' }], ['wisp', { a: '#ff7a3c', b: '#ffcf5a', e: '#fff' }], ['golem', { a: '#4a3030', b: '#352222', e: '#ff7a3c' }]],
+    boss: ['wisp', { a: '#ff5a2c', b: '#ffb03c', e: '#fff' }, 'Кицунэ пламени'] },
+  { id: 'z6', name: 'Замок бездны', sky: ['#0f0820', '#2a1240', '#5a1f5c'], stars: true, orb: { x: .22, y: .26, r: 20, c: '#ff6b8a', glow: '#ff2f6a', moon: true },
+    far: [{ c: '#24123a', p: .06, f: .012, base: 70, amp: 40 }, { c: '#180c28', p: .14, f: .02, base: 40, amp: 26 }],
+    prop: 'tower', propC: ['#120a1e', '#ffcf5a'], seed: 17, ground: ['#2a1a3a', '#5a3a7a', '#1e1230', '#7a4a9a'], amb: 'mote', ui: '#ff62d4',
+    mons: [['skull', { a: '#3a2452', b: '#4a3a6a', e: '#ff4f73' }], ['imp', { a: '#5a2a7a', b: '#2a1238', c: '#ff62d4', e: '#fff' }], ['ghost', { a: '#8a5ad8', b: '#d8b8ff', e: '#fff' }]],
+    boss: ['skull', { a: '#ff62d4', b: '#2a1838', e: '#ff62d4' }, 'Рыцарь бездны'] },
+];
+const ARENA_ZONE = { id: 'arena', name: 'Арена', sky: ['#2a1a4a', '#7a3a6a', '#ffb07a'], orb: { x: .5, y: .3, r: 24, c: '#ffe8b0', glow: '#ffb07a' },
+  far: [{ c: '#4a2a5a', p: .06, f: .012, base: 60, amp: 20 }, { c: '#3a2048', p: .14, f: .02, base: 34, amp: 12 }],
+  prop: 'ruin', propC: ['#6a4a6a', '#4a3050', '#8a6a7a'], seed: 21, ground: ['#c9a46a', '#e6c27e', '#a8834f', '#8f6d3c'] };
+const TYPE_SCALE = { slime: 1.15, mushroom: 1, bat: 1, goblin: 1, golem: 1.05, ghost: 1, imp: 1, skull: 1, wisp: 1, crystal: 1 };
+function zoneOf(s) {
+  const z = Math.floor(s / 10), base = ZONES[z % ZONES.length], loop = Math.floor(z / ZONES.length);
+  return { ...base, z, idx: z % ZONES.length, loop, title: base.name + (loop ? ` · круг ${loop + 1}` : ''), num: `${z + 1}-${(s % 10) + 1}` };
+}
+const dropGradeTop = z => [1, 2, 3, 4, 5, 6][Math.min(z, 5)];
+const crystalMul = g => [1, 1, 2, 4, 8, 16, 32][g];
+
+/* ---------- навыки ---------- */
+const SKILLS = [
+  { id: 'petal', name: 'Вихрь лепестков', unlock: 3, cd: 8, icon: 'sk_petal', mult: l => 1.5 + .12 * (l - 1),
+    desc: l => `Бьёт всех врагов рядом на ${pct(1.5 + .12 * (l - 1))} атаки.` },
+  { id: 'moon', name: 'Лунный разрез', unlock: 10, cd: 12, icon: 'sk_moon', mult: l => 3 + .25 * (l - 1),
+    desc: l => `Один мощный разрез на ${pct(3 + .25 * (l - 1))} атаки.` },
+  { id: 'spirit', name: 'Боевой дух', unlock: 18, cd: 24, icon: 'sk_spirit', mult: l => .25 + .03 * (l - 1),
+    desc: l => `Атака +${pct(.25 + .03 * (l - 1))} на 8 секунд.` },
+  { id: 'thunder', name: 'Небесный гром', unlock: 28, cd: 15, icon: 'sk_thunder', mult: l => 1 + .08 * (l - 1),
+    desc: l => `Три молнии по ${pct(1 + .08 * (l - 1))} атаки каждая.` },
+  { id: 'bloom', name: 'Цветение', unlock: 40, cd: 20, icon: 'sk_bloom', mult: l => .25 + .02 * (l - 1),
+    desc: l => `Лечит ${pct(.25 + .02 * (l - 1))} здоровья и снижает урон на 30% на 5 секунд, когда здоровья меньше половины.` },
+];
+const SK = Object.fromEntries(SKILLS.map(s => [s.id, s]));
+const SKILL_MAX = 20;
+
+/* ---------- состояние ---------- */
+const SAVE_KEY = 'klinok-sakury-v1';
+// Версия 3: сброс прогресса по просьбе владельца перед тестированием. Сохранения младше обнуляются.
+const SAVE_VERSION = 3;
+const zeros = () => Array(NG).fill(0);
+function newState() {
+  const equip = {}; B.SLOTS.forEach(s => equip[s.id] = null);
+  equip.weapon = 1; equip.upper = 2;
+  return {
+    v: SAVE_VERSION, savedAt: Date.now(), hero: null,
+    gold: 20, crystals: 0, gems: 200, level: 1, xp: 0, sp: 0,
+    growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
+    skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
+    items: [{ id: 1, slot: 'weapon', g: 0, e: 0 }, { id: 2, slot: 'upper', g: 0, e: 0 }],
+    equip, nextId: 3,
+    scrolls: { w: zeros(), a: zeros(), bw: zeros(), ba: zeros() },
+    stage: 0, maxStage: 0, kills: 0, autoBoss: true,
+    stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0 },
+    pets: { owned: {}, active: null },
+    gacha: { pity: 0, total: 0, tickets: 1 },
+    arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0 },
+    quests: { day: '', prog: {}, claimed: {}, chest: false },
+    ach: {},
+    login: { idx: 0, last: '' },
+    pass: { season: -1, xp: 0, free: [], prem: [], premium: false },
+    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [] },
+    boost: { goldUntil: 0 },
+    ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
+    settings: { music: .55, sfx: .75 },
+    intro: false,
+  };
+}
+function migrate(o) {
+  const d = newState();
+  if (!o || typeof o !== 'object' || (o.v || 1) < SAVE_VERSION) return d;
+  for (const k in d) if (o[k] === undefined) o[k] = d[k];
+  for (const k of ['w', 'a', 'bw', 'ba']) { o.scrolls[k] = o.scrolls[k] || zeros(); while (o.scrolls[k].length < NG) o.scrolls[k].push(0); }
+  for (const g of B.GROWTH) o.growth[g.id] = o.growth[g.id] || 0;
+  for (const s of SKILLS) o.skills[s.id] = o.skills[s.id] || 0;
+  for (const sl of B.SLOTS) if (!(sl.id in o.equip)) o.equip[sl.id] = null;
+  for (const k of ['stats', 'pets', 'gacha', 'arena', 'quests', 'login', 'pass', 'shop', 'boost', 'ads', 'settings'])
+    for (const kk in d[k]) if (o[k][kk] === undefined) o[k][kk] = d[k][kk];
+  return o;
+}
+let S = null;
+function loadLocal() { try { const raw = localStorage.getItem(SAVE_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) { } return null; }
+function saveLocal() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
+
+/* ---------- облако: база артефакта или Яндекс ---------- */
+const Cloud = {
+  db: null, uid: null, lastSent: '', busy: false, kind: 'none',
+  async init() {
+    if (P.mode === 'yandex') {
+      this.kind = 'yandex';
+      const raw = await P.loadCloud();
+      if (raw) try { const o = migrate(JSON.parse(raw)); if (!R.hadLocal || (o.savedAt || 0) > (S.savedAt || 0) + 3000) adoptCloud(o); } catch (e) { }
+      return;
+    }
+    try {
+      if (!window.claude || typeof window.claude.use !== 'function') return;
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return;
+      const uid = await user.id();
+      if (!uid) return;
+      this.db = db; this.uid = uid; this.kind = 'artifact';
+      const snap = await this.db.doc('data/users/' + uid + '/save').get();
+      if (snap.exists) {
+        const d = snap.data();
+        if (d && typeof d.save === 'string') {
+          const o = migrate(JSON.parse(d.save));
+          if (!R.hadLocal || (d.savedAt || 0) > (S.savedAt || 0) + 3000) adoptCloud(o);
+        }
+      }
+      Arena.cloudReady();
+    } catch (e) { this.db = null; }
+  },
+  async push() {
+    if (this.busy || !S || !S.hero) return;
+    const body = JSON.stringify(S);
+    if (body === this.lastSent) return;
+    this.busy = true;
+    try {
+      if (this.kind === 'yandex') { if (await P.saveCloud(body)) this.lastSent = body; }
+      else if (this.db) { await this.db.doc('data/users/' + this.uid + '/save').set({ save: body, savedAt: S.savedAt, stage: S.maxStage, level: S.level }); this.lastSent = body; }
+    } catch (e) { if (e && ['invalid_argument', 'revoked', 'not_granted', 'capability_disabled', 'capability_removed'].includes(e.code)) this.db = null; }
+    this.busy = false;
+  },
+};
+function adoptCloud(o) {
+  applyState(o);
+  toast('Загружено сохранение из облака');
+  if (!S.hero) openIntro(false);
+}
+
+/* ---------- рантайм ---------- */
+const battle = $('battle'), canvas = $('scene'), ctx = canvas.getContext('2d');
+const R = {
+  W: 400, H: 300, dpr: 1, k: 1, gy: 240, heroX: 100, scroll: 0, t: 0,
+  monsters: [], fx: [], amb: [], shake: 0, flash: 0, flashC: '#fff',
+  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, phase: 0, run: 0 },
+  pet: { t: 0, atkT: 0, attack: 0 },
+  boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
+  st: null, pb: null, look: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
+  imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
+  dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
+};
+SKILLS.forEach(s => R.cd[s.id] = 0);
+const isBoy = () => !!(S && S.hero && S.hero.body === 'boy');
+const G = (f, m) => isBoy() ? m : f;
+const heroName = () => (S && S.hero && S.hero.name) || G('Сакура', 'Рэн');
+
+function img(url) { let i = R.imgs.get(url); if (!i) { i = new Image(); i.src = url; R.imgs.set(url, i); } return i; }
+
+function resize() {
+  const r = battle.getBoundingClientRect();
+  R.W = Math.max(200, r.width); R.H = Math.max(200, r.height);
+  R.dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(R.W * R.dpr); canvas.height = Math.round(R.H * R.dpr);
+  R.k = Math.min(R.H / 330, R.W / 380); R.gy = R.H * .77;
+  R.heroX = Math.max(84 * R.k, R.W * .24);
+  const gr = $('icGold').getBoundingClientRect();
+  R.goldPos = { x: gr.left - r.left + gr.width / 2, y: gr.top - r.top + gr.height / 2 };
+  const tb = document.querySelector('[data-tab="gear"]').getBoundingClientRect();
+  R.bagPos = { x: tb.left - r.left + tb.width / 2, y: R.H + 30 };
+}
+
+/* ---------- предметы и характеристики ---------- */
+const itemById = id => S.items.find(i => i.id === id);
+const isEquipped = it => S.equip[it.slot] === it.id;
+const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
+const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
+const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита' };
+const statStr = (k, v) => ['atkPct', 'hpPct', 'crit', 'critDmg'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
+function itemScore(slot, g, e) {
+  const s = B.itemStats(slot, g, e);
+  return (s.atk || 0) * 3 + (s.def || 0) * 4 + (s.hp || 0) * .3 + (s.atkPct || 0) * 1e4 + (s.hpPct || 0) * 1e4 + (s.crit || 0) * 3e4 + (s.critDmg || 0) * 1e4;
+}
+function canEnchant(it) { if (!it || it.g === 0 || it.e >= B.MAX_ENCH) return false; const k = scrollKind(it.slot); return S.scrolls[k][it.g] + S.scrolls['b' + k][it.g] > 0; }
+function glowClass(e) { return e >= 16 ? 'glow16' : e >= 13 ? 'glow13' : e >= 10 ? 'glow10' : e >= 7 ? 'glow7' : e >= 4 ? 'glow4' : ''; }
+function tileHTML(it, attrs = '') {
+  return `<button class="tile g${it.g} ${glowClass(it.e)} ${it.id && S && canEnchant(it) ? 'can-ench' : ''}" ${attrs} aria-label="${itemName(it)}"><img src="${A.itemIcon(it.slot, it.g)}" alt=""><span class="gr">${B.GRADES[it.g].short}</span>${it.e ? `<span class="ench">+${it.e}</span>` : ''}</button>`;
+}
+function equippedList() {
+  const out = [];
+  for (const sl of B.SLOTS) { const id = S.equip[sl.id]; const it = id && itemById(id); if (it) out.push({ slot: it.slot, g: it.g, e: it.e }); }
+  return out;
+}
+function slotGrade(slot) { const id = S.equip[slot]; const it = id && itemById(id); return it ? it.g : -1; }
+function recalc() {
+  const prevMax = R.st ? R.st.hp : 0;
+  R.pb = B.petBonuses(S.pets.owned, S.pets.active);
+  R.st = B.heroStats(S.level, S.growth, equippedList(), { atkPct: R.pb.atkPct, hpPct: R.pb.hpPct, crit: R.pb.crit, critDmg: R.pb.critDmg });
+  R.power = B.power(R.st);
+  const h = R.hero;
+  if (prevMax && R.st.hp > prevMax && !h.dead) h.hp += R.st.hp - prevMax;
+  h.hp = clamp(h.hp, 0, R.st.hp);
+  const wid = S.equip.weapon, w = wid && itemById(wid);
+  R.look = {
+    body: S.hero ? S.hero.body : 'girl', hair: S.hero ? S.hero.hair : 0,
+    weapon: w ? { g: w.g, e: w.e } : null,
+    helmet: slotGrade('helmet'), upper: slotGrade('upper'), lower: slotGrade('lower'), gloves: slotGrade('gloves'), boots: slotGrade('boots'),
+    neck: slotGrade('neck'), ear: slotGrade('ear'),
+    aura: R.st.set && R.st.set.glow ? R.st.set.g : -1,
+    cosmetic: S.shop.cosmetic,
+  };
+}
+const red = s => R.st.def / (R.st.def + B.defK(s));
+const spiritBonus = () => R.buffs.spirit > 0 ? SK.spirit.mult(S.skills.spirit) : 0;
+const goldMul = () => (1 + R.pb.goldPct) * (Date.now() < S.boost.goldUntil ? 2 : 1);
+const petsOwnedCount = () => Object.keys(S.pets.owned).length;
