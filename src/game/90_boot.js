@@ -192,6 +192,9 @@ document.addEventListener('click', async e => {
     case 'sum-close': closeModal(); renderPanel(); break;
     case 'rates': openRates(); break;
     case 'pet': openPet(b.dataset.id); break;
+    case 'expo-start': expoStart(b.dataset.id); break;
+    case 'expo-claim': expoClaim(); break;
+    case 'expo-speed': expoSpeed(); break;
     case 'setpet': S.pets.active = b.dataset.id; recalc(); closeModal(); renderPanel(); toast(`${B.PET[S.pets.active].name} теперь ваш спутник`); AU.sfx('pet'); break;
     // арена
     case 'fight': arenaFight(+b.dataset.i); break;
@@ -333,5 +336,6 @@ if (/[?&]debug\b/.test(location.search)) {
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
     addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern, AU, updateMusic,
+    expoStart, expoClaim, expoSpeed, renderExpo,
   };
 }

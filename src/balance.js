@@ -283,6 +283,11 @@ const BAL = (() => {
     { id: 'enchant', name: 'Заточить снаряжение 15 раз',     goal: 15,   rw: { gems: 90, scrollsA: 2 } },
   ];
   const WEEKLY_CHEST = { gems: 300, crystals: 1000, summon: 3, petals: 5 };
+  const EXPO = [
+    { id: 'patrol', name: 'Садовый патруль', hours: 1, rw: { goldKills: 250, crystals: 80 } },
+    { id: 'night',  name: 'Ночной дозор',    hours: 4, rw: { crystals: 600, petals: 2 } },
+    { id: 'sky',    name: 'Небесный поход',  hours: 8, rw: { gems: 45, petals: 4, summon: 1 } },
+  ];
   const QUEST_XP = 120;
   const ACH = [
     { id: 'stage',  stat: 'bestStage', name: v => `Дойти до этапа ${Math.floor(v / 10) + 1}-${v % 10 + 1}`, tiers: [10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300], gems: [50, 80, 100, 150, 200, 250, 300, 400, 500, 700, 1000] },
@@ -540,7 +545,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
-    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT, LANTERN,
+    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, EXPO, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT, LANTERN,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,

@@ -283,6 +283,11 @@ const BAL = (() => {
     { id: 'enchant', name: 'Заточить снаряжение 15 раз',     goal: 15,   rw: { gems: 90, scrollsA: 2 } },
   ];
   const WEEKLY_CHEST = { gems: 300, crystals: 1000, summon: 3, petals: 5 };
+  const EXPO = [
+    { id: 'patrol', name: 'Садовый патруль', hours: 1, rw: { goldKills: 250, crystals: 80 } },
+    { id: 'night',  name: 'Ночной дозор',    hours: 4, rw: { crystals: 600, petals: 2 } },
+    { id: 'sky',    name: 'Небесный поход',  hours: 8, rw: { gems: 45, petals: 4, summon: 1 } },
+  ];
   const QUEST_XP = 120;
   const ACH = [
     { id: 'stage',  stat: 'bestStage', name: v => `Дойти до этапа ${Math.floor(v / 10) + 1}-${v % 10 + 1}`, tiers: [10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300], gems: [50, 80, 100, 150, 200, 250, 300, 400, 500, 700, 1000] },
@@ -540,7 +545,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
-    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT, LANTERN,
+    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, EXPO, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT, LANTERN,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,
@@ -3216,7 +3221,7 @@ const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 8;
+const SAVE_VERSION = 9;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -3244,6 +3249,7 @@ function newState() {
     stage: 0, maxStage: 0, bestStage: 0, kills: 0, autoBoss: true,
     stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0, dungeonRuns: 0, awakenings: 0, rerolls: 0 },
     pets: { owned: {}, active: null },
+    exped: { id: '', until: 0, pet: null },
     gacha: { pity: 0, total: 0, tickets: 1, first10: false },
     arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0, season: -1, history: [] },
     quests: { day: '', prog: {}, claimed: {}, chest: false },
@@ -5432,7 +5438,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.6</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.7</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -5710,8 +5716,57 @@ function openAwakenAsk() {
 /* ===== Питомцы: коллекция и призыв ===== */
 function renderPets() {
   if (!unlockOk('pets')) return lockCard('pets', 'Питомцы');
-  const seg = segHTML('petseg', R.petSeg, [['summon', 'Призыв', !hud.petDot.hidden], ['collection', `Коллекция ${petsOwnedCount()}/${B.PETS.length}`]]);
-  return seg + (R.petSeg === 'summon' ? renderSummon() : renderCollection());
+  const seg = segHTML('petseg', R.petSeg, [['summon', 'Призыв', !hud.petDot.hidden], ['collection', `Коллекция ${petsOwnedCount()}/${B.PETS.length}`], ['expo', 'Экспедиции', expoReady()]]);
+  return seg + (R.petSeg === 'summon' ? renderSummon() : R.petSeg === 'expo' ? renderExpo() : renderCollection());
+}
+const EXPO_SPEED = 30;
+function expoReady() { return !!(S.exped && S.exped.id && S.exped.until && Date.now() >= S.exped.until); }
+function bestExpoPet() {
+  const ids = Object.keys(S.pets.owned || {});
+  if (!ids.length) return null;
+  return ids.map(id => ({ id, p: B.PET[id], o: S.pets.owned[id] })).filter(x => x.p)
+    .sort((a, b) => (b.p.r * 10 + (b.o.stars || 0) * 3) - (a.p.r * 10 + (a.o.stars || 0) * 3))[0];
+}
+function renderExpo() {
+  if (!S.exped) S.exped = { id: '', until: 0, pet: null };
+  const e = S.exped, cur = e.id && B.EXPO.find(x => x.id === e.id);
+  if (cur && e.until) {
+    const done = Date.now() >= e.until, pet = B.PET[e.pet];
+    return `<section class="card">
+      <div class="row-main"><b>${cur.name}</b><span class="meta">${pet ? pet.name : 'Питомец'} · ${done ? 'готово' : left(e.until - Date.now())}</span>
+      <p class="sub">${rewardText(cur.rw)}</p></div>
+      ${done ? '<button class="buy pink" data-act="expo-claim">Забрать</button>'
+        : `<button class="buy ghost" data-act="expo-speed" ${S.gems < EXPO_SPEED ? 'disabled' : ''}>Ускорить · ${EXPO_SPEED} 💎</button>`}
+    </section>`;
+  }
+  const pet = bestExpoPet();
+  if (!pet) return `<section class="card"><img src="${A.miscIcon('paw', 64)}" alt=""><div class="row-main"><b>Нужен питомец</b><span class="meta">Призовите первого питомца, чтобы отправлять экспедиции.</span></div></section>`;
+  return `<section class="card"><div class="row-main"><b>Экспедиции</b><span class="meta">Питомец ${pet.p.name} отправится в путь. Награда придёт по таймеру.</span></div></section>
+    <ul class="rows">${B.EXPO.map(x => `<li class="row"><img src="${A.petIcon(pet.p, 64, pet.o.stars)}" alt="">
+      <div class="row-main"><b>${x.name}</b><span class="meta">${x.hours} ч · ${rewardText(x.rw)}</span></div>
+      <button class="buy pink" data-act="expo-start" data-id="${x.id}">Отправить</button></li>`).join('')}</ul>`;
+}
+function expoStart(id) {
+  const x = B.EXPO.find(v => v.id === id), pet = bestExpoPet();
+  if (!x || !pet || (S.exped && S.exped.id)) return;
+  S.exped = { id, until: Date.now() + x.hours * 3600e3, pet: pet.id };
+  saveLocal(); renderPanel();
+  toast(`${pet.p.name} отправлен: ${x.name}`);
+}
+function expoClaim() {
+  const e = S.exped, x = e && B.EXPO.find(v => v.id === e.id);
+  if (!x || !e.until || Date.now() < e.until) return;
+  grant(x.rw);
+  S.exped = { id: '', until: 0, pet: null };
+  saveLocal(); renderPanel();
+  toast(`Экспедиция: ${rewardText(x.rw)}`);
+}
+function expoSpeed() {
+  const e = S.exped;
+  if (!e || !e.id || S.gems < EXPO_SPEED) return;
+  S.gems -= EXPO_SPEED; e.until = Date.now();
+  saveLocal(); renderPanel();
+  toast('Экспедиция ускорена');
 }
 function renderSummon() {
   const left = B.GACHA.pity - S.gacha.pity, G1 = B.GACHA.cost1, G10 = B.GACHA.cost10, F10 = B.GACHA.first10;
@@ -7429,6 +7484,9 @@ document.addEventListener('click', async e => {
     case 'sum-close': closeModal(); renderPanel(); break;
     case 'rates': openRates(); break;
     case 'pet': openPet(b.dataset.id); break;
+    case 'expo-start': expoStart(b.dataset.id); break;
+    case 'expo-claim': expoClaim(); break;
+    case 'expo-speed': expoSpeed(); break;
     case 'setpet': S.pets.active = b.dataset.id; recalc(); closeModal(); renderPanel(); toast(`${B.PET[S.pets.active].name} теперь ваш спутник`); AU.sfx('pet'); break;
     // арена
     case 'fight': arenaFight(+b.dataset.i); break;
@@ -7570,6 +7628,7 @@ if (/[?&]debug\b/.test(location.search)) {
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
     addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern, AU, updateMusic,
+    expoStart, expoClaim, expoSpeed, renderExpo,
   };
 }
 

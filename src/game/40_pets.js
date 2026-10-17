@@ -1,8 +1,57 @@
 /* ===== Питомцы: коллекция и призыв ===== */
 function renderPets() {
   if (!unlockOk('pets')) return lockCard('pets', 'Питомцы');
-  const seg = segHTML('petseg', R.petSeg, [['summon', 'Призыв', !hud.petDot.hidden], ['collection', `Коллекция ${petsOwnedCount()}/${B.PETS.length}`]]);
-  return seg + (R.petSeg === 'summon' ? renderSummon() : renderCollection());
+  const seg = segHTML('petseg', R.petSeg, [['summon', 'Призыв', !hud.petDot.hidden], ['collection', `Коллекция ${petsOwnedCount()}/${B.PETS.length}`], ['expo', 'Экспедиции', expoReady()]]);
+  return seg + (R.petSeg === 'summon' ? renderSummon() : R.petSeg === 'expo' ? renderExpo() : renderCollection());
+}
+const EXPO_SPEED = 30;
+function expoReady() { return !!(S.exped && S.exped.id && S.exped.until && Date.now() >= S.exped.until); }
+function bestExpoPet() {
+  const ids = Object.keys(S.pets.owned || {});
+  if (!ids.length) return null;
+  return ids.map(id => ({ id, p: B.PET[id], o: S.pets.owned[id] })).filter(x => x.p)
+    .sort((a, b) => (b.p.r * 10 + (b.o.stars || 0) * 3) - (a.p.r * 10 + (a.o.stars || 0) * 3))[0];
+}
+function renderExpo() {
+  if (!S.exped) S.exped = { id: '', until: 0, pet: null };
+  const e = S.exped, cur = e.id && B.EXPO.find(x => x.id === e.id);
+  if (cur && e.until) {
+    const done = Date.now() >= e.until, pet = B.PET[e.pet];
+    return `<section class="card">
+      <div class="row-main"><b>${cur.name}</b><span class="meta">${pet ? pet.name : 'Питомец'} · ${done ? 'готово' : left(e.until - Date.now())}</span>
+      <p class="sub">${rewardText(cur.rw)}</p></div>
+      ${done ? '<button class="buy pink" data-act="expo-claim">Забрать</button>'
+        : `<button class="buy ghost" data-act="expo-speed" ${S.gems < EXPO_SPEED ? 'disabled' : ''}>Ускорить · ${EXPO_SPEED} 💎</button>`}
+    </section>`;
+  }
+  const pet = bestExpoPet();
+  if (!pet) return `<section class="card"><img src="${A.miscIcon('paw', 64)}" alt=""><div class="row-main"><b>Нужен питомец</b><span class="meta">Призовите первого питомца, чтобы отправлять экспедиции.</span></div></section>`;
+  return `<section class="card"><div class="row-main"><b>Экспедиции</b><span class="meta">Питомец ${pet.p.name} отправится в путь. Награда придёт по таймеру.</span></div></section>
+    <ul class="rows">${B.EXPO.map(x => `<li class="row"><img src="${A.petIcon(pet.p, 64, pet.o.stars)}" alt="">
+      <div class="row-main"><b>${x.name}</b><span class="meta">${x.hours} ч · ${rewardText(x.rw)}</span></div>
+      <button class="buy pink" data-act="expo-start" data-id="${x.id}">Отправить</button></li>`).join('')}</ul>`;
+}
+function expoStart(id) {
+  const x = B.EXPO.find(v => v.id === id), pet = bestExpoPet();
+  if (!x || !pet || (S.exped && S.exped.id)) return;
+  S.exped = { id, until: Date.now() + x.hours * 3600e3, pet: pet.id };
+  saveLocal(); renderPanel();
+  toast(`${pet.p.name} отправлен: ${x.name}`);
+}
+function expoClaim() {
+  const e = S.exped, x = e && B.EXPO.find(v => v.id === e.id);
+  if (!x || !e.until || Date.now() < e.until) return;
+  grant(x.rw);
+  S.exped = { id: '', until: 0, pet: null };
+  saveLocal(); renderPanel();
+  toast(`Экспедиция: ${rewardText(x.rw)}`);
+}
+function expoSpeed() {
+  const e = S.exped;
+  if (!e || !e.id || S.gems < EXPO_SPEED) return;
+  S.gems -= EXPO_SPEED; e.until = Date.now();
+  saveLocal(); renderPanel();
+  toast('Экспедиция ускорена');
 }
 function renderSummon() {
   const left = B.GACHA.pity - S.gacha.pity, G1 = B.GACHA.cost1, G10 = B.GACHA.cost10, F10 = B.GACHA.first10;
