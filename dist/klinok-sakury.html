@@ -1108,6 +1108,15 @@ const BAL = (() => {
     { id: 'ad',      name: 'Получить бонус за рекламу',   goal: 1,   gems: 50 },
   ];
   const DAILY_CHEST = { gems: 150, xp: 200 };
+  const WEEKLY = [
+    { id: 'kills',   name: 'Победить 1500 монстров',        goal: 1500, rw: { gems: 80 } },
+    { id: 'bosses',  name: 'Победить 20 боссов',             goal: 20,   rw: { gems: 120, crystals: 300 } },
+    { id: 'arena',   name: 'Провести 10 боёв на арене',      goal: 10,   rw: { gems: 100, summon: 1 } },
+    { id: 'dungeon', name: 'Пройти 5 подземелий',            goal: 5,    rw: { crystals: 500 } },
+    { id: 'tower',   name: 'Пройти 5 ярусов башни',          goal: 5,    rw: { petals: 3 } },
+    { id: 'enchant', name: 'Заточить снаряжение 15 раз',     goal: 15,   rw: { gems: 90, scrollsA: 2 } },
+  ];
+  const WEEKLY_CHEST = { gems: 300, crystals: 1000, summon: 3, petals: 5 };
   const QUEST_XP = 120;
   const ACH = [
     { id: 'stage',  stat: 'bestStage', name: v => `Дойти до этапа ${Math.floor(v / 10) + 1}-${v % 10 + 1}`, tiers: [10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300], gems: [50, 80, 100, 150, 200, 250, 300, 400, 500, 700, 1000] },
@@ -1332,7 +1341,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
-    DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
+    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,
@@ -3900,6 +3909,7 @@ function left(ms) {
 }
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 function msToMidnight() { const d = new Date(); const n = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1); return n - d; }
+function msToWeekEnd() { const d = new Date(), day = (d.getDay() + 6) % 7; const n = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day + 7); return n - d; }
 
 /* ---------- зоны ---------- */
 const ZONES = [
@@ -3993,7 +4003,7 @@ const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 6;
+const SAVE_VERSION = 7;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -4023,6 +4033,7 @@ function newState() {
     gacha: { pity: 0, total: 0, tickets: 1, first10: false },
     arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0, season: -1, history: [] },
     quests: { day: '', prog: {}, claimed: {}, chest: false },
+    weekly: { week: '', prog: {}, claimed: {}, chest: false },
     ach: {},
     login: { idx: 0, last: '' },
     pass: { season: -1, xp: 0, free: [], prem: [], premium: false },
@@ -6197,7 +6208,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.9</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.0</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -7373,6 +7384,7 @@ function dailyReset() {
   if (d.day !== today) { d.day = today; d.keys = B.DKEYS.perDay; d.ads = 0; d.buys = 0; }
   const wk = weekKey();
   if (S.tower.week !== wk) { S.tower.week = wk; S.tower.reward = 0; }
+  if (!S.weekly || S.weekly.week !== wk) S.weekly = { week: wk, prog: {}, claimed: {}, chest: false };
   const season = B.seasonOf(Date.now());
   if (S.pass.season !== season) S.pass = { season, xp: 0, free: [], prem: [], premium: false };
 }
@@ -7381,15 +7393,27 @@ function quest(id, n = 1) {
   dailyReset();
   const d = B.DAILY.find(x => x.id === id); if (!d) return;
   const before = S.quests.prog[id] || 0;
-  if (before >= d.goal) return;
-  S.quests.prog[id] = Math.min(d.goal, before + n);
-  if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+  if (before < d.goal) {
+    S.quests.prog[id] = Math.min(d.goal, before + n);
+    if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+  }
+  const w = B.WEEKLY.find(x => x.id === id);
+  if (w) {
+    const wb = S.weekly.prog[id] || 0;
+    if (wb < w.goal) {
+      S.weekly.prog[id] = Math.min(w.goal, wb + n);
+      if (S.weekly.prog[id] >= w.goal) { toast(`Недельное задание: ${w.name}`); updateSideButtons(); }
+    }
+  }
 }
 function questsReady() {
   if (!S) return 0;
+  if (!S.weekly) S.weekly = { week: weekKey(), prog: {}, claimed: {}, chest: false };
   let n = 0;
   for (const d of B.DAILY) if ((S.quests.prog[d.id] || 0) >= d.goal && !S.quests.claimed[d.id]) n++;
   if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) n++;
+  for (const w of B.WEEKLY) if ((S.weekly.prog[w.id] || 0) >= w.goal && !S.weekly.claimed[w.id]) n++;
+  if (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id])) n++;
   n += achReady().length;
   n += chaptersReady();
   n += fundClaimable().length;
@@ -7477,9 +7501,30 @@ let questTab = 'daily';
 function openQuests(tab) {
   if (tab) questTab = tab;
   dailyReset();
-  const tabs = segHTML('qtab', questTab, [['story', 'Сюжет', chaptersReady() > 0 || fundClaimable().length > 0], ['daily', 'Задания'], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
-  const body = { story: questsStory, daily: questsDaily, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
+  const tabs = segHTML('qtab', questTab, [['story', 'Сюжет', chaptersReady() > 0 || fundClaimable().length > 0], ['daily', 'Задания'], ['week', 'Неделя', weeklyReady() > 0], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
+  const body = { story: questsStory, daily: questsDaily, week: questsWeek, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
   openModal(sheet('Задания и награды', `Обновление через ${left(msToMidnight())}`, tabs + body, { cls: 'quests-sheet' }), { quests: true });
+}
+function weeklyReady() {
+  if (!S.weekly) return 0;
+  return B.WEEKLY.filter(w => (S.weekly.prog[w.id] || 0) >= w.goal && !S.weekly.claimed[w.id]).length
+    + (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id]) ? 1 : 0);
+}
+function questsWeek() {
+  const q = S.weekly;
+  const rows = B.WEEKLY.map(w => {
+    const p = q.prog[w.id] || 0, done = p >= w.goal, got = q.claimed[w.id];
+    return `<li class="row quest ${got ? 'got' : ''}"><img src="${A.miscIcon('quests', 64)}" alt="">
+      <div class="row-main"><b>${w.name}</b><div class="bar mini"><i style="width:${p / w.goal * 100}%"></i></div>
+      <span class="meta">${p}/${w.goal} · ${rewardText(w.rw)}</span></div>
+      ${got ? '<button class="buy" disabled>Получено</button>' : done ? `<button class="buy pink" data-act="wclaim" data-id="${w.id}">Забрать</button>` : '<button class="buy" disabled>В процессе</button>'}</li>`;
+  }).join('');
+  const all = B.WEEKLY.every(w => q.claimed[w.id]);
+  return `<p class="sub">До конца недели ${left(msToWeekEnd())}. Прогресс считается вместе с ежедневными заданиями.</p>
+    <ul class="rows">${rows}</ul>
+    <section class="card chest-card"><img src="${A.miscIcon('chest', 64)}" alt=""><div class="row-main">
+      <b>Сундук недели</b><span class="meta">Все недельные задания: ${rewardText(B.WEEKLY_CHEST)}</span></div>
+      ${q.chest ? '<button class="buy" disabled>Открыт</button>' : `<button class="buy ${all ? 'pink' : ''}" data-act="wchest" ${all ? '' : 'disabled'}>Открыть</button>`}</section>`;
 }
 function questsStory() {
   const cur = chapterProgress(), f = fundUi();
@@ -8034,6 +8079,12 @@ document.addEventListener('click', async e => {
       S.quests.claimed[d.id] = true; passXp(B.QUEST_XP); grant({ gems: d.gems, scrollsA: d.scrollsA }); openQuests(); break;
     }
     case 'qchest': if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) { S.quests.chest = true; passXp(B.DAILY_CHEST.xp); grant({ gems: B.DAILY_CHEST.gems }); openQuests(); } break;
+    case 'wclaim': {
+      const w = B.WEEKLY.find(x => x.id === b.dataset.id);
+      if (!w || S.weekly.claimed[w.id] || (S.weekly.prog[w.id] || 0) < w.goal) break;
+      S.weekly.claimed[w.id] = true; grant(w.rw); openQuests('week'); break;
+    }
+    case 'wchest': if (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id])) { S.weekly.chest = true; grant(B.WEEKLY_CHEST); openQuests('week'); } break;
     case 'ach-claim': {
       const a = B.ACH.find(x => x.id === b.dataset.id), i = S.ach[a.id] || 0;
       if (i < a.tiers.length && statValue(a.stat) >= a.tiers[i]) { S.ach[a.id] = i + 1; grant({ gems: a.gems[i] }); openQuests(); }
@@ -8144,7 +8195,7 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
-    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
   };
 }
 

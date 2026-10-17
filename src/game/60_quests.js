@@ -11,6 +11,7 @@ function dailyReset() {
   if (d.day !== today) { d.day = today; d.keys = B.DKEYS.perDay; d.ads = 0; d.buys = 0; }
   const wk = weekKey();
   if (S.tower.week !== wk) { S.tower.week = wk; S.tower.reward = 0; }
+  if (!S.weekly || S.weekly.week !== wk) S.weekly = { week: wk, prog: {}, claimed: {}, chest: false };
   const season = B.seasonOf(Date.now());
   if (S.pass.season !== season) S.pass = { season, xp: 0, free: [], prem: [], premium: false };
 }
@@ -19,15 +20,27 @@ function quest(id, n = 1) {
   dailyReset();
   const d = B.DAILY.find(x => x.id === id); if (!d) return;
   const before = S.quests.prog[id] || 0;
-  if (before >= d.goal) return;
-  S.quests.prog[id] = Math.min(d.goal, before + n);
-  if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+  if (before < d.goal) {
+    S.quests.prog[id] = Math.min(d.goal, before + n);
+    if (S.quests.prog[id] >= d.goal) { toast(`Задание выполнено: ${d.name}`); updateSideButtons(); }
+  }
+  const w = B.WEEKLY.find(x => x.id === id);
+  if (w) {
+    const wb = S.weekly.prog[id] || 0;
+    if (wb < w.goal) {
+      S.weekly.prog[id] = Math.min(w.goal, wb + n);
+      if (S.weekly.prog[id] >= w.goal) { toast(`Недельное задание: ${w.name}`); updateSideButtons(); }
+    }
+  }
 }
 function questsReady() {
   if (!S) return 0;
+  if (!S.weekly) S.weekly = { week: weekKey(), prog: {}, claimed: {}, chest: false };
   let n = 0;
   for (const d of B.DAILY) if ((S.quests.prog[d.id] || 0) >= d.goal && !S.quests.claimed[d.id]) n++;
   if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) n++;
+  for (const w of B.WEEKLY) if ((S.weekly.prog[w.id] || 0) >= w.goal && !S.weekly.claimed[w.id]) n++;
+  if (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id])) n++;
   n += achReady().length;
   n += chaptersReady();
   n += fundClaimable().length;
@@ -115,9 +128,30 @@ let questTab = 'daily';
 function openQuests(tab) {
   if (tab) questTab = tab;
   dailyReset();
-  const tabs = segHTML('qtab', questTab, [['story', 'Сюжет', chaptersReady() > 0 || fundClaimable().length > 0], ['daily', 'Задания'], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
-  const body = { story: questsStory, daily: questsDaily, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
+  const tabs = segHTML('qtab', questTab, [['story', 'Сюжет', chaptersReady() > 0 || fundClaimable().length > 0], ['daily', 'Задания'], ['week', 'Неделя', weeklyReady() > 0], ['pass', 'Пропуск'], ['ach', 'Достижения', achReady().length > 0], ['login', 'Вход', S.login.last !== dayKey()]]);
+  const body = { story: questsStory, daily: questsDaily, week: questsWeek, pass: questsPass, ach: questsAch, login: questsLogin }[questTab]();
   openModal(sheet('Задания и награды', `Обновление через ${left(msToMidnight())}`, tabs + body, { cls: 'quests-sheet' }), { quests: true });
+}
+function weeklyReady() {
+  if (!S.weekly) return 0;
+  return B.WEEKLY.filter(w => (S.weekly.prog[w.id] || 0) >= w.goal && !S.weekly.claimed[w.id]).length
+    + (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id]) ? 1 : 0);
+}
+function questsWeek() {
+  const q = S.weekly;
+  const rows = B.WEEKLY.map(w => {
+    const p = q.prog[w.id] || 0, done = p >= w.goal, got = q.claimed[w.id];
+    return `<li class="row quest ${got ? 'got' : ''}"><img src="${A.miscIcon('quests', 64)}" alt="">
+      <div class="row-main"><b>${w.name}</b><div class="bar mini"><i style="width:${p / w.goal * 100}%"></i></div>
+      <span class="meta">${p}/${w.goal} · ${rewardText(w.rw)}</span></div>
+      ${got ? '<button class="buy" disabled>Получено</button>' : done ? `<button class="buy pink" data-act="wclaim" data-id="${w.id}">Забрать</button>` : '<button class="buy" disabled>В процессе</button>'}</li>`;
+  }).join('');
+  const all = B.WEEKLY.every(w => q.claimed[w.id]);
+  return `<p class="sub">До конца недели ${left(msToWeekEnd())}. Прогресс считается вместе с ежедневными заданиями.</p>
+    <ul class="rows">${rows}</ul>
+    <section class="card chest-card"><img src="${A.miscIcon('chest', 64)}" alt=""><div class="row-main">
+      <b>Сундук недели</b><span class="meta">Все недельные задания: ${rewardText(B.WEEKLY_CHEST)}</span></div>
+      ${q.chest ? '<button class="buy" disabled>Открыт</button>' : `<button class="buy ${all ? 'pink' : ''}" data-act="wchest" ${all ? '' : 'disabled'}>Открыть</button>`}</section>`;
 }
 function questsStory() {
   const cur = chapterProgress(), f = fundUi();

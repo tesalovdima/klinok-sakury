@@ -200,6 +200,12 @@ document.addEventListener('click', async e => {
       S.quests.claimed[d.id] = true; passXp(B.QUEST_XP); grant({ gems: d.gems, scrollsA: d.scrollsA }); openQuests(); break;
     }
     case 'qchest': if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) { S.quests.chest = true; passXp(B.DAILY_CHEST.xp); grant({ gems: B.DAILY_CHEST.gems }); openQuests(); } break;
+    case 'wclaim': {
+      const w = B.WEEKLY.find(x => x.id === b.dataset.id);
+      if (!w || S.weekly.claimed[w.id] || (S.weekly.prog[w.id] || 0) < w.goal) break;
+      S.weekly.claimed[w.id] = true; grant(w.rw); openQuests('week'); break;
+    }
+    case 'wchest': if (!S.weekly.chest && B.WEEKLY.every(w => S.weekly.claimed[w.id])) { S.weekly.chest = true; grant(B.WEEKLY_CHEST); openQuests('week'); } break;
     case 'ach-claim': {
       const a = B.ACH.find(x => x.id === b.dataset.id), i = S.ach[a.id] || 0;
       if (i < a.tiers.length && statValue(a.stat) >= a.tiers[i]) { S.ach[a.id] = i + 1; grant({ gems: a.gems[i] }); openQuests(); }
@@ -310,6 +316,6 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
-    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
   };
 }

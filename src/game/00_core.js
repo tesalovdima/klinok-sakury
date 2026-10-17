@@ -33,6 +33,7 @@ function left(ms) {
 }
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 function msToMidnight() { const d = new Date(); const n = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1); return n - d; }
+function msToWeekEnd() { const d = new Date(), day = (d.getDay() + 6) % 7; const n = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day + 7); return n - d; }
 
 /* ---------- зоны ---------- */
 const ZONES = [
@@ -126,7 +127,7 @@ const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 6;
+const SAVE_VERSION = 7;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -156,6 +157,7 @@ function newState() {
     gacha: { pity: 0, total: 0, tickets: 1, first10: false },
     arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0, season: -1, history: [] },
     quests: { day: '', prog: {}, claimed: {}, chest: false },
+    weekly: { week: '', prog: {}, claimed: {}, chest: false },
     ach: {},
     login: { idx: 0, last: '' },
     pass: { season: -1, xp: 0, free: [], prem: [], premium: false },

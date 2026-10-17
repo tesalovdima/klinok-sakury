@@ -274,6 +274,15 @@ const BAL = (() => {
     { id: 'ad',      name: 'Получить бонус за рекламу',   goal: 1,   gems: 50 },
   ];
   const DAILY_CHEST = { gems: 150, xp: 200 };
+  const WEEKLY = [
+    { id: 'kills',   name: 'Победить 1500 монстров',        goal: 1500, rw: { gems: 80 } },
+    { id: 'bosses',  name: 'Победить 20 боссов',             goal: 20,   rw: { gems: 120, crystals: 300 } },
+    { id: 'arena',   name: 'Провести 10 боёв на арене',      goal: 10,   rw: { gems: 100, summon: 1 } },
+    { id: 'dungeon', name: 'Пройти 5 подземелий',            goal: 5,    rw: { crystals: 500 } },
+    { id: 'tower',   name: 'Пройти 5 ярусов башни',          goal: 5,    rw: { petals: 3 } },
+    { id: 'enchant', name: 'Заточить снаряжение 15 раз',     goal: 15,   rw: { gems: 90, scrollsA: 2 } },
+  ];
+  const WEEKLY_CHEST = { gems: 300, crystals: 1000, summon: 3, petals: 5 };
   const QUEST_XP = 120;
   const ACH = [
     { id: 'stage',  stat: 'bestStage', name: v => `Дойти до этапа ${Math.floor(v / 10) + 1}-${v % 10 + 1}`, tiers: [10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300], gems: [50, 80, 100, 150, 200, 250, 300, 400, 500, 700, 1000] },
@@ -498,7 +507,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
-    DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
+    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,
