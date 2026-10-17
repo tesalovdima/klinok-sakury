@@ -332,7 +332,36 @@ const BAL = (() => {
       { id: 'petal',   name: 'Лепестки ×6',     ico: 'petal',   cost: 450, limit: 3,  rw: { petals: 6 } },
       { id: 'gold',    name: 'Золото',          ico: 'gold',    cost: 80,  limit: 20, rw: { goldKills: 30 } },
     ],
-  };  function passReward(tier, prem) {          // tier: 1..30
+  };
+  const LANTERN = {
+    id: 'lantern',
+    name: 'Ночь фонарей',
+    seasonDays: 14,
+    epoch: Date.UTC(2026, 9, 22),
+    killChance: .08,
+    killCap: 600,
+    boss: 8,
+    dungeon: 30,
+    arena: 10,
+    tower: 8,
+    awaken: 100,
+    milestones: [
+      { at: 200,  rw: { gems: 30 } },
+      { at: 500,  rw: { crystals: 250 } },
+      { at: 900,  rw: { scrollsA: 2, summon: 1 } },
+      { at: 1400, rw: { petals: 4 } },
+      { at: 2100, rw: { gems: 80, crystals: 500 } },
+      { at: 3000, rw: { petals: 10, gems: 120 } },
+    ],
+    shop: [
+      { id: 'gems',    name: 'Самоцветы ×50',    ico: 'gem',     cost: 120, limit: 5,  rw: { gems: 50 } },
+      { id: 'crystal', name: 'Кристаллы ×250',   ico: 'crystal', cost: 80,  limit: 10, rw: { crystals: 250 } },
+      { id: 'ticket',  name: 'Билет призыва',    ico: 'ticket',  cost: 70,  limit: 10, rw: { summon: 1 } },
+      { id: 'petal',   name: 'Лепестки ×6',      ico: 'petal',   cost: 400, limit: 3,  rw: { petals: 6 } },
+      { id: 'scroll',  name: 'Свитки брони ×2',  ico: 'scroll',  cost: 150, limit: 5,  rw: { scrollsA: 2 } },
+    ],
+  };
+  function passReward(tier, prem) {          // tier: 1..30
     if (prem) {
       if (tier === 30) return { pet: 'tenryu', cosmetic: 'petals', petals: 20 };
       if (tier % 10 === 0) return { summon: 2, petals: 8 };
@@ -507,7 +536,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
-    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
+    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT, LANTERN,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,
@@ -1121,6 +1150,16 @@ const ART = (() => {
       ell(ctx, 32, 32, 24, 24); fillStroke(ctx, '#ffc93d', OUT, 3);
       ctx.fillStyle = '#ffe58f'; ell(ctx, 26, 25, 12, 9, -.6); ctx.fill();
       rr(ctx, 26, 26, 12, 12, 2); fillStroke(ctx, '#d99a1e', OUT, 2.4);
+    },
+    lantern(ctx) {
+      ctx.fillStyle = '#3a1620'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      ctx.strokeStyle = '#ffd760'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(32, 5); ctx.lineTo(32, 14); ctx.stroke();
+      rr(ctx, 22, 10, 20, 5, 2); fillStroke(ctx, '#ffd760', OUT, 1.8);
+      rr(ctx, 17, 15, 30, 30, 11); fillStroke(ctx, '#ff7a3c', OUT, 2.4);
+      rr(ctx, 23, 20, 18, 20, 7); fillStroke(ctx, '#ffd760', OUT, 1.6);
+      rr(ctx, 28, 25, 8, 10, 3); ctx.fillStyle = '#fff6d0'; ctx.fill();
+      rr(ctx, 22, 43, 20, 5, 2); fillStroke(ctx, '#ffd760', OUT, 1.8);
+      ctx.fillStyle = '#ffd760'; ell(ctx, 32, 50, 3, 3); ctx.fill();
     },
     crystal(ctx) {
       const shard = (x, y, w, h, c) => { ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + w, y - h * .6); ctx.lineTo(x + w * .8, y); ctx.lineTo(x - w * .8, y); ctx.lineTo(x - w, y - h * .6); ctx.closePath(); fillStroke(ctx, c, OUT, 2.2); };
@@ -3214,6 +3253,7 @@ function newState() {
     fund: { owned: false, claimed: [] },
     chapter: { idx: 0, claimed: [] },
     event: { season: -1, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 },
+    lantern: { season: -1, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 },
     codex: { 'weapon:0': 1, 'upper:0': 1 },
   };
 }
@@ -3624,6 +3664,7 @@ function bossWin() {
   S.kills = 0;
   R.boss = null;
   addEventCoins(B.EVENT.boss, 'boss');
+  addLanternDrop('boss');
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
   if (S.stats.bosses === 1) setTimeout(() => { if (S && S.hero && !modalState) Monet.openStarterOffer(); }, 2600);
   const z = zoneOf(S.stage);
@@ -3701,6 +3742,7 @@ function killMonster(m) {
   const xp = B.mXp(s) * (m.boss ? B.BOSS.xp : 1) * xpMul();
   S.gold += gold; S.stats.kills++;
   if (!m.boss && rnd() < B.EVENT.killChance) addEventCoins(1, 'kill');
+  if (!m.boss) addLanternDrop('kill');
   quest('kills');
   gainXp(xp);
   const y = R.gy - A.monTop(m.type) * m.scale * R.k * .5;
@@ -4546,6 +4588,7 @@ function doAwaken() {
   S.aw.count++;
   S.stats.awakenings++;
   addEventCoins(B.EVENT.awaken, 'awaken');
+  addLanternDrop('awaken');
   S.bestStage = Math.max(S.bestStage || 0, S.maxStage);
   // сброс похода, но не коллекций
   S.maxStage = 0; S.stage = 0; S.level = 1; S.xp = 0; S.gold = 0; S.sp = 0; S.kills = 0;
@@ -4823,6 +4866,7 @@ function renderHero() {
     ${chapter}
     ${fundCard}
     ${eventBannerHTML()}
+    ${lanternBannerHTML()}
     <section class="card hero-card">
       <img class="portrait" src="${A.heroIcon(S.hero.body, S.hero.hair, 128)}" alt="">
       <div class="hero-meta"><h2>${esc(heroName())}</h2><span class="power">Боевая мощь<b id="powerVal">${fmt(R.power)}</b></span></div>
@@ -5374,7 +5418,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.0</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.1</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -5550,6 +5594,7 @@ function applyDuelResult(st) {
       const rw = B.dungeonReward(st.id, S.stage);
       grant(rw);
       addEventCoins(B.EVENT.dungeon, 'dungeon');
+      addLanternDrop('dungeon');
       quest('dungeon'); passXp(12); checkAch(); saveLocal();
       st.rw = rw;
       AU.sfx('victory');
@@ -5571,6 +5616,7 @@ function towerClear(f, silent) {
   S.tower.best = Math.max(S.tower.best, f);
   grant(rw, silent);
   addEventCoins(B.EVENT.tower, 'tower');
+  addLanternDrop('tower');
   quest('tower'); passXp(18);
   checkAch(); saveLocal();
   return rw;
@@ -6033,6 +6079,10 @@ function addEventCoins(n, src) {
   S.event.total += n;
   if (Date.now() - (R.evSave || 0) > 5000) { R.evSave = Date.now(); saveLocal(); }
 }
+function addLanternDrop(src) {
+  if (src === 'kill') { if (rnd() < B.LANTERN.killChance) addLantern(1, 'kill'); }
+  else addLantern(B.LANTERN[src] || 0, src);
+}
 
 function eventReadyCount() {
   ensureEvent();
@@ -6134,6 +6184,134 @@ function eventBuy(id) {
   toast('Куплено: ' + rewardText(s.rw));
   saveLocal();
   openEvent('shop');
+}
+
+/* ---------- событие «Ночь фонарей» ---------- */
+function lanternInfo() {
+  const span = B.LANTERN.seasonDays * 864e5, now = Date.now();
+  let idx = Math.floor((now - B.LANTERN.epoch) / span);
+  if (!Number.isFinite(idx) || idx < 0) idx = 0;
+  const start = B.LANTERN.epoch + idx * span;
+  return { idx, start, end: start + span, left: start + span - now };
+}
+function ensureLantern() {
+  const info = lanternInfo();
+  if (!S.lantern || typeof S.lantern !== 'object') S.lantern = { season: info.idx, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 };
+  if (S.lantern.season !== info.idx) {
+    S.lantern = { season: info.idx, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 };
+  }
+  if (!Array.isArray(S.lantern.claimed)) S.lantern.claimed = [];
+  if (!S.lantern.bought || typeof S.lantern.bought !== 'object') S.lantern.bought = {};
+  return info;
+}
+function addLantern(n, src) {
+  if (!S || !n) return;
+  ensureLantern();
+  if (src === 'kill') {
+    const d = dayKey();
+    if (S.lantern.day !== d) { S.lantern.day = d; S.lantern.today = 0; }
+    if (S.lantern.today >= B.LANTERN.killCap) return;
+    n = Math.min(n, B.LANTERN.killCap - S.lantern.today);
+    if (n <= 0) return;
+    S.lantern.today += n;
+  }
+  S.lantern.coins += n;
+  S.lantern.total += n;
+  if (Date.now() - (R.lnSave || 0) > 5000) { R.lnSave = Date.now(); saveLocal(); }
+}
+function lanternReadyCount() {
+  ensureLantern();
+  return B.LANTERN.milestones.reduce((n, m, i) => n + (!S.lantern.claimed.includes(i) && S.lantern.total >= m.at ? 1 : 0), 0);
+}
+function lanternBannerHTML() {
+  const info = ensureLantern();
+  const ready = lanternReadyCount();
+  const readyTxt = ready ? ` · ${ready} ${plural(ready, ['награда', 'награды', 'наград'])}` : '';
+  return `<section class="card event-card lantern-card">
+    <div class="ev-badge"><img src="${A.miscIcon('lantern', 64)}" alt=""></div>
+    <div class="row-main"><b>${B.LANTERN.name}${readyTxt}</b>
+      <span class="meta">Сезон ${info.idx + 1} · до конца ${left(info.left)}</span>
+      <span class="ev-coins">${fmt(S.lantern.coins)} фонариков</span></div>
+    <button class="buy pink small" data-act="lantern-open">Открыть</button>
+  </section>`;
+}
+function lanternTrackHTML() {
+  return `<ul class="rows ev-track">${B.LANTERN.milestones.map((m, i) => {
+    const claimed = S.lantern.claimed.includes(i), ready = S.lantern.total >= m.at;
+    const w = Math.min(100, S.lantern.total / m.at * 100);
+    return `<li class="row ev-row ${claimed ? 'done' : ready ? 'ready' : ''}">
+      <img src="${A.miscIcon('lantern', 48)}" alt="">
+      <div class="row-main"><b>${rewardText(m.rw)}</b>
+        <div class="bar mini"><i style="width:${w}%"></i></div>
+        <span class="meta">${fmt(Math.min(S.lantern.total, m.at))} / ${fmt(m.at)} фонариков</span></div>
+      ${claimed ? '<span class="val ok">получено</span>' : ready
+        ? `<button class="buy pink small" data-act="lantern-claim" data-i="${i}">Забрать</button>`
+        : '<span class="val">🔒</span>'}
+    </li>`;
+  }).join('')}</ul>`;
+}
+function lanternShopHTML() {
+  return `<ul class="rows">${B.LANTERN.shop.map(s => {
+    const used = S.lantern.bought[s.id] || 0, leftN = s.limit - used;
+    const can = leftN > 0 && S.lantern.coins >= s.cost;
+    return `<li class="row"><img src="${A.miscIcon(s.ico, 48)}" alt="">
+      <div class="row-main"><b>${s.name}</b><span class="meta">${rewardText(s.rw)} · осталось ${leftN} из ${s.limit}</span></div>
+      <button class="buy ${can ? 'pink' : 'ghost'}" data-act="lantern-buy" data-id="${s.id}" ${can ? '' : 'disabled'}>
+        <img src="${A.miscIcon('lantern', 28)}" alt="">${s.cost}</button>
+    </li>`;
+  }).join('')}</ul>`;
+}
+function openLantern(tab) {
+  const info = ensureLantern();
+  R.lanternTab = tab || R.lanternTab || 'track';
+  const ready = B.LANTERN.milestones.map((m, i) => i).filter(i => !S.lantern.claimed.includes(i) && S.lantern.total >= B.LANTERN.milestones[i].at);
+  const tabs = [['track', `Награды${ready.length ? ' · ' + ready.length : ''}`], ['shop', 'Магазин']]
+    .map(([v, l]) => `<button data-act="lantern-tab" data-v="${v}" aria-pressed="${R.lanternTab === v}">${l}</button>`).join('');
+  openModal(sheet(B.LANTERN.name, `Сезон ${info.idx + 1} · до конца ${left(info.left)}`, `
+    <div class="event-banner lantern"><span>${B.LANTERN.name}</span></div>
+    <div class="ev-balance"><img src="${A.miscIcon('lantern', 40)}" alt=""><b>${fmt(S.lantern.coins)}</b><span>фонариков</span></div>
+    <div class="ev-tabs" role="group">${tabs}</div>
+    ${R.lanternTab === 'shop' ? lanternShopHTML() : lanternTrackHTML()}
+    ${R.lanternTab === 'track' && ready.length > 1 ? `<button class="buy pink ev-all" data-act="lantern-claim-all">Забрать всё · ${ready.length}</button>` : ''}
+    <p class="note">Фонарики падают с монстров (до ${B.LANTERN.killCap} в день), боссов, подземелий, арены и башни. Сезон меняется каждые ${B.LANTERN.seasonDays} дней.</p>
+  `));
+}
+function lanternClaim(i) {
+  ensureLantern();
+  const m = B.LANTERN.milestones[i];
+  if (!m || S.lantern.claimed.includes(i) || S.lantern.total < m.at) return;
+  S.lantern.claimed.push(i);
+  grant(m.rw, true);
+  toast('Награда ночи: ' + rewardText(m.rw));
+  saveLocal();
+  openLantern('track');
+}
+function lanternClaimAll() {
+  ensureLantern();
+  const got = [];
+  B.LANTERN.milestones.forEach((m, i) => {
+    if (S.lantern.claimed.includes(i) || S.lantern.total < m.at) return;
+    S.lantern.claimed.push(i);
+    grant(m.rw, true);
+    got.push(rewardText(m.rw));
+  });
+  if (!got.length) return;
+  toast('Ночь фонарей: ' + got.join(', '));
+  saveLocal();
+  openLantern('track');
+}
+function lanternBuy(id) {
+  ensureLantern();
+  const s = B.LANTERN.shop.find(x => x.id === id);
+  if (!s) return;
+  const used = S.lantern.bought[id] || 0;
+  if (used >= s.limit || S.lantern.coins < s.cost) return;
+  S.lantern.coins -= s.cost;
+  S.lantern.bought[id] = used + 1;
+  grant(s.rw, true);
+  toast('Куплено: ' + rewardText(s.rw));
+  saveLocal();
+  openLantern('shop');
 }
 
 /* --- 48_world.js --- */
@@ -6519,7 +6697,7 @@ function arenaResult(st) {
   a.rating = Math.max(0, a.rating + delta);
   const gems = F.win ? B.ARENA.winGems : B.ARENA.loseGems;
   S.gems += gems;
-  if (F.win) { a.wins++; S.stats.arenaWins++; addEventCoins(B.EVENT.arena, 'arena'); } else a.losses++;
+  if (F.win) { a.wins++; S.stats.arenaWins++; addEventCoins(B.EVENT.arena, 'arena'); addLanternDrop('arena'); } else a.losses++;
   a.seed++;
   quest('arena'); passXp(B.PASS.arenaXp); checkAch();
   const res = $('fightRes');
@@ -7121,6 +7299,11 @@ document.addEventListener('click', async e => {
     case 'event-claim': eventClaim(+b.dataset.i); break;
     case 'event-claim-all': eventClaimAll(); break;
     case 'event-buy': eventBuy(b.dataset.id); break;
+    case 'lantern-open': openLantern(); break;
+    case 'lantern-tab': R.lanternTab = b.dataset.v; openLantern(R.lanternTab); break;
+    case 'lantern-claim': lanternClaim(+b.dataset.i); break;
+    case 'lantern-claim-all': lanternClaimAll(); break;
+    case 'lantern-buy': lanternBuy(b.dataset.id); break;
     case 'chat-send': Social.send(); break;
     case 'board-refresh': Social.loadBoard(); break;
     case 'chat-retry': NET.probe(true).then(ok => { renderPanel(); Social.enter(); if (!ok) toast('Сервер недоступен'); }); break;
@@ -7362,6 +7545,7 @@ if (/[?&]debug\b/.test(location.search)) {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
+    addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern,
   };
 }
 

@@ -76,6 +76,11 @@ document.addEventListener('click', async e => {
     case 'event-claim': eventClaim(+b.dataset.i); break;
     case 'event-claim-all': eventClaimAll(); break;
     case 'event-buy': eventBuy(b.dataset.id); break;
+    case 'lantern-open': openLantern(); break;
+    case 'lantern-tab': R.lanternTab = b.dataset.v; openLantern(R.lanternTab); break;
+    case 'lantern-claim': lanternClaim(+b.dataset.i); break;
+    case 'lantern-claim-all': lanternClaimAll(); break;
+    case 'lantern-buy': lanternBuy(b.dataset.id); break;
     case 'chat-send': Social.send(); break;
     case 'board-refresh': Social.loadBoard(); break;
     case 'chat-retry': NET.probe(true).then(ok => { renderPanel(); Social.enter(); if (!ok) toast('Сервер недоступен'); }); break;
@@ -317,5 +322,6 @@ if (/[?&]debug\b/.test(location.search)) {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
+    addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern,
   };
 }

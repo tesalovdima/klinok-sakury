@@ -278,7 +278,7 @@ function arenaResult(st) {
   a.rating = Math.max(0, a.rating + delta);
   const gems = F.win ? B.ARENA.winGems : B.ARENA.loseGems;
   S.gems += gems;
-  if (F.win) { a.wins++; S.stats.arenaWins++; addEventCoins(B.EVENT.arena, 'arena'); } else a.losses++;
+  if (F.win) { a.wins++; S.stats.arenaWins++; addEventCoins(B.EVENT.arena, 'arena'); addLanternDrop('arena'); } else a.losses++;
   a.seed++;
   quest('arena'); passXp(B.PASS.arenaXp); checkAch();
   const res = $('fightRes');

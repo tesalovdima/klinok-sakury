@@ -172,6 +172,7 @@ function newState() {
     fund: { owned: false, claimed: [] },
     chapter: { idx: 0, claimed: [] },
     event: { season: -1, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 },
+    lantern: { season: -1, coins: 0, total: 0, claimed: [], bought: {}, day: '', today: 0 },
     codex: { 'weapon:0': 1, 'upper:0': 1 },
   };
 }

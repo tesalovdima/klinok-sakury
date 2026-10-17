@@ -332,7 +332,36 @@ const BAL = (() => {
       { id: 'petal',   name: 'Лепестки ×6',     ico: 'petal',   cost: 450, limit: 3,  rw: { petals: 6 } },
       { id: 'gold',    name: 'Золото',          ico: 'gold',    cost: 80,  limit: 20, rw: { goldKills: 30 } },
     ],
-  };  function passReward(tier, prem) {          // tier: 1..30
+  };
+  const LANTERN = {
+    id: 'lantern',
+    name: 'Ночь фонарей',
+    seasonDays: 14,
+    epoch: Date.UTC(2026, 9, 22),
+    killChance: .08,
+    killCap: 600,
+    boss: 8,
+    dungeon: 30,
+    arena: 10,
+    tower: 8,
+    awaken: 100,
+    milestones: [
+      { at: 200,  rw: { gems: 30 } },
+      { at: 500,  rw: { crystals: 250 } },
+      { at: 900,  rw: { scrollsA: 2, summon: 1 } },
+      { at: 1400, rw: { petals: 4 } },
+      { at: 2100, rw: { gems: 80, crystals: 500 } },
+      { at: 3000, rw: { petals: 10, gems: 120 } },
+    ],
+    shop: [
+      { id: 'gems',    name: 'Самоцветы ×50',    ico: 'gem',     cost: 120, limit: 5,  rw: { gems: 50 } },
+      { id: 'crystal', name: 'Кристаллы ×250',   ico: 'crystal', cost: 80,  limit: 10, rw: { crystals: 250 } },
+      { id: 'ticket',  name: 'Билет призыва',    ico: 'ticket',  cost: 70,  limit: 10, rw: { summon: 1 } },
+      { id: 'petal',   name: 'Лепестки ×6',      ico: 'petal',   cost: 400, limit: 3,  rw: { petals: 6 } },
+      { id: 'scroll',  name: 'Свитки брони ×2',  ico: 'scroll',  cost: 150, limit: 5,  rw: { scrollsA: 2 } },
+    ],
+  };
+  function passReward(tier, prem) {          // tier: 1..30
     if (prem) {
       if (tier === 30) return { pet: 'tenryu', cosmetic: 'petals', petals: 20 };
       if (tier % 10 === 0) return { summon: 2, petals: 8 };
@@ -507,7 +536,7 @@ const BAL = (() => {
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
     LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
-    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
+    DAILY, DAILY_CHEST, WEEKLY, WEEKLY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT, LANTERN,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
     itemStats, price, sellPrice, crystalYield, SCROLL_COST, BLESS_MULT,

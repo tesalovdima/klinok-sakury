@@ -600,6 +600,16 @@ const ART = (() => {
       ctx.fillStyle = '#ffe58f'; ell(ctx, 26, 25, 12, 9, -.6); ctx.fill();
       rr(ctx, 26, 26, 12, 12, 2); fillStroke(ctx, '#d99a1e', OUT, 2.4);
     },
+    lantern(ctx) {
+      ctx.fillStyle = '#3a1620'; ell(ctx, 32, 32, 28, 28); ctx.fill();
+      ctx.strokeStyle = '#ffd760'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(32, 5); ctx.lineTo(32, 14); ctx.stroke();
+      rr(ctx, 22, 10, 20, 5, 2); fillStroke(ctx, '#ffd760', OUT, 1.8);
+      rr(ctx, 17, 15, 30, 30, 11); fillStroke(ctx, '#ff7a3c', OUT, 2.4);
+      rr(ctx, 23, 20, 18, 20, 7); fillStroke(ctx, '#ffd760', OUT, 1.6);
+      rr(ctx, 28, 25, 8, 10, 3); ctx.fillStyle = '#fff6d0'; ctx.fill();
+      rr(ctx, 22, 43, 20, 5, 2); fillStroke(ctx, '#ffd760', OUT, 1.8);
+      ctx.fillStyle = '#ffd760'; ell(ctx, 32, 50, 3, 3); ctx.fill();
+    },
     crystal(ctx) {
       const shard = (x, y, w, h, c) => { ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + w, y - h * .6); ctx.lineTo(x + w * .8, y); ctx.lineTo(x - w * .8, y); ctx.lineTo(x - w, y - h * .6); ctx.closePath(); fillStroke(ctx, c, OUT, 2.2); };
       shard(20, 54, 9, 28, '#8fd8ff'); shard(44, 54, 9, 26, '#b9a2ff'); shard(32, 56, 12, 44, '#d4f3ff');

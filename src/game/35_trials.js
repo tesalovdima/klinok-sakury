@@ -170,6 +170,7 @@ function applyDuelResult(st) {
       const rw = B.dungeonReward(st.id, S.stage);
       grant(rw);
       addEventCoins(B.EVENT.dungeon, 'dungeon');
+      addLanternDrop('dungeon');
       quest('dungeon'); passXp(12); checkAch(); saveLocal();
       st.rw = rw;
       AU.sfx('victory');
@@ -191,6 +192,7 @@ function towerClear(f, silent) {
   S.tower.best = Math.max(S.tower.best, f);
   grant(rw, silent);
   addEventCoins(B.EVENT.tower, 'tower');
+  addLanternDrop('tower');
   quest('tower'); passXp(18);
   checkAch(); saveLocal();
   return rw;
