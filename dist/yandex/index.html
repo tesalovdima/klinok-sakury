@@ -3729,7 +3729,7 @@ function newState() {
     ach: {},
     login: { idx: 0, last: '' },
     pass: { season: -1, xp: 0, free: [], prem: [], premium: false },
-    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false },
+    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false, starterSeen: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
     settings: { music: .55, sfx: .75 },
@@ -4117,6 +4117,7 @@ function bossWin() {
   S.kills = 0;
   R.boss = null;
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
+  if (S.stats.bosses === 1) setTimeout(() => { if (S && S.hero && !modalState) Monet.openStarterOffer(); }, 2600);
   const z = zoneOf(S.stage);
   if (z.z !== z0) {
     setTimeout(() => banner(z.title, 'Новая зона', z.ui), 1800);
@@ -4872,7 +4873,7 @@ function fundUi() {
 
 /* ---------- главы: сюжетный онбординг ---------- */
 const CHAPTERS = [
-  { id: 'kills',  title: 'Первые шаги',    text: 'Монстры гибнут сами — вам нужно лишь направлять силу. Победите 10 монстров.', goal: 10, of: () => S.stats.kills, rw: { gems: 60, scrollsA: 2 } },
+  { id: 'kills',  title: 'Первые шаги',    text: 'Монстры гибнут сами — вам нужно лишь направлять силу. Победите 10 монстров.', goal: 10, of: () => S.stats.kills, rw: { gems: 60, scrollsA: 2, goldKills: 250 } },
   { id: 'geard',  title: 'Грейд D',        text: 'На 8-м уровне откроется грейд D. Купите и наденьте любой предмет этого грейда.', goal: 1, of: () => anyEquippedGrade(1) ? 1 : 0, rw: { gems: 80, scrollsA: 2 } },
   { id: 'ench',   title: 'Кузнец',         text: 'Свитки заточки падают из монстров. Заточите надетый предмет — до +3 это безопасно.', goal: 1, of: () => S.stats.enchants, rw: { gems: 60, scrollsA: 3 } },
   { id: 'boss',   title: 'Первый босс',    text: 'Победив 10 монстров, вызовите босса этапа. Победа откроет новый этап.', goal: 1, of: () => S.stats.bosses, rw: { gems: 100, summon: 1 } },
@@ -6456,6 +6457,22 @@ const Monet = {
     S.ads.freeSummon = true;
     summon(1, 'free');
   },
+  // предложение в момент первой победы над боссом: подарок + стартовый набор
+  openStarterOffer() {
+    if (!S || S.shop.starterSeen || S.shop.starter) return;
+    S.shop.starterSeen = true;
+    grant({ gems: 50, scrollsA: 2 });
+    const p = B.IAP_BY.starter, pr = P.price(p.id, p.rub);
+    openModal(sheet('Первый босс повержен!', 'Подарок новичку уже в кошельке', `
+      <section class="card chest-card"><img src="${A.miscIcon('chest', 64)}" alt="">
+        <div class="row-main"><b>50 💎 и 2 свитка заточки</b><span class="meta">Добавлены автоматически</span></div></section>
+      <section class="offer starter"><img src="${A.miscIcon('starter', 64)}" alt="">
+        <div class="row-main"><b>${p.name}</b><span class="tag">${p.tag}</span>
+        <p>${p.gems} 💎, эпический питомец ${B.PET[p.pet].name}, ${p.scrollsA} свитков доспеха и ${p.blessedA} благословенных.</p></div>
+        <button class="buy pink" data-act="iap" data-id="starter">${pr.icon ? `<img src="${pr.icon}" alt="">` : ''}${pr.text}</button></section>
+      <p class="note">Набор покупается один раз и сильно ускоряет старт. На Яндекс Играх оплату обрабатывает площадка.</p>
+      <div class="btn-row"><button class="buy ghost wide" data-act="close">Продолжить</button></div>`), { starterOffer: true });
+  },
   async purchase(id) {
     const p = B.IAP_BY[id]; if (!p) return;
     if (p.once && ((id === 'starter' && S.shop.starter) || (id === 'noads' && S.shop.noAds))) return;
@@ -6482,6 +6499,7 @@ const Monet = {
       }
     }
     log(`Покупка: ${p.name}. Спасибо за поддержку!`, 'good');
+    if (modalState && modalState.starterOffer) closeModal();
     refreshAfterReward();
   },
   async adKey() {

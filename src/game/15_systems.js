@@ -113,7 +113,7 @@ function fundUi() {
 
 /* ---------- главы: сюжетный онбординг ---------- */
 const CHAPTERS = [
-  { id: 'kills',  title: 'Первые шаги',    text: 'Монстры гибнут сами — вам нужно лишь направлять силу. Победите 10 монстров.', goal: 10, of: () => S.stats.kills, rw: { gems: 60, scrollsA: 2 } },
+  { id: 'kills',  title: 'Первые шаги',    text: 'Монстры гибнут сами — вам нужно лишь направлять силу. Победите 10 монстров.', goal: 10, of: () => S.stats.kills, rw: { gems: 60, scrollsA: 2, goldKills: 250 } },
   { id: 'geard',  title: 'Грейд D',        text: 'На 8-м уровне откроется грейд D. Купите и наденьте любой предмет этого грейда.', goal: 1, of: () => anyEquippedGrade(1) ? 1 : 0, rw: { gems: 80, scrollsA: 2 } },
   { id: 'ench',   title: 'Кузнец',         text: 'Свитки заточки падают из монстров. Заточите надетый предмет — до +3 это безопасно.', goal: 1, of: () => S.stats.enchants, rw: { gems: 60, scrollsA: 3 } },
   { id: 'boss',   title: 'Первый босс',    text: 'Победив 10 монстров, вызовите босса этапа. Победа откроет новый этап.', goal: 1, of: () => S.stats.bosses, rw: { gems: 100, summon: 1 } },

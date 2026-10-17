@@ -130,7 +130,7 @@ function newState() {
     ach: {},
     login: { idx: 0, last: '' },
     pass: { season: -1, xp: 0, free: [], prem: [], premium: false },
-    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false },
+    shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false, starterSeen: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
     settings: { music: .55, sfx: .75 },

@@ -36,6 +36,22 @@ const Monet = {
     S.ads.freeSummon = true;
     summon(1, 'free');
   },
+  // предложение в момент первой победы над боссом: подарок + стартовый набор
+  openStarterOffer() {
+    if (!S || S.shop.starterSeen || S.shop.starter) return;
+    S.shop.starterSeen = true;
+    grant({ gems: 50, scrollsA: 2 });
+    const p = B.IAP_BY.starter, pr = P.price(p.id, p.rub);
+    openModal(sheet('Первый босс повержен!', 'Подарок новичку уже в кошельке', `
+      <section class="card chest-card"><img src="${A.miscIcon('chest', 64)}" alt="">
+        <div class="row-main"><b>50 💎 и 2 свитка заточки</b><span class="meta">Добавлены автоматически</span></div></section>
+      <section class="offer starter"><img src="${A.miscIcon('starter', 64)}" alt="">
+        <div class="row-main"><b>${p.name}</b><span class="tag">${p.tag}</span>
+        <p>${p.gems} 💎, эпический питомец ${B.PET[p.pet].name}, ${p.scrollsA} свитков доспеха и ${p.blessedA} благословенных.</p></div>
+        <button class="buy pink" data-act="iap" data-id="starter">${pr.icon ? `<img src="${pr.icon}" alt="">` : ''}${pr.text}</button></section>
+      <p class="note">Набор покупается один раз и сильно ускоряет старт. На Яндекс Играх оплату обрабатывает площадка.</p>
+      <div class="btn-row"><button class="buy ghost wide" data-act="close">Продолжить</button></div>`), { starterOffer: true });
+  },
   async purchase(id) {
     const p = B.IAP_BY[id]; if (!p) return;
     if (p.once && ((id === 'starter' && S.shop.starter) || (id === 'noads' && S.shop.noAds))) return;
@@ -62,6 +78,7 @@ const Monet = {
       }
     }
     log(`Покупка: ${p.name}. Спасибо за поддержку!`, 'good');
+    if (modalState && modalState.starterOffer) closeModal();
     refreshAfterReward();
   },
   async adKey() {

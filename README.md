@@ -58,6 +58,7 @@ python3 -m http.server 8080 --directory dist/yandex
 | `src/shell.html`, `src/style.css` | Разметка и стили |
 | `build.js` | Сборка в `dist/` |
 | `sim.js` | Симуляция прогрессии для подбора баланса: `node sim.js 8` (часов), второй аргумент — порог пробуждения |
+| `docs/market-and-roadmap.md` | Выжимка по рынку idle-RPG и план развития |
 | `dist/README_YANDEX.md` | Как опубликовать на Яндекс Играх |
 
 После правок в `src/` снова запустите `node build.js` и обновите страницу.

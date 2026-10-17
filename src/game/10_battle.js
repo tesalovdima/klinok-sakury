@@ -154,6 +154,7 @@ function bossWin() {
   S.kills = 0;
   R.boss = null;
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
+  if (S.stats.bosses === 1) setTimeout(() => { if (S && S.hero && !modalState) Monet.openStarterOffer(); }, 2600);
   const z = zoneOf(S.stage);
   if (z.z !== z0) {
     setTimeout(() => banner(z.title, 'Новая зона', z.ui), 1800);
