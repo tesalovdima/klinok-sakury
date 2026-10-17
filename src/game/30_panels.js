@@ -9,11 +9,35 @@ function renderPanel() {
   if (R.tab === 'arena') Arena.onOpen();
 }
 function setTab(t) {
+  if (tabLocked(t)) { toast(`Раздел откроется: ${unlockLabel(tabUnlockKey(t))}`); return; }
   R.tab = t;
   for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false');
   renderPanel(); panel.scrollTop = 0;
   if (t === 'social') Social.enter();
 }
+const TAB_UNLOCK = { shop: 'shop', pets: 'pets', social: 'chat', arena: 'arena' };
+const tabUnlockKey = t => TAB_UNLOCK[t] || null;
+const tabLocked = t => { const k = tabUnlockKey(t); return !!(k && !unlockOk(k)); };
+function updateNav() {
+  if (!S) return;
+  const now = new Set();
+  let switched = false;
+  for (const b of document.querySelectorAll('#tabs [data-tab]')) {
+    const locked = tabLocked(b.dataset.tab);
+    if (b.hidden !== locked) b.hidden = locked;
+    b.setAttribute('aria-hidden', locked ? 'true' : 'false');
+    if (!locked) now.add(b.dataset.tab);
+  }
+  if (!R.navSeen) R.navSeen = now;
+  else for (const t of now) if (!R.navSeen.has(t)) toast(`Открыт раздел: ${TAB_LABEL[t] || t}`);
+  R.navSeen = now;
+  if (tabLocked(R.tab)) { R.tab = 'hero'; switched = true; }
+  if (switched) {
+    for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === R.tab ? 'true' : 'false');
+    renderPanel();
+  }
+}
+const TAB_LABEL = { hero: 'Героиня', gear: 'Вещи', pets: 'Питомцы', arena: 'Арена', trials: 'Башня', social: 'Чат', shop: 'Магазин' };
 const segHTML = (act, cur, items) => `<div class="seg" role="group">${items.map(([v, l, dot]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${l}${dot ? '<i class="mini-dot"></i>' : ''}</button>`).join('')}</div>`;
 
 /* ---------- герой ---------- */
@@ -30,6 +54,26 @@ function growthBatch(g) {
   }
   return { n, cost };
 }
+function nextTip() {
+  if (S.tutorial && !S.tutorial.done) return { id: 'tutorial', title: 'Пройти обучение', text: 'Короткий гайд по бою, вещам и заданиям — с возможностью пропустить.', btn: 'Начать' };
+  if (S.sp > 0) return { id: 'skills', title: 'Есть очко навыка', text: 'Откройте «Навыки» и усильте умение, которое чаще срабатывает.', btn: 'К навыкам' };
+  const eq = S.items.filter(isEquipped);
+  if (eq.some(it => it.g > 0 && it.e < 3)) return { id: 'enchant', title: 'Заточите снаряжение', text: 'Заточка до +3 безопасна и заметно повышает силу.', btn: 'К заточке' };
+  if (questsReady() > 0) return { id: 'quests', title: 'Есть награды', text: 'Заберите выполненные задания и бонусы — это ускорит прогресс.', btn: 'Открыть' };
+  if (S.kills >= B.STAGE_KILLS) return { id: 'boss', title: 'Босс этапа готов', text: 'Победите босса, чтобы открыть новую зону.', btn: 'В бой' };
+  if (S.level < 10) return { id: 'growth', title: 'Растите силу', text: 'Тренировка стоит золото и работает даже в автобое.', btn: 'Тренировка' };
+  return null;
+}
+function nextTipCard() {
+  if (S.level > 12) return '';
+  const t = nextTip(); if (!t) return '';
+  return `<section class="card next-card" data-tip-card="${t.id}">
+    <img src="${A.miscIcon(t.id === 'quests' ? 'quests' : t.id === 'boss' ? 'boss' : t.id === 'enchant' ? 'scroll' : t.id === 'skills' ? 'skills' : 'atk', 56)}" alt="">
+    <div class="row-main"><b>${t.title}</b><span class="meta">${t.text}</span></div>
+    <button class="buy pink small" data-act="tip-go" data-tip="${t.id}">${t.btn}</button>
+  </section>`;
+}
+
 function statCells() {
   const st = R.st;
   return [
@@ -53,6 +97,7 @@ function renderHero() {
       <div class="row-main"><b>Фонд сакуры</b><span class="meta">Уровень ${f.current} достигнут · ${B.FUND.gems} 💎</span></div>
       <button class="buy pink" data-act="fund-claim" data-l="${f.current}">Забрать</button></section>` : '';
   return `
+    ${nextTipCard()}
     ${chapter}
     ${fundCard}
     ${eventBannerHTML()}
@@ -605,9 +650,9 @@ function openSettings() {
   openModal(sheet('Настройки', esc(heroName()) + ` · уровень ${S.level}`, `
     <label class="slider"><img src="${A.miscIcon('music', 40)}" alt=""><span>Музыка</span><input type="range" id="volMusic" min="0" max="100" value="${Math.round(S.settings.music * 100)}"></label>
     <label class="slider"><img src="${A.miscIcon('crit', 40)}" alt=""><span>Эффекты</span><input type="range" id="volSfx" min="0" max="100" value="${Math.round(S.settings.sfx * 100)}"></label>
-    <div class="btn-row"><button class="buy ghost" data-act="look">Сменить облик и имя</button></div>
+    <div class="btn-row"><button class="buy ghost" data-act="look">Сменить облик и имя</button><button class="buy ghost" data-act="tutorial">Обучение</button></div>
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 5.1</p>`));
+    <p class="note version">Клинок Сакуры · версия 5.2</p>`));
 }

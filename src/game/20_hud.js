@@ -21,6 +21,10 @@ function updateHudStatic() {
   hud.heroDot.textContent = S.sp || '';
   hud.heroTabLabel.textContent = G('Героиня', 'Герой');
   hud.trialDot.hidden = !(towerClaimable() || chaptersReady() > 0);
+  const hasSkill = SKILLS.some(s => S.skills[s.id] > 0);
+  const mpBar = document.querySelector('.bar.mp'), dock = hud.skillDock;
+  if (mpBar) mpBar.hidden = !hasSkill;
+  if (dock) dock.hidden = !hasSkill;
   updateSideButtons();
 }
 function updateSideButtons() {
@@ -29,6 +33,7 @@ function updateSideButtons() {
   hud.questDot.hidden = !q; hud.questDot.textContent = q;
   const gift = Monet.giftReady();
   hud.giftDot.hidden = !gift;
+  if (typeof updateNav === 'function') updateNav();
   hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()) || (!S.gacha.first10 && S.gems >= B.GACHA.first10) || expoReady());
   hud.arenaDot.hidden = !(S.arena.tickets > 0 || S.arena.rewardDay !== dayKey());
   hud.shopDot.hidden = !(S.shop.monthlyUntil > Date.now() && S.shop.monthlyDay !== dayKey());

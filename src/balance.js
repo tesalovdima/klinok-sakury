@@ -542,6 +542,7 @@ const BAL = (() => {
     awakening: { stage: 50, label: 'этап 50' },
     chat:      { stage: 8,  label: 'этап 8' },
     pass:      { level: 5,  label: 'уровень 5' },
+    shop:      { level: 3,  label: 'уровень 3' },
   };
 
   return {

@@ -175,6 +175,17 @@ document.addEventListener('click', async e => {
       }
       break;
     }
+    case 'tutorial': closeModal(); startTutorial(true); break;
+    case 'tip-go': {
+      const tip = b.dataset.tip;
+      if (tip === 'tutorial') startTutorial(true);
+      else if (tip === 'skills') { setTab('hero'); R.heroSeg = 'skills'; renderPanel(); }
+      else if (tip === 'enchant') { setTab('gear'); const it = S.items.find(i => isEquipped(i) && canEnchant(i)); if (it) openEnchant(it.id); }
+      else if (tip === 'quests') openQuests();
+      else if (tip === 'boss') { if (S.kills >= B.STAGE_KILLS && !R.boss) startBoss(); }
+      else { setTab('hero'); R.heroSeg = 'growth'; renderPanel(); }
+      break;
+    }
     case 'learn': {
       const s = SK[b.dataset.sk];
       if (S.sp > 0 && S.level >= s.unlock && S.skills[s.id] < SKILL_MAX) { S.sp--; S.skills[s.id]++; AU.sfx('buy'); if (S.skills[s.id] === 1) log(`Изучен навык «${s.name}».`, 'good'); renderPanel(); updateHudStatic(); }
@@ -294,7 +305,7 @@ function applyState(o) {
   R.st = null; dailyReset(); recalc(); R.hero.hp = R.st.hp; R.hero.dead = 0;
   R.shopGrade = unlockedGrade(); Arena.opp = null;
   AU.setVolume('music', S.settings.music); AU.setVolume('sfx', S.settings.sfx);
-  updateHudStatic(); updateHud(); renderPanel(); updateMusic();
+  updateHudStatic(); updateHud(); renderPanel(); updateSideButtons(); updateNav(); updateMusic();
 }
 async function start(hot) {
   const isHot = !!(hot && hot.S);
@@ -331,6 +342,7 @@ async function start(hot) {
   window.claude?.hot?.snapshot?.(() => ({ S, tab: R.tab }));
 
   P.ready();
+  if (S.hero && S.tutorial && !S.tutorial.done) setTimeout(() => startTutorial(), 1000);
   if (P.mode === 'yandex') Monet.restore();
   await Cloud.init();
   if (!S.hero) { R.pendingOffline = !isHot && R.hadLocal; openIntro(false); return; }
@@ -350,5 +362,6 @@ if (/[?&]debug\b/.test(location.search)) {
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
     addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern, AU, updateMusic,
     expoStart, expoClaim, expoSpeed, renderExpo, offline, updateSideButtons, updateHudStatic,
+    startTutorial, updateNav, nextTip, migrate,
   };
 }

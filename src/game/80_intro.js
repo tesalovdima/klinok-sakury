@@ -45,7 +45,7 @@ function finishIntro() {
   const first = !S.hero;
   S.hero = { body: IN.body, hair: IN.hair, name };
   intro.hidden = true; cancelAnimationFrame(IN.raf);
-  recalc(); updateHudStatic(); renderPanel(); saveLocal(); Cloud.push();
+  recalc(); updateHudStatic(); renderPanel(); updateSideButtons(); updateNav(); saveLocal(); Cloud.push();
   Arena.lastPush = 0; Arena.push();
   if (first) {
     S.intro = true;
@@ -59,6 +59,7 @@ function finishIntro() {
     banner(name, 'Путь начинается', '#ff8fc1');
     P.gameplay(true);
     if (R.pendingOffline) { R.pendingOffline = false; offline(); }
+    setTimeout(() => { if (S.tutorial && !S.tutorial.done) startTutorial(); }, 1200);
   } else toast('Облик сохранён');
   updateMusic();
 }

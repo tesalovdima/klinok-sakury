@@ -2,9 +2,11 @@ const fs = require('fs'), path = require('path');
 const r = f => fs.readFileSync(path.join(__dirname, 'src', f), 'utf8');
 const gameParts = fs.readdirSync(path.join(__dirname, 'src/game')).filter(f => f.endsWith('.js')).sort();
 const game = "(() => {\n'use strict';\n" + gameParts.map(f => `/* --- ${f} --- */\n` + r('game/' + f)).join('\n') + "\n})();";
+const tutoB64 = fs.readFileSync(path.join(__dirname, 'src/img/tuto-guide.png')).toString('base64');
 const scripts = [
   r('balance.js').replace("if (typeof module !== 'undefined') module.exports = BAL;", ''),
-  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), r('net.js'), game,
+  r('art.js'), r('art_hero.js'), r('art_pets.js'), r('art_extra.js'), r('audio.js'), r('platform.js'), r('net.js'),
+  `const TUTO_GUIDE='data:image/png;base64,${tutoB64}';`, game,
 ].join('\n');
 const GOOGLE = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

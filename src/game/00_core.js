@@ -127,7 +127,7 @@ const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 9;
+const SAVE_VERSION = 10;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -166,7 +166,8 @@ function newState() {
     shop: { noAds: false, starter: false, monthlyUntil: 0, monthlyDay: '', cosmetic: null, cosmetics: [], firstTopup: false, starterSeen: false },
     boost: { goldUntil: 0 },
     ads: { day: '', gems: 0, freeSummon: false, boosts: 0 },
-    settings: { music: .55, sfx: .75, autoBuyBreak: true, autoEnchantTo: 7 },
+    settings: { music: .55, sfx: .75, autoBuyBreak: true, autoEnchantTo: 7, tutorialDone: false },
+    tutorial: { done: false, step: 0 },
     intro: false,
     aw: { petals: 0, count: 0, lvl: Object.fromEntries(B.AW_NODES.map(n => [n.id, 0])) },
     tower: { floor: 0, best: 0, week: '', reward: 0, auto: false },
@@ -181,9 +182,11 @@ function newState() {
 function migrate(o) {
   if (!o || typeof o !== 'object') return newState();
   if ((o.v || 1) < 3) return newState();          // совсем старые сохранения несовместимы
+  const wasV = o.v || 1;
   const d = newState();
   fillDefaults(o, d);
   o.v = SAVE_VERSION;
+  if (wasV < 10 && o.tutorial && !o.tutorial.done) o.tutorial.done = true;   // старым игрокам обучение не показываем
   for (const k of ['w', 'a', 'bw', 'ba']) {
     o.scrolls[k] = Array.isArray(o.scrolls[k]) ? o.scrolls[k] : zeros();
     while (o.scrolls[k].length < NG) o.scrolls[k].push(0);

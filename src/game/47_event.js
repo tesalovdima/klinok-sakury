@@ -54,6 +54,7 @@ function eventReadyCount() {
 }
 
 function eventBannerHTML() {
+  if (!S || S.level < 5) return '';
   const info = ensureEvent();
   const ready = eventReadyCount();
   const readyTxt = ready ? ` · ${ready} ${plural(ready, ['награда', 'награды', 'наград'])}` : '';
@@ -188,6 +189,7 @@ function lanternReadyCount() {
   return B.LANTERN.milestones.reduce((n, m, i) => n + (!S.lantern.claimed.includes(i) && S.lantern.total >= m.at ? 1 : 0), 0);
 }
 function lanternBannerHTML() {
+  if (!S || S.level < 7) return '';
   const info = ensureLantern();
   const ready = lanternReadyCount();
   const readyTxt = ready ? ` · ${ready} ${plural(ready, ['награда', 'награды', 'наград'])}` : '';
