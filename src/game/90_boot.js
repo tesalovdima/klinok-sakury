@@ -219,7 +219,7 @@ document.addEventListener('click', async e => {
     case 'qclaim': {
       const d = B.DAILY.find(x => x.id === b.dataset.id);
       if (!d || S.quests.claimed[d.id] || (S.quests.prog[d.id] || 0) < d.goal) break;
-      S.quests.claimed[d.id] = true; passXp(B.QUEST_XP); grant({ gems: d.gems, scrollsA: d.scrollsA }); openQuests(); break;
+      S.quests.claimed[d.id] = true; passXp(B.QUEST_XP); grant({ gems: d.gems, scrollsA: d.scrollsA, crystalsK: d.crystalsK, petals: d.petals }); openQuests(); break;
     }
     case 'qchest': if (!S.quests.chest && B.DAILY.every(d => S.quests.claimed[d.id])) { S.quests.chest = true; passXp(B.DAILY_CHEST.xp); grant({ gems: B.DAILY_CHEST.gems }); openQuests(); } break;
     case 'wclaim': {
@@ -349,6 +349,6 @@ if (/[?&]debug\b/.test(location.search)) {
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
     addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit, quest, openQuests,
     addLantern, addLanternDrop, openLantern, lanternClaim, lanternBuy, ensureLantern, AU, updateMusic,
-    expoStart, expoClaim, expoSpeed, renderExpo, offline,
+    expoStart, expoClaim, expoSpeed, renderExpo, offline, updateSideButtons, updateHudStatic,
   };
 }

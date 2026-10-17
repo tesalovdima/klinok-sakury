@@ -29,7 +29,7 @@ function updateSideButtons() {
   hud.questDot.hidden = !q; hud.questDot.textContent = q;
   const gift = Monet.giftReady();
   hud.giftDot.hidden = !gift;
-  hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()) || (!S.gacha.first10 && S.gems >= B.GACHA.first10));
+  hud.petDot.hidden = !(S.gacha.tickets > 0 || (!S.ads.freeSummon && Monet.adsOn()) || (!S.gacha.first10 && S.gems >= B.GACHA.first10) || expoReady());
   hud.arenaDot.hidden = !(S.arena.tickets > 0 || S.arena.rewardDay !== dayKey());
   hud.shopDot.hidden = !(S.shop.monthlyUntil > Date.now() && S.shop.monthlyDay !== dayKey());
   hud.gearDot.hidden = !S.items.some(it => isEquipped(it) && canEnchant(it));

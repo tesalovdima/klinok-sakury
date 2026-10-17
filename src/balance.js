@@ -271,6 +271,7 @@ const BAL = (() => {
     { id: 'summon',  name: 'Призвать питомца',            goal: 1,   gems: 40 },
     { id: 'dungeon', name: 'Пройти подземелье',           goal: 1,   gems: 60, crystalsK: 1 },
     { id: 'tower',   name: 'Пройти ярус башни',           goal: 1,   gems: 50, petals: 2 },
+    { id: 'exped',   name: 'Завершить экспедицию',        goal: 1,   gems: 40, crystalsK: 1 },
     { id: 'ad',      name: 'Получить бонус за рекламу',   goal: 1,   gems: 50 },
   ];
   const DAILY_CHEST = { gems: 150, xp: 200 };
