@@ -39,7 +39,7 @@ function expoStart(id) {
   const x = B.EXPO.find(v => v.id === id), pet = bestExpoPet();
   if (!x || !pet || (S.exped && S.exped.id)) return;
   S.exped = { id, until: Date.now() + x.hours * 3600e3, pet: pet.id };
-  saveLocal(); renderPanel();
+  saveLocal(); renderPanel(); updateSideButtons();
   toast(`${pet.p.name} отправлен: ${x.name}`);
 }
 function expoClaim() {
@@ -48,14 +48,14 @@ function expoClaim() {
   grant(expoReward(x));
   quest('exped');
   S.exped = { id: '', until: 0, pet: null };
-  saveLocal(); renderPanel();
+  saveLocal(); renderPanel(); updateSideButtons();
   toast(`Экспедиция: ${rewardText(expoReward(x))}`);
 }
 function expoSpeed() {
   const e = S.exped;
   if (!e || !e.id || S.gems < EXPO_SPEED) return;
   S.gems -= EXPO_SPEED; e.until = Date.now();
-  saveLocal(); renderPanel();
+  saveLocal(); renderPanel(); updateSideButtons();
   toast('Экспедиция ускорена');
 }
 function renderSummon() {
