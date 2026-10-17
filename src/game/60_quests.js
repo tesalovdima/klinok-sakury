@@ -54,10 +54,16 @@ function statValue(stat) {
   return S.stats[stat] || 0;
 }
 function achReady() { return B.ACH.filter(a => { const i = S.ach[a.id] || 0; return i < a.tiers.length && statValue(a.stat) >= a.tiers[i]; }); }
-let achNotified = '';
+let achNotified = '', chapterNotified = -1;
 function checkAch() {
   const r = achReady().map(a => a.id + (S.ach[a.id] || 0)).join();
   if (r && r !== achNotified) { achNotified = r; updateSideButtons(); }
+  const p = chapterProgress();
+  if (p && p.done && chapterNotified !== S.chapter.idx) {
+    chapterNotified = S.chapter.idx;
+    toast(`Глава «${p.c.title}»: награда ждёт`);
+    updateSideButtons();
+  }
 }
 
 /* ---------- выдача наград ---------- */

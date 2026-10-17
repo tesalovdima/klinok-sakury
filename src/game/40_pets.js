@@ -15,7 +15,7 @@ function renderSummon() {
       </div>
     </section>
     <div class="summon-btns">
-      ${!S.gacha.first10 ? `<button class="buy pink wide" data-act="summon" data-n="10" data-m="first10" data-cost="${F10}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">Первый ×10 за ${F10} · скидка</button>` : ''}
+      ${!S.gacha.first10 ? `<button class="buy pink wide ${S.gems < F10 ? 'poor' : ''}" data-act="summon" data-n="10" data-m="first10" data-cost="${F10}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">Первый ×10 за ${F10} · скидка</button>` : ''}
       ${S.gacha.tickets > 0 ? `<button class="buy pink wide" data-act="summon" data-n="1" data-m="ticket"><img src="${A.miscIcon('summon', 32)}" alt="">Призвать по билету · есть ${S.gacha.tickets}</button>` : ''}
       ${freeAd ? `<button class="buy ad wide" data-act="summon-ad">Бесплатный призыв за рекламу</button>` : ''}
       <div class="btn-row">

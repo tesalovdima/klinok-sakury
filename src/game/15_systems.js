@@ -52,16 +52,10 @@ function towerClaim() {
 }
 
 /* ---------- подземелья ---------- */
-function dungeonKeyCap() { return B.DKEYS.perDay + 2; }
-
 /* ---------- пробуждение ---------- */
 const awakenGain = () => B.AW.gain(S.maxStage);
 const canAwaken = () => S.maxStage >= B.AW.unlockStage;
 function awLevel(id) { return S.aw.lvl[id] || 0; }
-function awCostFor(id) {
-  const n = B.AW_BY[id];
-  return B.awCost(n, awLevel(id));
-}
 function buyAw(id) {
   const n = B.AW_BY[id];
   if (!n) return false;

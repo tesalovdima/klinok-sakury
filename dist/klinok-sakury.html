@@ -671,6 +671,13 @@ input { -webkit-user-select: text; user-select: text; }
   #tabs img { width: 24px; height: 24px; }
   .tower-num b { font-size: 36px; }
 }
+/* крупные числа не должны вылезать из полосы здоровья на узких экранах */
+@media (max-width: 420px) {
+  .bar.hp > span { font-size: 8.5px; letter-spacing: -.2px; }
+  .hero-badge { max-width: 250px; }
+  .cur { font-size: 12px; padding-right: 7px; }
+  .cur img { width: 18px; height: 18px; }
+}
 
 </style>
 
@@ -3767,7 +3774,16 @@ function seededOpts(it) {
 }
 let S = null;
 function rawGet() {
-  try { const st = P.getStorage && P.getStorage(); const v = st && st.getItem(SAVE_KEY); if (v) return v; } catch (e) { }
+  try {
+    const st = P.getStorage && P.getStorage();
+    if (st) {
+      const v = st.getItem(SAVE_KEY);
+      if (v) return v;
+      // перенос сохранения из localStorage в безопасное хранилище площадки
+      const old = localStorage.getItem(SAVE_KEY);
+      if (old) { try { st.setItem(SAVE_KEY, old); } catch (e) { } return old; }
+    }
+  } catch (e) { }
   try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
 }
 function rawSet(v) {
@@ -3861,7 +3877,7 @@ const itemById = id => S.items.find(i => i.id === id);
 const isEquipped = it => S.equip[it.slot] === it.id;
 const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
 const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
-const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', defPct: 'Защита', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
+const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака %', hpPct: 'Здоровье %', defPct: 'Защита %', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
 const statStr = (k, v) => ['atkPct', 'hpPct', 'defPct', 'crit', 'critDmg', 'goldPct', 'xpPct', 'dropPct'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
 function itemTotals(it) {
   const s = B.itemStats(it.slot, it.g, it.e || 0);
@@ -4076,6 +4092,10 @@ function bossWin() {
   S.stage++;
   if (S.stage > S.maxStage) S.maxStage = S.stage;
   if (S.maxStage > (S.bestStage || 0)) S.bestStage = S.maxStage;
+  if (S.maxStage === B.AW.unlockStage && S.aw.count === 0) {
+    toast('Открылось пробуждение: вкладка «Башня»');
+    log('Доступно пробуждение: перерождение даст лепестки сакуры и вечные бонусы. Вкладка «Башня» → «Пробуждение».', 'good');
+  }
   S.kills = 0;
   R.boss = null;
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
@@ -4408,7 +4428,7 @@ function frame(now) {
   if (hudTick > .12) { hudTick = 0; updateHud(); }
   if (saveTick > 5) { saveTick = 0; saveLocal(); }
   if (cloudTick > 30) { cloudTick = 0; Cloud.push(); }
-  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); }
+  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); }
 }
 
 function update(dtRaw) {
@@ -4773,16 +4793,10 @@ function towerClaim() {
 }
 
 /* ---------- подземелья ---------- */
-function dungeonKeyCap() { return B.DKEYS.perDay + 2; }
-
 /* ---------- пробуждение ---------- */
 const awakenGain = () => B.AW.gain(S.maxStage);
 const canAwaken = () => S.maxStage >= B.AW.unlockStage;
 function awLevel(id) { return S.aw.lvl[id] || 0; }
-function awCostFor(id) {
-  const n = B.AW_BY[id];
-  return B.awCost(n, awLevel(id));
-}
 function buyAw(id) {
   const n = B.AW_BY[id];
   if (!n) return false;
@@ -4949,6 +4963,13 @@ function updateHud() {
   const bl = S.boost.goldUntil - Date.now();
   hud.boostChip.hidden = bl <= 0;
   if (bl > 0) hud.boostTime.textContent = left(bl);
+  // пока автобой фармит после поражения, кнопка показывает, сколько ещё ждать
+  if (S.autoBoss && R.bossCd > 0 && S.kills >= 10 && !R.boss) {
+    hud.bossBtn.textContent = `Фарм ${Math.ceil(R.bossCd)}`;
+    hud.bossBtn.disabled = true;
+  } else if (hud.bossBtn.textContent !== 'Босс') {
+    hud.bossBtn.textContent = 'Босс';
+  }
   for (const b of document.querySelectorAll('[data-cost]')) {
     const cur = b.dataset.cur === 'cry' ? S.crystals : b.dataset.cur === 'gem' ? S.gems : S.gold;
     b.classList.toggle('poor', +b.dataset.cost > cur);
@@ -5496,14 +5517,15 @@ function renderTrials() {
 
 /* ---------- башня ---------- */
 const awBadges = () => S.aw.petals > 0 ? `<span class="chip plain"><img src="${A.miscIcon('petal', 32)}" alt="">${fmt(S.aw.petals)}</span>` : '';
-function powerTag(guard) {
-  const gp = B.power(guard), mine = R.power;
-  const r = gp / Math.max(1, mine);
-  return r < .85 ? ['легко', 'easy'] : r > 1.4 ? ['сложно', 'hard'] : ['на равных', 'even'];
+// честная оценка сложности: прогоняем бой и смотрим время и исход
+function fightTag(guard, stageEq) {
+  const r = simFight(guard, stageEq);
+  if (!r.win) return ['сложно', 'hard'];
+  return r.t < 8 ? ['легко', 'easy'] : r.t < 20 ? ['на равных', 'even'] : ['сложно', 'hard'];
 }
 function renderTower() {
   const f = towerFloor(), open = towerOpen(), guard = towerGuardFor(Math.min(f, B.TOWER.floors));
-  const tag = powerTag(guard), claimable = towerClaimable();
+  const tag = fightTag(guard, guard.stageEq), claimable = towerClaimable();
   const rw = towerRewardFor(Math.min(f, B.TOWER.floors));
   const canClaim = claimable;
   return `
@@ -5543,7 +5565,7 @@ function renderDungeons() {
       </div>
     </section>
     <ul class="rows">${B.DUNGEONS.map(dn => {
-      const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = powerTag(guard);
+      const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = fightTag(guard, S.stage);
       return `<li class="row"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
         <div class="row-main"><b>${dn.name}</b><span class="meta">${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span></span>
         <span class="val">${rewardSummary(rw)}</span></div>
@@ -5701,9 +5723,8 @@ function towerAuto() {
   }
   drawTowerSummary(from - 1, n, total);
 }
-function addRewards(a, b) { const o = { ...a }; for (const k in b) o[k] = (o[k] || 0) + b[k]; return o; }
 function drawTowerSummary(from, n, total) {
-  const f = towerFloor(), g = towerGuardFor(Math.min(f, B.TOWER.floors)), tag = powerTag(g);
+  const f = towerFloor(), g = towerGuardFor(Math.min(f, B.TOWER.floors)), tag = fightTag(g, g.stageEq);
   openModal(sheet('Авто-подъём', n ? `Пройдено ${n} ${plural(n, ['ярус', 'яруса', 'ярусов'])}` : 'Ни одного яруса', `
     <dl class="compare"><dt>Было</dt><dd>ярус ${from + 1}</dd><dd></dd><dt>Стало</dt><dd class="up">ярус ${S.tower.best}</dd><dd></dd>
       ${Object.keys(total).length ? `<dt>Награды</dt><dd class="up">${rewardSummary(total)}</dd><dd></dd>` : ''}
@@ -5770,7 +5791,7 @@ function renderSummon() {
       </div>
     </section>
     <div class="summon-btns">
-      ${!S.gacha.first10 ? `<button class="buy pink wide" data-act="summon" data-n="10" data-m="first10" data-cost="${F10}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">Первый ×10 за ${F10} · скидка</button>` : ''}
+      ${!S.gacha.first10 ? `<button class="buy pink wide ${S.gems < F10 ? 'poor' : ''}" data-act="summon" data-n="10" data-m="first10" data-cost="${F10}" data-cur="gem"><img src="${A.miscIcon('gem', 32)}" alt="">Первый ×10 за ${F10} · скидка</button>` : ''}
       ${S.gacha.tickets > 0 ? `<button class="buy pink wide" data-act="summon" data-n="1" data-m="ticket"><img src="${A.miscIcon('summon', 32)}" alt="">Призвать по билету · есть ${S.gacha.tickets}</button>` : ''}
       ${freeAd ? `<button class="buy ad wide" data-act="summon-ad">Бесплатный призыв за рекламу</button>` : ''}
       <div class="btn-row">
@@ -6230,10 +6251,16 @@ function statValue(stat) {
   return S.stats[stat] || 0;
 }
 function achReady() { return B.ACH.filter(a => { const i = S.ach[a.id] || 0; return i < a.tiers.length && statValue(a.stat) >= a.tiers[i]; }); }
-let achNotified = '';
+let achNotified = '', chapterNotified = -1;
 function checkAch() {
   const r = achReady().map(a => a.id + (S.ach[a.id] || 0)).join();
   if (r && r !== achNotified) { achNotified = r; updateSideButtons(); }
+  const p = chapterProgress();
+  if (p && p.done && chapterNotified !== S.chapter.idx) {
+    chapterNotified = S.chapter.idx;
+    toast(`Глава «${p.c.title}»: награда ждёт`);
+    updateSideButtons();
+  }
 }
 
 /* ---------- выдача наград ---------- */
@@ -6834,6 +6861,7 @@ hud.skillDock.addEventListener('click', e => {
 function applyState(o) {
   S = o;
   R.monsters = []; R.boss = null; R.bossPending = false; R.warn = 0; R.fx = [];
+  R.bossCd = 0; R.bossFails = 0; R.towerRun = false;
   R.st = null; dailyReset(); recalc(); R.hero.hp = R.st.hp; R.hero.dead = 0;
   R.shopGrade = unlockedGrade(); Arena.opp = null;
   AU.setVolume('music', S.settings.music); AU.setVolume('sfx', S.settings.sfx);

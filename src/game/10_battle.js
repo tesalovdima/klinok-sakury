@@ -147,6 +147,10 @@ function bossWin() {
   S.stage++;
   if (S.stage > S.maxStage) S.maxStage = S.stage;
   if (S.maxStage > (S.bestStage || 0)) S.bestStage = S.maxStage;
+  if (S.maxStage === B.AW.unlockStage && S.aw.count === 0) {
+    toast('Открылось пробуждение: вкладка «Башня»');
+    log('Доступно пробуждение: перерождение даст лепестки сакуры и вечные бонусы. Вкладка «Башня» → «Пробуждение».', 'good');
+  }
   S.kills = 0;
   R.boss = null;
   if (first) { S.gems += 10; log('Первая победа над боссом этапа: +10 самоцветов.', 'good'); }
@@ -479,7 +483,7 @@ function frame(now) {
   if (hudTick > .12) { hudTick = 0; updateHud(); }
   if (saveTick > 5) { saveTick = 0; saveLocal(); }
   if (cloudTick > 30) { cloudTick = 0; Cloud.push(); }
-  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); }
+  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); }
 }
 
 function update(dtRaw) {

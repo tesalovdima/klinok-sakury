@@ -664,3 +664,10 @@ input { -webkit-user-select: text; user-select: text; }
   #tabs img { width: 24px; height: 24px; }
   .tower-num b { font-size: 36px; }
 }
+/* крупные числа не должны вылезать из полосы здоровья на узких экранах */
+@media (max-width: 420px) {
+  .bar.hp > span { font-size: 8.5px; letter-spacing: -.2px; }
+  .hero-badge { max-width: 250px; }
+  .cur { font-size: 12px; padding-right: 7px; }
+  .cur img { width: 18px; height: 18px; }
+}

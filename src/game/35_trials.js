@@ -7,14 +7,15 @@ function renderTrials() {
 
 /* ---------- башня ---------- */
 const awBadges = () => S.aw.petals > 0 ? `<span class="chip plain"><img src="${A.miscIcon('petal', 32)}" alt="">${fmt(S.aw.petals)}</span>` : '';
-function powerTag(guard) {
-  const gp = B.power(guard), mine = R.power;
-  const r = gp / Math.max(1, mine);
-  return r < .85 ? ['легко', 'easy'] : r > 1.4 ? ['сложно', 'hard'] : ['на равных', 'even'];
+// честная оценка сложности: прогоняем бой и смотрим время и исход
+function fightTag(guard, stageEq) {
+  const r = simFight(guard, stageEq);
+  if (!r.win) return ['сложно', 'hard'];
+  return r.t < 8 ? ['легко', 'easy'] : r.t < 20 ? ['на равных', 'even'] : ['сложно', 'hard'];
 }
 function renderTower() {
   const f = towerFloor(), open = towerOpen(), guard = towerGuardFor(Math.min(f, B.TOWER.floors));
-  const tag = powerTag(guard), claimable = towerClaimable();
+  const tag = fightTag(guard, guard.stageEq), claimable = towerClaimable();
   const rw = towerRewardFor(Math.min(f, B.TOWER.floors));
   const canClaim = claimable;
   return `
@@ -54,7 +55,7 @@ function renderDungeons() {
       </div>
     </section>
     <ul class="rows">${B.DUNGEONS.map(dn => {
-      const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = powerTag(guard);
+      const guard = B.dungeonGuard(dn.id, S.stage), rw = B.dungeonReward(dn.id, S.stage), tag = fightTag(guard, S.stage);
       return `<li class="row"><img src="${A.miscIcon(dn.icon, 64)}" alt="">
         <div class="row-main"><b>${dn.name}</b><span class="meta">${dn.desc} · <span class="diff ${tag[1]}">${tag[0]}</span></span>
         <span class="val">${rewardSummary(rw)}</span></div>
@@ -212,9 +213,8 @@ function towerAuto() {
   }
   drawTowerSummary(from - 1, n, total);
 }
-function addRewards(a, b) { const o = { ...a }; for (const k in b) o[k] = (o[k] || 0) + b[k]; return o; }
 function drawTowerSummary(from, n, total) {
-  const f = towerFloor(), g = towerGuardFor(Math.min(f, B.TOWER.floors)), tag = powerTag(g);
+  const f = towerFloor(), g = towerGuardFor(Math.min(f, B.TOWER.floors)), tag = fightTag(g, g.stageEq);
   openModal(sheet('Авто-подъём', n ? `Пройдено ${n} ${plural(n, ['ярус', 'яруса', 'ярусов'])}` : 'Ни одного яруса', `
     <dl class="compare"><dt>Было</dt><dd>ярус ${from + 1}</dd><dd></dd><dt>Стало</dt><dd class="up">ярус ${S.tower.best}</dd><dd></dd>
       ${Object.keys(total).length ? `<dt>Награды</dt><dd class="up">${rewardSummary(total)}</dd><dd></dd>` : ''}

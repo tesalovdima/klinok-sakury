@@ -209,6 +209,7 @@ hud.skillDock.addEventListener('click', e => {
 function applyState(o) {
   S = o;
   R.monsters = []; R.boss = null; R.bossPending = false; R.warn = 0; R.fx = [];
+  R.bossCd = 0; R.bossFails = 0; R.towerRun = false;
   R.st = null; dailyReset(); recalc(); R.hero.hp = R.st.hp; R.hero.dead = 0;
   R.shopGrade = unlockedGrade(); Arena.opp = null;
   AU.setVolume('music', S.settings.music); AU.setVolume('sfx', S.settings.sfx);

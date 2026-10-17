@@ -185,7 +185,16 @@ function seededOpts(it) {
 }
 let S = null;
 function rawGet() {
-  try { const st = P.getStorage && P.getStorage(); const v = st && st.getItem(SAVE_KEY); if (v) return v; } catch (e) { }
+  try {
+    const st = P.getStorage && P.getStorage();
+    if (st) {
+      const v = st.getItem(SAVE_KEY);
+      if (v) return v;
+      // перенос сохранения из localStorage в безопасное хранилище площадки
+      const old = localStorage.getItem(SAVE_KEY);
+      if (old) { try { st.setItem(SAVE_KEY, old); } catch (e) { } return old; }
+    }
+  } catch (e) { }
   try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
 }
 function rawSet(v) {
@@ -279,7 +288,7 @@ const itemById = id => S.items.find(i => i.id === id);
 const isEquipped = it => S.equip[it.slot] === it.id;
 const itemName = it => (it.e > 0 ? `+${it.e} ` : '') + B.NAMES[it.slot][it.g];
 const scrollKind = slot => slot === 'weapon' ? 'w' : 'a';
-const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака', hpPct: 'Здоровье', defPct: 'Защита', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
+const STAT_LABEL = { atk: 'Атака', def: 'Защита', hp: 'Здоровье', atkPct: 'Атака %', hpPct: 'Здоровье %', defPct: 'Защита %', regenPct: 'Восстановление', crit: 'Шанс крита', critDmg: 'Урон крита', goldPct: 'Золото', xpPct: 'Опыт', dropPct: 'Шансы свитков' };
 const statStr = (k, v) => ['atkPct', 'hpPct', 'defPct', 'crit', 'critDmg', 'goldPct', 'xpPct', 'dropPct'].includes(k) ? '+' + pct(v) : k === 'regenPct' ? pct(v) + '/с' : fmt(v);
 function itemTotals(it) {
   const s = B.itemStats(it.slot, it.g, it.e || 0);

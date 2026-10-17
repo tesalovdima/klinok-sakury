@@ -58,6 +58,13 @@ function updateHud() {
   const bl = S.boost.goldUntil - Date.now();
   hud.boostChip.hidden = bl <= 0;
   if (bl > 0) hud.boostTime.textContent = left(bl);
+  // пока автобой фармит после поражения, кнопка показывает, сколько ещё ждать
+  if (S.autoBoss && R.bossCd > 0 && S.kills >= 10 && !R.boss) {
+    hud.bossBtn.textContent = `Фарм ${Math.ceil(R.bossCd)}`;
+    hud.bossBtn.disabled = true;
+  } else if (hud.bossBtn.textContent !== 'Босс') {
+    hud.bossBtn.textContent = 'Босс';
+  }
   for (const b of document.querySelectorAll('[data-cost]')) {
     const cur = b.dataset.cur === 'cry' ? S.crystals : b.dataset.cur === 'gem' ? S.gems : S.gold;
     b.classList.toggle('poor', +b.dataset.cost > cur);
