@@ -241,7 +241,18 @@ const BAL = (() => {
     { name: 'Мастер',  min: 2000, daily: 420, color: '#ff5fd2' },
   ];
   const league = r => { let i = 0; LEAGUES.forEach((l, j) => { if (r >= l.min) i = j; }); return i; };
-  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.05 };
+  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.05, seasonDays: 7, seasonEpoch: Date.UTC(2026, 9, 5) };
+  const arenaSeason = (now = Date.now()) => {
+    const span = ARENA.seasonDays * 864e5;
+    let idx = Math.floor((now - ARENA.seasonEpoch) / span);
+    if (!Number.isFinite(idx) || idx < 0) idx = 0;
+    const start = ARENA.seasonEpoch + idx * span;
+    return { idx, num: idx + 1, start, end: start + span, left: start + span - now };
+  };
+  const arenaSeasonReward = rating => {
+    const i = league(rating);
+    return { gems: 60 + 60 * i, crystals: 200 + 250 * i, petals: Math.floor(i / 2), summon: i >= 2 ? 1 : 0 };
+  };
   const eloExpect = (a, b) => 1 / (1 + Math.pow(10, (b - a) / 400));
   const eloDelta = (a, b, win) => Math.round(ARENA.K * ((win ? 1 : 0) - eloExpect(a, b)));
   // урон в PvP: защита режет не более 45% и мягче, чтобы бои не были вечными
@@ -484,7 +495,7 @@ const BAL = (() => {
 
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
-    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP,
+    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
     DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,
@@ -3048,7 +3059,7 @@ const SKILL_MAX = 20;
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 6;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -3076,7 +3087,7 @@ function newState() {
     stats: { kills: 0, bosses: 0, breaks: 0, enchants: 0, best: 0, summons: 0, arenaWins: 0, arenaFights: 0, dungeonRuns: 0, awakenings: 0, rerolls: 0 },
     pets: { owned: {}, active: null },
     gacha: { pity: 0, total: 0, tickets: 1, first10: false },
-    arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0 },
+    arena: { rating: B.ARENA.start, day: '', tickets: B.ARENA.tickets, buys: 0, wins: 0, losses: 0, rewardDay: '', seed: 1, fights: 0, season: -1, history: [] },
     quests: { day: '', prog: {}, claimed: {}, chest: false },
     ach: {},
     login: { idx: 0, last: '' },
@@ -3827,7 +3838,7 @@ function frame(now) {
   if (hudTick > .12) { hudTick = 0; updateHud(); }
   if (saveTick > 5) { saveTick = 0; saveLocal(); }
   if (cloudTick > 30) { cloudTick = 0; Cloud.push(); }
-  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); Social.sync(); }
+  if (minuteTick > 20) { minuteTick = 0; dailyReset(); ensureArenaSeason(); updateSideButtons(); checkAch(); Social.sync(); }
   // чат: подтягиваем новые сообщения, пока открыта вкладка
   if (R.tab === 'social' && R.socialSeg === 'chat') {
     R.chatT = (R.chatT || 0) + dtRaw;
@@ -5027,7 +5038,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.3</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.4</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -6019,17 +6030,56 @@ function boardHTML() {
     return `<li class="${p.me ? 'me' : ''}"><span class="place">${rows.indexOf(p) + 1}</span><span class="nm">${esc(p.name)}${p.shadow ? '<small>тень</small>' : p.real ? '<small class="pl">игрок</small>' : ''}</span><span class="lg" style="color:${lg.color}">${lg.name}</span><b>${p.rating}</b></li>`;
   }).join('');
 }
+/* ---------- сезоны арены ---------- */
+function ensureArenaSeason() {
+  const info = B.arenaSeason();
+  if (!S || !S.arena) return info;
+  const a = S.arena;
+  if (!Array.isArray(a.history)) a.history = [];
+  if (a.season === info.idx) return info;
+  const had = a.season >= 0 && (a.fights > 0 || a.wins > 0 || a.losses > 0);
+  if (had) {
+    const rw = B.arenaSeasonReward(a.rating);
+    a.history.unshift({ season: info.idx, rating: a.rating, league: B.league(a.rating), reward: rw, wins: a.wins, losses: a.losses });
+    a.history = a.history.slice(0, 5);
+    const prev = info.idx;
+    a.rating = B.ARENA.start; a.wins = 0; a.losses = 0; a.fights = 0; a.buys = 0; a.seed = 1;
+    a.tickets = B.ARENA.tickets; a.day = ''; a.rewardDay = '';
+    a.season = info.idx;
+    grant(rw, true);
+    toast(`Сезон арены ${prev} завершён: награда ${rewardText(rw)}`);
+    log(`Сезон арены ${prev} завершён. Рейтинг сброшен до ${B.ARENA.start}, награда выдана.`, 'good');
+  } else {
+    a.season = info.idx;
+  }
+  saveLocal();
+  return info;
+}
+
 function renderArena() {
   if (!unlockOk('arena')) return lockCard('arena', 'Арена');
+  const season = ensureArenaSeason();
   const a = S.arena, li = B.league(a.rating), lg = B.LEAGUES[li], next = B.LEAGUES[li + 1];
   const canClaim = a.rewardDay !== dayKey();
   const ops = opponents();
+  const sr = B.arenaSeasonReward(a.rating);
+  const hist = (a.history || []).slice(0, 3);
   return `
     <section class="card league-card" style="--lg:${lg.color}">
       <div class="badge"><img src="${A.miscIcon('trophy', 64)}" alt=""></div>
       <div class="league-meta"><h2>${lg.name}</h2><p class="sub">Рейтинг <b>${a.rating}</b>${next ? ` · до лиги «${next.name}» ${next.min - a.rating}` : ''}</p>
         <p class="sub">Побед ${a.wins} · поражений ${a.losses}</p></div>
       <button class="buy ${canClaim ? 'pink' : ''} small" data-act="arena-claim" ${canClaim ? '' : 'disabled'}><img src="${A.miscIcon('gem', 32)}" alt="">${canClaim ? `+${lg.daily}` : 'Завтра'}</button>
+    </section>
+    <section class="card season-card">
+      <div class="card-head"><h3>Сезон ${season.num}</h3><span class="sub">до конца ${left(season.left)}</span></div>
+      <p class="sub">Награда за лигу «${lg.name}»: ${rewardText(sr)}</p>
+      ${hist.length ? `<ul class="rows season-hist">${hist.map(h => `<li class="row season-row">
+        <img src="${A.miscIcon('trophy', 48)}" alt="">
+        <div class="row-main"><b>Сезон ${h.season} · ${B.LEAGUES[h.league].name}</b>
+          <span class="meta">${h.rating} рейтинга · ${h.wins}–${h.losses}</span>
+          <span class="meta">Награда: ${rewardText(h.reward)}</span></div></li>`).join('')}</ul>`
+      : '<p class="note">Пока нет завершённых сезонов. Играйте бои до конца недели — награда придёт автоматически.</p>'}
     </section>
     <div class="ticket-row">
       <span class="chip plain"><img src="${A.miscIcon('ticket', 32)}" alt="">Билеты ${a.tickets}/${B.ARENA.tickets}</span>
@@ -6889,6 +6939,7 @@ async function start(hot) {
   AU.setVolume('music', S.settings.music); AU.setVolume('sfx', S.settings.sfx);
   resize();
   recalc(); R.hero.hp = R.st.hp;
+  ensureArenaSeason();
   R.shopGrade = unlockedGrade();
   updateHudStatic(); updateHud();
   for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === R.tab ? 'true' : 'false');

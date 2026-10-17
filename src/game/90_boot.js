@@ -264,6 +264,7 @@ async function start(hot) {
   AU.setVolume('music', S.settings.music); AU.setVolume('sfx', S.settings.sfx);
   resize();
   recalc(); R.hero.hp = R.st.hp;
+  ensureArenaSeason();
   R.shopGrade = unlockedGrade();
   updateHudStatic(); updateHud();
   for (const b of document.querySelectorAll('#tabs [data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === R.tab ? 'true' : 'false');

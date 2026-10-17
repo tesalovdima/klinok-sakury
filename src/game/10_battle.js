@@ -486,7 +486,7 @@ function frame(now) {
   if (hudTick > .12) { hudTick = 0; updateHud(); }
   if (saveTick > 5) { saveTick = 0; saveLocal(); }
   if (cloudTick > 30) { cloudTick = 0; Cloud.push(); }
-  if (minuteTick > 20) { minuteTick = 0; dailyReset(); updateSideButtons(); checkAch(); Social.sync(); }
+  if (minuteTick > 20) { minuteTick = 0; dailyReset(); ensureArenaSeason(); updateSideButtons(); checkAch(); Social.sync(); }
   // чат: подтягиваем новые сообщения, пока открыта вкладка
   if (R.tab === 'social' && R.socialSeg === 'chat') {
     R.chatT = (R.chatT || 0) + dtRaw;

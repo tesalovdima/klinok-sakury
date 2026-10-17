@@ -241,7 +241,18 @@ const BAL = (() => {
     { name: 'Мастер',  min: 2000, daily: 420, color: '#ff5fd2' },
   ];
   const league = r => { let i = 0; LEAGUES.forEach((l, j) => { if (r >= l.min) i = j; }); return i; };
-  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.05 };
+  const ARENA = { start: 1000, K: 32, tickets: 5, refillCost: 60, refillMax: 3, winGems: 20, loseGems: 5, hpMul: 1.05, seasonDays: 7, seasonEpoch: Date.UTC(2026, 9, 5) };
+  const arenaSeason = (now = Date.now()) => {
+    const span = ARENA.seasonDays * 864e5;
+    let idx = Math.floor((now - ARENA.seasonEpoch) / span);
+    if (!Number.isFinite(idx) || idx < 0) idx = 0;
+    const start = ARENA.seasonEpoch + idx * span;
+    return { idx, num: idx + 1, start, end: start + span, left: start + span - now };
+  };
+  const arenaSeasonReward = rating => {
+    const i = league(rating);
+    return { gems: 60 + 60 * i, crystals: 200 + 250 * i, petals: Math.floor(i / 2), summon: i >= 2 ? 1 : 0 };
+  };
   const eloExpect = (a, b) => 1 / (1 + Math.pow(10, (b - a) / 400));
   const eloDelta = (a, b, win) => Math.round(ARENA.K * ((win ? 1 : 0) - eloExpect(a, b)));
   // урон в PvP: защита режет не более 45% и мягче, чтобы бои не были вечными
@@ -484,7 +495,7 @@ const BAL = (() => {
 
   return {
     RAR, PET_BONUS, PETS, PET, PET_ATK, PET_DUPES, PET_MAX_STARS, starMult, petValue, COLLECTION_SHARE, GACHA, rollRarity, petBonuses,
-    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP,
+    LEAGUES, league, ARENA, eloExpect, eloDelta, pvpHit, BOT_NAMES, UNLOCK, CRIT_CAP, arenaSeason, arenaSeasonReward,
     DAILY, DAILY_CHEST, QUEST_XP, ACH, LOGIN, PASS, passReward, seasonOf, seasonEnd, EVENT,
     IAP, IAP_BY, GEM_SHOP, ADS, FUND, FUND_TOTAL,
     GRADES, GM, GP, SLOTS, SLOT, ARMOR_SET, NAMES, SAFE, MAX_ENCH, enchChance, enchMult, ENCH,

@@ -739,3 +739,6 @@ input { -webkit-user-select: text; user-select: text; }
 .event-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,16,43,.04) 20%, rgba(24,16,43,.92)); }
 .event-banner span { position: relative; z-index: 1; font: 900 20px/1.1 var(--font-display); color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
 
+.season-card .season-hist { margin-top: 8px; }
+.season-card .season-hist .row { grid-template-columns: 40px minmax(0, 1fr); }
+.season-card .season-hist .row-main { gap: 2px; }

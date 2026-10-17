@@ -125,17 +125,56 @@ function boardHTML() {
     return `<li class="${p.me ? 'me' : ''}"><span class="place">${rows.indexOf(p) + 1}</span><span class="nm">${esc(p.name)}${p.shadow ? '<small>тень</small>' : p.real ? '<small class="pl">игрок</small>' : ''}</span><span class="lg" style="color:${lg.color}">${lg.name}</span><b>${p.rating}</b></li>`;
   }).join('');
 }
+/* ---------- сезоны арены ---------- */
+function ensureArenaSeason() {
+  const info = B.arenaSeason();
+  if (!S || !S.arena) return info;
+  const a = S.arena;
+  if (!Array.isArray(a.history)) a.history = [];
+  if (a.season === info.idx) return info;
+  const had = a.season >= 0 && (a.fights > 0 || a.wins > 0 || a.losses > 0);
+  if (had) {
+    const rw = B.arenaSeasonReward(a.rating);
+    a.history.unshift({ season: info.idx, rating: a.rating, league: B.league(a.rating), reward: rw, wins: a.wins, losses: a.losses });
+    a.history = a.history.slice(0, 5);
+    const prev = info.idx;
+    a.rating = B.ARENA.start; a.wins = 0; a.losses = 0; a.fights = 0; a.buys = 0; a.seed = 1;
+    a.tickets = B.ARENA.tickets; a.day = ''; a.rewardDay = '';
+    a.season = info.idx;
+    grant(rw, true);
+    toast(`Сезон арены ${prev} завершён: награда ${rewardText(rw)}`);
+    log(`Сезон арены ${prev} завершён. Рейтинг сброшен до ${B.ARENA.start}, награда выдана.`, 'good');
+  } else {
+    a.season = info.idx;
+  }
+  saveLocal();
+  return info;
+}
+
 function renderArena() {
   if (!unlockOk('arena')) return lockCard('arena', 'Арена');
+  const season = ensureArenaSeason();
   const a = S.arena, li = B.league(a.rating), lg = B.LEAGUES[li], next = B.LEAGUES[li + 1];
   const canClaim = a.rewardDay !== dayKey();
   const ops = opponents();
+  const sr = B.arenaSeasonReward(a.rating);
+  const hist = (a.history || []).slice(0, 3);
   return `
     <section class="card league-card" style="--lg:${lg.color}">
       <div class="badge"><img src="${A.miscIcon('trophy', 64)}" alt=""></div>
       <div class="league-meta"><h2>${lg.name}</h2><p class="sub">Рейтинг <b>${a.rating}</b>${next ? ` · до лиги «${next.name}» ${next.min - a.rating}` : ''}</p>
         <p class="sub">Побед ${a.wins} · поражений ${a.losses}</p></div>
       <button class="buy ${canClaim ? 'pink' : ''} small" data-act="arena-claim" ${canClaim ? '' : 'disabled'}><img src="${A.miscIcon('gem', 32)}" alt="">${canClaim ? `+${lg.daily}` : 'Завтра'}</button>
+    </section>
+    <section class="card season-card">
+      <div class="card-head"><h3>Сезон ${season.num}</h3><span class="sub">до конца ${left(season.left)}</span></div>
+      <p class="sub">Награда за лигу «${lg.name}»: ${rewardText(sr)}</p>
+      ${hist.length ? `<ul class="rows season-hist">${hist.map(h => `<li class="row season-row">
+        <img src="${A.miscIcon('trophy', 48)}" alt="">
+        <div class="row-main"><b>Сезон ${h.season} · ${B.LEAGUES[h.league].name}</b>
+          <span class="meta">${h.rating} рейтинга · ${h.wins}–${h.losses}</span>
+          <span class="meta">Награда: ${rewardText(h.reward)}</span></div></li>`).join('')}</ul>`
+      : '<p class="note">Пока нет завершённых сезонов. Играйте бои до конца недели — награда придёт автоматически.</p>'}
     </section>
     <div class="ticket-row">
       <span class="chip plain"><img src="${A.miscIcon('ticket', 32)}" alt="">Билеты ${a.tickets}/${B.ARENA.tickets}</span>
