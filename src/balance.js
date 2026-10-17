@@ -475,6 +475,7 @@ const BAL = (() => {
   const UNLOCK = {
     pets:      { level: 5,  label: 'уровень 5' },
     arena:     { stage: 12, label: 'этап 12' },
+    world:     { stage: 15, label: 'этап 15' },
     dungeon:   { stage: 6,  label: 'этап 6' },
     awakening: { stage: 50, label: 'этап 50' },
     chat:      { stage: 8,  label: 'этап 8' },

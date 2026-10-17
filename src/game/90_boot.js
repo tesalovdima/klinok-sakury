@@ -65,7 +65,11 @@ document.addEventListener('click', async e => {
     case 'mult': R.mult = b.dataset.v === 'max' ? 'max' : +b.dataset.v; renderPanel(); break;
     case 'heroseg': R.heroSeg = b.dataset.v; renderPanel(); break;
     case 'petseg': R.petSeg = b.dataset.v; renderPanel(); break;
-    case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); break;
+    case 'trialseg': R.trialSeg = b.dataset.v; renderPanel(); if (R.trialSeg === 'world') World.load(true); break;
+    case 'world-hit': World.hit(); break;
+    case 'world-claim': World.claim(); break;
+    case 'world-refresh': World.load(true); break;
+    case 'world-retry': NET.probe(true).then(ok => { World.load(true); if (!ok) toast('Сервер недоступен'); }); break;
     case 'socialseg': R.socialSeg = b.dataset.v; renderPanel(); Social.enter(); break;
     case 'event-open': openEvent(); break;
     case 'event-tab': R.eventTab = b.dataset.v; openEvent(R.eventTab); break;

@@ -43,6 +43,64 @@ state_lock = threading.Lock()
 state = {"players": {}, "chat": [], "seq": 1}
 last = {}
 
+WORLD = {"base_hp": 1.6e9, "per_player": .5, "hit_gap": 45, "respawn": 600, "max_hit": .15,
+         "names": ["Древень Тысячи Лепестков", "Страж Алого Сада", "Корень Забвения", "Хранитель Ханами"]}
+
+
+def utc_day():
+    return time.strftime("%Y-%m-%d", time.gmtime())
+
+
+def world_players():
+    t = now()
+    return sum(1 for p in state["players"].values() if t - int(p.get("ts", 0)) < 7 * 86400)
+
+
+def world_reset(serial=1, hp_mul=1.0, power=0, base=None):
+    n = max(1, world_players())
+    base_hp = base if base else max(20e6, (power * 180 * 30) if power else 0)
+    max_hp = int(base_hp * (1 + WORLD["per_player"] * (n - 1)) * hp_mul)
+    state["world"] = {
+        "day": utc_day(), "serial": serial, "name": WORLD["names"][(serial - 1) % len(WORLD["names"])],
+        "hp": max_hp, "maxHp": max_hp, "startedAt": now(), "killedAt": 0,
+        "dmg": {}, "names": {}, "claimed": {},
+    }
+    return state["world"]
+
+
+def world_ensure():
+    w = state.get("world") or {}
+    if not w or w.get("day") != utc_day():
+        return world_reset(1)
+    if w.get("killedAt") and now() - int(w["killedAt"]) > WORLD["respawn"]:
+        return world_reset(int(w.get("serial", 1)) + 1, 1.1, base=int(w.get("maxHp", 20e6)))
+    return w
+
+
+def world_public(pid):
+    w = world_ensure()
+    rows = sorted(w["dmg"].items(), key=lambda kv: -kv[1])
+    top = [{"name": w["names"].get(k, "Игрок"), "damage": int(v)} for k, v in rows[:10]]
+    rank = next((i + 1 for i, (k, _) in enumerate(rows) if k == pid), 0)
+    killed = bool(w.get("killedAt"))
+    rew = w["claimed"].get(pid) if killed else None
+    return {
+        "ok": True, "id": f"{w['day']}-{w['serial']}", "name": w["name"], "hp": int(w["hp"]), "maxHp": int(w["maxHp"]),
+        "killed": killed, "respawnIn": max(0, WORLD["respawn"] - (now() - int(w["killedAt"]))) if killed else 0,
+        "players": len(w["dmg"]), "top": top, "myDamage": int(w["dmg"].get(pid, 0)), "rank": rank,
+        "claimable": bool(killed and pid in w["dmg"] and pid not in w["claimed"]),
+        "rewards": rew,
+        "wait": max(0, WORLD["hit_gap"] - int(now() - last.get("world:" + pid, 0))),
+    }
+
+
+def world_reward(pid):
+    w = world_ensure()
+    total = sum(w["dmg"].values()) or 1
+    share = w["dmg"].get(pid, 0) / total
+    return {"gems": int(60 + 300 * share), "crystals": int(300 + 1500 * share),
+            "petals": int(1 + (share >= .25) + (share >= .5))}
+
 
 def now():
     return int(time.time())
@@ -58,6 +116,7 @@ def load():
     state.setdefault("players", {})
     state.setdefault("chat", [])
     state.setdefault("seq", 1)
+    state.setdefault("world", {})
 
 
 def save():
@@ -209,6 +268,10 @@ class Handler(BaseHTTPRequestHandler):
                     "st": p.get("st"), "look": p.get("look"),
                 })
             return self.send_json({"ok": True, "players": out})
+        if path == "/api/world":
+            pid = (q.get("pid") or [""])[0]
+            with state_lock:
+                return self.send_json(world_public(pid))
         # static
         if path == "/":
             path = "/index.html"
@@ -295,6 +358,59 @@ class Handler(BaseHTTPRequestHandler):
                 state["players"][pid] = p
                 save()
             return self.send_json({"ok": True})
+        if path == "/api/world":
+            pid = clean(data.get("pid"), 40)
+            name = clean(data.get("name"), 14, name=True) or "Игрок"
+            if not pid or len(pid) < 6:
+                return self.send_json({"ok": False, "error": "bad_pid"}, 400)
+            dmg = num(data.get("damage"), 0, 1e30, 0)
+            with state_lock:
+                w = world_ensure()
+                if w.get("killedAt"):
+                    pub = world_public(pid)
+                    pub.update({"ok": False, "error": "killed"})
+                    return self.send_json(pub, 409)
+                wait = int(WORLD["hit_gap"] - (now() - last.get("world:" + pid, 0)))
+                if wait > 0:
+                    pub = world_public(pid)
+                    pub.update({"ok": False, "error": "slow", "wait": wait})
+                    return self.send_json(pub, 429)
+                last["world:" + pid] = now()
+                power = num(data.get("power"), 0, 1e30)
+                if not w["dmg"]:
+                    # первый удар задаёт масштаб босса под силу игрока
+                    w["maxHp"] = int(max(20e6, power * 180 * 30))
+                    w["hp"] = w["maxHp"]
+                cap = w["maxHp"] * WORLD["max_hit"]
+                hit = int(min(max(dmg, 1), cap, w["hp"]))
+                w["dmg"][pid] = int(w["dmg"].get(pid, 0)) + hit
+                w["names"][pid] = name
+                w["hp"] = max(0, w["hp"] - hit)
+                if w["hp"] <= 0:
+                    w["killedAt"] = now()
+                p = state["players"].setdefault(pid, {"pid": pid})
+                p.update({"pid": pid, "name": name, "level": int(num(data.get("level"), 1, 100000)),
+                          "power": num(data.get("power"), 0, 1e30), "ts": now()})
+                save()
+                pub = world_public(pid)
+                pub["hit"] = hit
+                return self.send_json(pub)
+        if path == "/api/world/claim":
+            pid = clean(data.get("pid"), 40)
+            if not pid or len(pid) < 6:
+                return self.send_json({"ok": False, "error": "bad_pid"}, 400)
+            with state_lock:
+                w = world_ensure()
+                if not w.get("killedAt"):
+                    return self.send_json({"ok": False, "error": "alive"}, 409)
+                if pid not in w["dmg"]:
+                    return self.send_json({"ok": False, "error": "no_damage"}, 403)
+                if pid in w["claimed"]:
+                    return self.send_json({"ok": True, "rewards": w["claimed"][pid], "already": True})
+                rw = world_reward(pid)
+                w["claimed"][pid] = rw
+                save()
+                return self.send_json({"ok": True, "rewards": rw})
         return self.send_json({"ok": False, "error": "not_found"}, 404)
 
 

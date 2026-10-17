@@ -45,5 +45,8 @@ const NET = (() => {
     boardPush: p => req('/api/board', { method: 'POST', body: JSON.stringify(p) }),
     arenaList: (pid, rating, power) => req(`/api/arena?pid=${encodeURIComponent(pid)}&rating=${Math.round(rating)}&power=${Math.round(power)}`),
     arenaPush: p => req('/api/arena', { method: 'POST', body: JSON.stringify(p) }),
+    worldGet: pid => req('/api/world?pid=' + encodeURIComponent(pid)),
+    worldHit: p => req('/api/world', { method: 'POST', body: JSON.stringify(p) }),
+    worldClaim: pid => req('/api/world/claim', { method: 'POST', body: JSON.stringify({ pid }) }),
   };
 })();

@@ -492,6 +492,10 @@ function frame(now) {
     R.chatT = (R.chatT || 0) + dtRaw;
     if (R.chatT > 6) { R.chatT = 0; Social.loadChat(); }
   }
+  if (R.tab === 'trials' && R.trialSeg === 'world') {
+    R.worldT = (R.worldT || 0) + dtRaw;
+    if (R.worldT > 20) { R.worldT = 0; World.load(); }
+  }
 }
 
 function update(dtRaw) {

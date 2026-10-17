@@ -715,3 +715,21 @@ input { -webkit-user-select: text; user-select: text; }
 .val.ok { color: #8fe08a; font-size: 11px; }
 
 .ev-all { width: 100%; margin: 10px 0 4px; }
+/* ===== мировой босс ===== */
+.world-head { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: center; margin-bottom: 8px; }
+.world-head > img { width: 52px; height: 52px; }
+.world-head h2 { margin: 0; }
+.world-head .link-btn { align-self: start; }
+.world-card .bar { height: 14px; margin: 8px 0 4px; }
+.world-dead { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: rgba(255,127,176,.12); margin: 10px 0; }
+.world-dead b { color: var(--petal); font: 900 16px var(--font-display); }
+.world-me { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+.world-top .row { grid-template-columns: 26px minmax(0, 1fr) auto; padding: 6px 8px; }
+.world-top .place { text-align: center; font: 900 12px/1 var(--font-display); color: var(--mist); }
+.world-top .val { color: var(--petal); }
+
+@media (max-width: 430px) { .seg button { font-size: 11.5px; } }
+@media (max-width: 360px) { .seg button { font-size: 10.5px; } }
+.bullets { margin: 0; padding-left: 18px; color: var(--mist); font-size: 13px; line-height: 1.5; }
+.bullets li { margin: 4px 0; }
+.world-rewards .row, .world-how { margin-top: 10px; }

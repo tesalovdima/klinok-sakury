@@ -1,7 +1,7 @@
 /* ===== Панели испытаний: башня, подземелья, пробуждение ===== */
 function renderTrials() {
-  const seg = segHTML('trialseg', R.trialSeg, [['tower', 'Башня'], ['dungeon', 'Подземелья'], ['awaken', 'Пробуждение']]);
-  const body = { tower: renderTower, dungeon: renderDungeons, awaken: renderAwaken }[R.trialSeg]();
+  const seg = segHTML('trialseg', R.trialSeg, [['tower', 'Башня'], ['world', 'Босс'], ['dungeon', 'Подземелья'], ['awaken', 'Пробуждение']]);
+  const body = { tower: renderTower, world: renderWorld, dungeon: renderDungeons, awaken: renderAwaken }[R.trialSeg]();
   return seg + body;
 }
 

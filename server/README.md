@@ -32,6 +32,9 @@ systemctl status klinok-sakury --no-pager
 | POST | `/api/board` | `{pid,name,stage,best,level,power,rating}` | `{ok}`; 5 с на игрока |
 | GET | `/api/arena?pid&rating&power` | — | `{players:[{name,rating,power,st,look}]}` |
 | POST | `/api/arena` | `{pid,name,rating,power,level,body,hair,st,look}` | `{ok}`; 8 с на игрока |
+| GET | `/api/world?pid` | — | `{name,hp,maxHp,killed,top,myDamage,rank,claimable,rewards,wait}` |
+| POST | `/api/world` | `{pid,name,damage,level,power}` | удар по общему боссу; кулдаун 45 с, не больше 15% HP за удар |
+| POST | `/api/world/claim` | `{pid}` | награда за вклад; выдаётся один раз за босса |
 
 Клиент игры сам определяет доступность: если `/api/health` не отвечает, чат и рейтинг показывают «нет связи», арена работает на ботах. Поэтому та же сборка подходит и для Яндекс Игр.
 
