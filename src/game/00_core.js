@@ -127,7 +127,7 @@ const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 7;
+const SAVE_VERSION = 8;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -148,6 +148,7 @@ function newState() {
     gold: 20, crystals: 0, gems: 300, level: 1, xp: 0, sp: 0,
     growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
     skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
+    skillOn: Object.fromEntries(SKILLS.map(s => [s.id, true])),
     items: [{ id: 1, slot: 'weapon', g: 0, e: 0, pt: 0, opts: starterOpts(0) }, { id: 2, slot: 'upper', g: 0, e: 0, pt: 0, opts: starterOpts(0) }],
     equip, nextId: 3,
     scrolls: { w: [0, 2, 0, 0, 0, 0, 0], a: [0, 3, 0, 0, 0, 0, 0], bw: zeros(), ba: zeros() },
@@ -189,6 +190,8 @@ function migrate(o) {
   }
   for (const g of B.GROWTH) o.growth[g.id] = o.growth[g.id] || 0;
   for (const s of SKILLS) o.skills[s.id] = o.skills[s.id] || 0;
+  if (!o.skillOn || typeof o.skillOn !== 'object') o.skillOn = {};
+  for (const s of SKILLS) o.skillOn[s.id] = o.skillOn[s.id] !== false;
   for (const sl of B.SLOTS) if (!(sl.id in o.equip)) o.equip[sl.id] = null;
   if (!Array.isArray(o.items)) o.items = [];
   for (const it of o.items) {

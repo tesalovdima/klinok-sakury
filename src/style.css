@@ -750,3 +750,4 @@ input { -webkit-user-select: text; user-select: text; }
 .row-main b .el { font: 800 10px/1 var(--font-ui); margin-left: 4px; opacity: .95; }
 .row > img.ico-badge { background: radial-gradient(circle at 50% 40%, #3a2a5a, #241a3a); border-radius: 50%; padding: 3px; box-sizing: content-box; }
 .event-banner.lantern { background: linear-gradient(120deg, #2a1030, #ff7a3c 55%, #ffd760); }
+.row-actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; } .sk-toggle { padding: 6px 10px; border-radius: 10px; border: 0; font: inherit; font-weight: 800; font-size: 12px; background: rgba(255,255,255,.12); color: #c9c2d8; } .sk-toggle.on { background: #2f6b4f; color: #c8ffe2; } .row.sk-off > img { filter: grayscale(1) brightness(.55); } .sk.off { opacity: .32; filter: grayscale(1); }

@@ -326,6 +326,7 @@ function trySkills(dt, engaged) {
   for (const s of SKILLS) R.cd[s.id] = Math.max(0, R.cd[s.id] - dt);
   if (R.hero.dead || R.castLock > 0) return;
   for (const s of SKILL_ORDER) {
+    if (S.skillOn && S.skillOn[s.id] === false) continue;
     if (!S.skills[s.id] || R.cd[s.id] > 0 || (R.mp || 0) < s.mp) continue;
     if (canCast(s.id, engaged)) { cast(s.id); break; }
   }

@@ -3212,7 +3212,7 @@ const skillIcon = (id, size = 64) => A.miscIcon(id, size);
 const SAVE_KEY = 'klinok-sakury-v1';
 // Версия 4: пробуждение, башня, подземелья, главы, грань предметов.
 // Старые сохранения (v3) переводятся без потери прогресса.
-const SAVE_VERSION = 7;
+const SAVE_VERSION = 8;
 const zeros = () => Array(NG).fill(0);
 const isPlain = v => v && typeof v === 'object' && !Array.isArray(v);
 const clone = v => v === null || typeof v !== 'object' ? v : JSON.parse(JSON.stringify(v));
@@ -3233,6 +3233,7 @@ function newState() {
     gold: 20, crystals: 0, gems: 300, level: 1, xp: 0, sp: 0,
     growth: Object.fromEntries(B.GROWTH.map(g => [g.id, 0])),
     skills: Object.fromEntries(SKILLS.map(s => [s.id, 0])),
+    skillOn: Object.fromEntries(SKILLS.map(s => [s.id, true])),
     items: [{ id: 1, slot: 'weapon', g: 0, e: 0, pt: 0, opts: starterOpts(0) }, { id: 2, slot: 'upper', g: 0, e: 0, pt: 0, opts: starterOpts(0) }],
     equip, nextId: 3,
     scrolls: { w: [0, 2, 0, 0, 0, 0, 0], a: [0, 3, 0, 0, 0, 0, 0], bw: zeros(), ba: zeros() },
@@ -3274,6 +3275,8 @@ function migrate(o) {
   }
   for (const g of B.GROWTH) o.growth[g.id] = o.growth[g.id] || 0;
   for (const s of SKILLS) o.skills[s.id] = o.skills[s.id] || 0;
+  if (!o.skillOn || typeof o.skillOn !== 'object') o.skillOn = {};
+  for (const s of SKILLS) o.skillOn[s.id] = o.skillOn[s.id] !== false;
   for (const sl of B.SLOTS) if (!(sl.id in o.equip)) o.equip[sl.id] = null;
   if (!Array.isArray(o.items)) o.items = [];
   for (const it of o.items) {
@@ -3840,6 +3843,7 @@ function trySkills(dt, engaged) {
   for (const s of SKILLS) R.cd[s.id] = Math.max(0, R.cd[s.id] - dt);
   if (R.hero.dead || R.castLock > 0) return;
   for (const s of SKILL_ORDER) {
+    if (S.skillOn && S.skillOn[s.id] === false) continue;
     if (!S.skills[s.id] || R.cd[s.id] > 0 || (R.mp || 0) < s.mp) continue;
     if (canCast(s.id, engaged)) { cast(s.id); break; }
   }
@@ -4741,6 +4745,7 @@ function updateHud() {
     el.style.setProperty('--cd', learned ? (R.cd[s.id] / s.cd).toFixed(3) : 0);
     el.classList.toggle('ready', learned && R.cd[s.id] <= 0 && (R.mp || 0) >= s.mp);
     el.classList.toggle('poor', learned && (R.mp || 0) < s.mp);
+    el.classList.toggle('off', learned && S.skillOn[s.id] === false);
   }
   const bl = S.boost.goldUntil - Date.now();
   hud.boostChip.hidden = bl <= 0;
@@ -4924,14 +4929,15 @@ function renderSkills() {
   return `<p class="sub">Очко навыка даётся за каждый уровень. Изученные навыки срабатывают сами, тратя ману. Иконки на сцене показывают перезарядку, по ним можно нажать.</p>
     <ul class="rows">${list.map(s => {
       const l = S.skills[s.id], open = S.level >= s.unlock, maxed = l >= SKILL_MAX;
-      const el = ELEMENTS[s.el];
+      const el = ELEMENTS[s.el], on = S.skillOn[s.id] !== false;
       const btn = !open ? `<button class="buy" disabled>Ур. ${s.unlock}</button>`
         : maxed ? '<button class="buy" disabled>Максимум</button>'
         : `<button class="buy pink" data-act="learn" data-sk="${s.id}" ${S.sp > 0 ? '' : 'disabled'}>${l ? 'Улучшить' : 'Изучить'}</button>`;
-      return `<li class="row"><img src="${skillIcon(s.icon, 64)}" alt="" style="${open ? '' : 'filter:grayscale(1) brightness(.6)'}">
+      const act = open && l ? `<div class="row-actions"><button class="sk-toggle ${on ? 'on' : ''}" data-act="skill-toggle" data-id="${s.id}" aria-pressed="${on}">${on ? 'Вкл' : 'Выкл'}</button>${btn}</div>` : btn;
+      return `<li class="row ${on ? '' : 'sk-off'}"><img src="${skillIcon(s.icon, 64)}" alt="" style="${open ? '' : 'filter:grayscale(1) brightness(.6)'}">
         <div class="row-main"><b>${s.name} <small class="el" style="color:${el.color}">${el.name}</small></b>
         <span class="meta">${l ? `Ур. ${l}/${SKILL_MAX}` : open ? 'Не изучен' : `Откроется на уровне ${s.unlock}`} · ${s.mp} маны · перезарядка ${s.cd} с</span>
-        <p>${s.desc(Math.max(1, l))}</p></div>${btn}</li>`;
+        <p>${s.desc(Math.max(1, l))}</p></div>${act}</li>`;
     }).join('')}</ul>`;
 }
 
@@ -5422,7 +5428,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 4.4</p>`));
+    <p class="note version">Клинок Сакуры · версия 4.5</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -7388,6 +7394,16 @@ document.addEventListener('click', async e => {
       toast(`+${fmt(c)} ${plural(c, CRY_W)}`); closeModal(); renderPanel(); break;
     }
     case 'goshop': R.shopTab = 'gear'; R.shopGrade = +b.dataset.g; closeModal(); setTab('shop'); break;
+    case 'skill-toggle': {
+      const id = b.dataset.id;
+      if (S.skills[id]) {
+        const sc = panel ? panel.scrollTop : 0;
+        S.skillOn[id] = S.skillOn[id] === false; saveLocal(); renderPanel();
+        if (panel) panel.scrollTop = sc;
+        toast(`${SK[id].name}: ${S.skillOn[id] ? 'включено' : 'выключено'}`);
+      }
+      break;
+    }
     case 'learn': {
       const s = SK[b.dataset.sk];
       if (S.sp > 0 && S.level >= s.unlock && S.skills[s.id] < SKILL_MAX) { S.sp--; S.skills[s.id]++; AU.sfx('buy'); if (S.skills[s.id] === 1) log(`Изучен навык «${s.name}».`, 'good'); renderPanel(); updateHudStatic(); }

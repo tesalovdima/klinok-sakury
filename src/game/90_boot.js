@@ -161,6 +161,16 @@ document.addEventListener('click', async e => {
       toast(`+${fmt(c)} ${plural(c, CRY_W)}`); closeModal(); renderPanel(); break;
     }
     case 'goshop': R.shopTab = 'gear'; R.shopGrade = +b.dataset.g; closeModal(); setTab('shop'); break;
+    case 'skill-toggle': {
+      const id = b.dataset.id;
+      if (S.skills[id]) {
+        const sc = panel ? panel.scrollTop : 0;
+        S.skillOn[id] = S.skillOn[id] === false; saveLocal(); renderPanel();
+        if (panel) panel.scrollTop = sc;
+        toast(`${SK[id].name}: ${S.skillOn[id] ? 'включено' : 'выключено'}`);
+      }
+      break;
+    }
     case 'learn': {
       const s = SK[b.dataset.sk];
       if (S.sp > 0 && S.level >= s.unlock && S.skills[s.id] < SKILL_MAX) { S.sp--; S.skills[s.id]++; AU.sfx('buy'); if (S.skills[s.id] === 1) log(`Изучен навык «${s.name}».`, 'good'); renderPanel(); updateHudStatic(); }

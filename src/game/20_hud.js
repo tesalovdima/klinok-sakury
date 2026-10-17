@@ -59,6 +59,7 @@ function updateHud() {
     el.style.setProperty('--cd', learned ? (R.cd[s.id] / s.cd).toFixed(3) : 0);
     el.classList.toggle('ready', learned && R.cd[s.id] <= 0 && (R.mp || 0) >= s.mp);
     el.classList.toggle('poor', learned && (R.mp || 0) < s.mp);
+    el.classList.toggle('off', learned && S.skillOn[s.id] === false);
   }
   const bl = S.boost.goldUntil - Date.now();
   hud.boostChip.hidden = bl <= 0;
