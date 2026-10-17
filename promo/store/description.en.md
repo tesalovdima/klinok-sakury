@@ -44,6 +44,8 @@ Anime idle RPG: your heroine fights on her own while you grow stronger. Lineage-
 4. `screen-tower.jpg` — tower
 5. `screen-world.jpg` — world boss
 6. `screen-skills.jpg` — elemental skills
+7. `screen-lantern.jpg` — Lantern Night event
+8. `screen-weekly.jpg` — weekly quests
 
 ## Monetization
 

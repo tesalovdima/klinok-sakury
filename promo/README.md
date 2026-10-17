@@ -17,6 +17,9 @@
 | `screen-tower.jpg` | 1080×1920 | Скриншот 4: башня |
 | `screen-world.jpg` | 1080×1920 | Скриншот 5: мировой босс |
 | `screen-skills.jpg` | 1080×1920 | Скриншот 6: умения со стихиями |
+| `screen-lantern.jpg` | 1080×1920 | Скриншот 7: «Ночь фонарей» |
+| `screen-weekly.jpg` | 1080×1920 | Скриншот 8: недельные задания |
+| `cover-en-800x470.jpg` | 800×470 | Обложка с английским названием |
 | `description.md` | — | Текст карточки для Яндекс Игр |
 | `description.en.md` | — | English store listing |
 

@@ -54,6 +54,8 @@ idle rpg, аниме, автобой, заточка, грейды, Lineage 2, �
 4. `screen-tower.jpg` — башня
 5. `screen-world.jpg` — мировой босс
 6. `screen-skills.jpg` — умения со стихиями
+7. `screen-lantern.jpg` — событие «Ночь фонарей»
+8. `screen-weekly.jpg` — недельные задания
 
 ## Возрастной рейтинг
 
