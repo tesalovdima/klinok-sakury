@@ -9,8 +9,11 @@ const scripts = [
 const GOOGLE = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Russo+One&display=swap">`;
+// баннер события вшиваем в CSS как data URI: работает и в одиночном HTML, и на Яндекс Играх
+const bannerB64 = fs.readFileSync(path.join(__dirname, 'src/img/event-hanami.jpg')).toString('base64');
+const style = r('style.css') + `\n.event-banner{background-image:url(data:image/jpeg;base64,${bannerB64})}`;
 function page(fonts) {
-  return r('shell.html').replace('<!--FONTS-->', () => fonts).replace('/*STYLE*/', () => r('style.css')).replace('/*SCRIPTS*/', () => scripts);
+  return r('shell.html').replace('<!--FONTS-->', () => fonts).replace('/*STYLE*/', () => style).replace('/*SCRIPTS*/', () => scripts);
 }
 fs.mkdirSync(path.join(__dirname, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(__dirname, 'dist/klinok-sakury.html'), page(GOOGLE));

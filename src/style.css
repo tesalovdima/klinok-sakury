@@ -733,3 +733,9 @@ input { -webkit-user-select: text; user-select: text; }
 .bullets { margin: 0; padding-left: 18px; color: var(--mist); font-size: 13px; line-height: 1.5; }
 .bullets li { margin: 4px 0; }
 .world-rewards .row, .world-how { margin-top: 10px; }
+/* ===== баннер события в окне ===== */
+.event-banner { flex: 0 0 132px; height: 132px; border-radius: 14px; background-size: cover; background-position: center 45%;
+  position: relative; overflow: hidden; margin: 0 0 10px; display: flex; align-items: flex-end; padding: 12px; }
+.event-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(24,16,43,.04) 20%, rgba(24,16,43,.92)); }
+.event-banner span { position: relative; z-index: 1; font: 900 20px/1.1 var(--font-display); color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+

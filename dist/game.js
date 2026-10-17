@@ -5740,6 +5740,7 @@ function openEvent(tab) {
   const tabs = [['track', `Награды${ready.length ? ' · ' + ready.length : ''}`], ['shop', 'Магазин']]
     .map(([v, l]) => `<button data-act="event-tab" data-v="${v}" aria-pressed="${R.eventTab === v}">${l}</button>`).join('');
   openModal(sheet(B.EVENT.name, `Сезон ${info.idx + 1} · до конца ${left(info.left)}`, `
+    <div class="event-banner"><span>${B.EVENT.name}</span></div>
     <div class="ev-balance"><img src="${A.miscIcon('petal', 40)}" alt=""><b>${fmt(S.event.coins)}</b><span>ханами</span></div>
     <div class="ev-tabs" role="group">${tabs}</div>
     ${R.eventTab === 'shop' ? shopHTML() : trackHTML()}
