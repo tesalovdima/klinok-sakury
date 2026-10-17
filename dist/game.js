@@ -2852,6 +2852,7 @@ const AUDIO = (() => {
       case 'victory': [523, 659, 784, 1047, 1319].forEach((f, i) => { tone(f, i * .09, .3, 'square', .04); tone(f / 2, i * .09, .3, 'triangle', .05); }); break;
       case 'skill': hiss(0, .25, .1, 1200); tone(880, 0, .2, 'sine', .05, 1760); break;
       case 'explode': hiss(0, .5, .35, 180); tone(70, 0, .4, 'sine', .12, 32); break;
+      case 'dodge': hiss(0, .18, .15, 900); tone(600, 0, .12, 'sine', .04, 1200); break;
       case 'thunder': hiss(0, .3, .2, 600); break;
       case 'buff': [392, 523, 659].forEach((f, i) => tone(f, i * .06, .25, 'sine', .05)); break;
       case 'charge': tone(220, 0, 1.1, 'sine', .04, 880); break;
@@ -3126,15 +3127,15 @@ const SKILLS = [
     desc: l => `Три ледяных шипа по ${pct(1.4 + .12 * (l - 1))} атаки.` },
   { id: 'thunder', name: 'Небесный гром', unlock: 28, cd: 15, mp: 38, el: 'wind', type: 'multi', prio: 7, icon: 'sk_thunder', mult: l => 1 + .08 * (l - 1),
     desc: l => `Три молнии по ${pct(1 + .08 * (l - 1))} атаки каждая.` },
-  { id: 'storm', name: 'Буря клинков', unlock: 55, cd: 22, mp: 60, el: 'wind', type: 'storm', prio: 8, icon: 'sk_storm', mult: l => .9 + .08 * (l - 1),
+  { id: 'storm', name: 'Буря клинков', unlock: 55, cd: 22, mp: 50, el: 'wind', type: 'storm', prio: 8, icon: 'sk_storm', mult: l => .9 + .08 * (l - 1),
     desc: l => `Шесть быстрых ударов по ${pct(.9 + .08 * (l - 1))} атаки случайным врагам.` },
-  { id: 'quake', name: 'Землетряс', unlock: 46, cd: 18, mp: 50, el: 'earth', type: 'aoe', prio: 9, icon: 'sk_quake', mult: l => 2.8 + .22 * (l - 1),
+  { id: 'quake', name: 'Землетряс', unlock: 46, cd: 18, mp: 45, el: 'earth', type: 'aoe', prio: 9, icon: 'sk_quake', mult: l => 2.8 + .22 * (l - 1),
     desc: l => `Земля дрожит: ${pct(2.8 + .22 * (l - 1))} атаки всем и сильная отдача.` },
-  { id: 'meteor', name: 'Метеор', unlock: 65, cd: 26, mp: 70, el: 'fire', type: 'meteor', prio: 10, icon: 'sk_meteor', mult: l => 6 + .5 * (l - 1),
+  { id: 'meteor', name: 'Метеор', unlock: 65, cd: 26, mp: 60, el: 'fire', type: 'meteor', prio: 10, icon: 'sk_meteor', mult: l => 6 + .5 * (l - 1),
     desc: l => `С неба падает метеор: ${pct(6 + .5 * (l - 1))} атаки по всем врагам.` },
   { id: 'spirit', name: 'Боевой дух', unlock: 18, cd: 24, mp: 34, el: 'fire', type: 'buff', prio: 1, icon: 'sk_spirit', mult: l => .25 + .03 * (l - 1),
     desc: l => `Атака +${pct(.25 + .03 * (l - 1))} на 8 секунд.` },
-  { id: 'bloom', name: 'Цветение', unlock: 40, cd: 20, mp: 44, el: 'earth', type: 'heal', prio: 2, icon: 'sk_bloom', mult: l => .25 + .02 * (l - 1),
+  { id: 'bloom', name: 'Цветение', unlock: 40, cd: 20, mp: 40, el: 'earth', type: 'heal', prio: 2, icon: 'sk_bloom', mult: l => .25 + .02 * (l - 1),
     desc: l => `Лечит ${pct(.25 + .02 * (l - 1))} здоровья и снижает урон на 30% на 5 секунд, когда здоровья меньше половины.` },
 ];
 const SKILL_ORDER = SKILLS.slice().sort((a, b) => a.prio - b.prio);
@@ -3309,10 +3310,10 @@ const battle = $('battle'), canvas = $('scene'), ctx = canvas.getContext('2d');
 const R = {
   W: 400, H: 300, dpr: 1, k: 1, gy: 240, heroX: 100, scroll: 0, t: 0,
   monsters: [], fx: [], amb: [], shake: 0, flash: 0, flashC: '#fff',
-  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0 },
+  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0, dodgeT: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
-  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0,
+  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0, dodge: .05, dodgeCount: 0, castLog: [],
   st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
   imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', socialSeg: 'chat', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
@@ -3423,6 +3424,8 @@ function recalc() {
     aura: R.st.set && R.st.set.glow ? R.st.set.g : -1,
     cosmetic: S.shop.cosmetic,
   };
+  const bootsG = R.look.boots >= 0 ? R.look.boots : -1;
+  R.dodge = Math.min(.28, .04 + S.level * .0012 + (bootsG >= 0 ? .012 * (bootsG + 1) : 0));
 }
 const red = s => R.st.def / (R.st.def + B.defK(s));
 const spiritBonus = () => R.buffs.spirit > 0 ? SK.spirit.mult(S.skills.spirit) : 0;
@@ -3639,6 +3642,7 @@ function heroStrike() {
   const tgt = frontMonster();
   if (!tgt) return;
   const h = R.hero, heavy = h.combo === 2;
+  R.mp = Math.min(R.mpMax, (R.mp || 0) + 1.5);
   const crit = rnd() < R.st.crit;
   const dmg = R.st.atk * (1 + spiritBonus()) * (crit ? R.st.critDmg : 1) * (.94 + rnd() * .12) * (heavy ? 1.18 : 1);
   const sx = tgt.x - 6 * R.k, sy = R.gy - 34 * R.k * Math.min(1.6, tgt.scale);
@@ -3654,7 +3658,16 @@ function hitDamage(m, dmg, crit, color) {
   m.hp -= dmg; m.flash = .1;
   if (m.boss && dmg > m.maxHp * .04) m.sq = -.06;
   const top = A.monTop(m.type) * m.scale * R.k;
-  R.fx.push({ type: 'num', x: m.x + (rnd() - .5) * 18 * R.k, y: R.gy - top - 4 * R.k, vy: -46 * R.k, t: 0, life: .9, text: fmt(dmg) + (crit ? '!' : ''), c: color || (crit ? '#ffcf4a' : '#ffffff'), size: (crit ? 22 : 15) * Math.sqrt(R.k), crit });
+  const size = (crit ? 18 : 13) * Math.sqrt(R.k);
+  let num = R.fx.find(f => f.type === 'num' && f.src === m && f.t < .22);
+  if (num) {
+    num.amount += dmg; num.t = 0; num.life = .9;
+    if (crit && !num.crit) { num.crit = true; num.c = color || '#ffcf4a'; }
+    num.text = fmt(num.amount) + (num.crit ? '!' : '');
+    num.size = Math.max(num.size, size);
+  } else {
+    R.fx.push({ type: 'num', src: m, amount: dmg, x: m.x + (rnd() - .5) * 18 * R.k, y: R.gy - top - 4 * R.k, vy: -46 * R.k, t: 0, life: .9, text: fmt(dmg) + (crit ? '!' : ''), c: color || (crit ? '#ffcf4a' : '#ffffff'), size, crit });
+  }
   for (let i = 0; i < (crit ? 7 : 4); i++) R.fx.push({ type: 'part', x: m.x - 4 * R.k, y: R.gy - top * .5, vx: (rnd() * 120 + 40) * R.k, vy: (rnd() - .7) * 160 * R.k, g: 300 * R.k, size: (2 + rnd() * 2.5) * R.k, c: crit ? '#ffe28a' : '#ffffff', t: 0, life: .35 + rnd() * .2, shape: 'star' });
   if (m.hp <= 0) killMonster(m);
 }
@@ -3728,8 +3741,20 @@ function damageHero(raw, special) {
 }
 function monsterHit(m) {
   if (R.hero.dead || m.hp <= 0) return;
+  if (rnd() < (R.dodge || 0)) { heroDodge(m); return; }
   damageHero(m.dmg * (m.enr ? 1.25 : 1), false);
   if (m.boss && !RM) R.shake = Math.max(R.shake, .14);
+}
+function heroDodge(m) {
+  const h = R.hero, k = R.k, gy = R.gy;
+  h.dodgeT = .32; h.hurt = 0; h.cast = 0;
+  R.dodgeCount = (R.dodgeCount || 0) + 1;
+  R.hitStop = Math.max(R.hitStop, .035);
+  R.fx.push({ type: 'num', x: R.heroX, y: gy - 132 * k, vy: -24 * k, t: 0, life: .7, text: 'Уклонение', c: '#8fe0c0', size: 12 * Math.sqrt(k) });
+  R.fx.push({ type: 'ring', x: R.heroX, y: gy - 46 * k, r0: 14 * k, r1: 74 * k, t: 0, life: .35, c: '#8fe0c0' });
+  for (let i = 0; i < 10; i++) R.fx.push({ type: 'part', x: R.heroX + (rnd() - .5) * 30 * k, y: gy - 40 * k - rnd() * 50 * k, vx: (rnd() - .8) * 140 * k, vy: (rnd() - .5) * 80 * k, g: 40 * k, size: (1.5 + rnd() * 2) * k, c: '#8fe0c0', t: 0, life: .3 + rnd() * .2, shape: 'star' });
+  AU.sfx('dodge');
+  setTimeout(() => { if (!R.hero.dead && m.hp > 0) { R.hero.combo = 0; heroStrike(); } }, 150);
 }
 function heroDie() {
   const h = R.hero;
@@ -3760,6 +3785,7 @@ function cast(id) {
   if (!s || !l || (R.mp || 0) < s.mp) return;
   R.mp -= s.mp;
   R.cd[id] = s.cd; R.castLock = s.type === 'buff' || s.type === 'heal' ? .35 : .5;
+  R.castLog.push(id); if (R.castLog.length > 40) R.castLog.shift();
   h.cast = .4; h.castType = s.type; h.castEl = ELEMENTS[s.el].color;
   if (!R.cut && ['flame', 'quake', 'storm', 'meteor'].includes(id)) R.cut = { id, t: 0, life: .7 };
   if (['flame', 'quake', 'storm', 'meteor'].includes(id)) R.zoom = .3;
@@ -4014,9 +4040,10 @@ function update(dtRaw) {
   if (R.slow > 0) { R.slow = Math.max(0, R.slow - dtRaw); dt = dtRaw * .3; }
   R.t += dt;
   const h = R.hero, st = R.st, k = R.k;
-  R.mp = Math.min(R.mpMax, (R.mp || 0) + (6 + S.level * .12) * dt);
+  R.mp = Math.min(R.mpMax, (R.mp || 0) + (8 + S.level * .15) * dt);
   if (h.dashT > 0) { h.dashT = Math.max(0, h.dashT - dtRaw); R.heroOff = Math.sin((1 - h.dashT / .28) * Math.PI) * 34 * k; }
   else R.heroOff = 0;
+  if (h.dodgeT > 0) { h.dodgeT = Math.max(0, h.dodgeT - dtRaw); R.heroOff -= Math.sin((1 - h.dodgeT / .32) * Math.PI) * 30 * k; }
   if (h.lungeT > 0) { h.lungeT = Math.max(0, h.lungeT - dtRaw); R.heroOff += Math.sin((1 - h.lungeT / .2) * Math.PI) * 14 * k; }
   if (h.comboT > 0) { h.comboT = Math.max(0, h.comboT - dtRaw); if (h.comboT === 0) h.combo = 0; }
   const z = zoneOf(S.stage);
@@ -4160,10 +4187,11 @@ function render() {
     c.restore();
   }
   // послеобразы рывка
-  if (h.dashT > 0 && !h.dead) {
+  if ((h.dashT > 0 || h.dodgeT > 0) && !h.dead) {
+    const dir = h.dodgeT > 0 ? 1 : -1;
     for (let i = 2; i >= 1; i--) {
       c.save(); c.globalAlpha = .13 * i;
-      A.drawHero(c, R.heroX + R.heroOff - i * 20 * k, R.gy, k * 1.02, R.look, { t: R.t - i * .05, run: 1, phase: h.phase, swing: -1, hurt: 0, dead: false, cast: 0, combo: 0 });
+      A.drawHero(c, R.heroX + R.heroOff + dir * i * 18 * k, R.gy, k * 1.02, R.look, { t: R.t - i * .05, run: 1, phase: h.phase, swing: -1, hurt: 0, dead: false, cast: 0, combo: 0 });
       c.restore();
     }
   }
@@ -4748,7 +4776,7 @@ function statCells() {
   const st = R.st;
   return [
     ['Атака', fmt(st.atk)], ['Здоровье', fmt(st.hp)], ['Защита', fmt(st.def)], ['Восстановление', fmt(st.regen) + '/с'],
-    ['Шанс крита', pct(st.crit)], ['Урон крита', pct(st.critDmg)], ['Скорость атаки', st.aspd.toFixed(2) + '/с'], ['Золото', '+' + pct(goldMul() - 1)],
+    ['Шанс крита', pct(st.crit)], ['Урон крита', pct(st.critDmg)], ['Уклонение', pct(R.dodge || 0)], ['Скорость атаки', st.aspd.toFixed(2) + '/с'], ['Золото', '+' + pct(goldMul() - 1)],
   ];
 }
 function renderHero() {
@@ -5321,7 +5349,7 @@ function openSettings() {
     <p class="note">${cloud}</p>
     ${P.mode === 'local' ? '<p class="note">Тестовая версия: реклама и покупки работают в демонстрационном режиме, деньги не списываются. На Яндекс Играх их обрабатывает площадка.</p>' : ''}
     <div class="danger-zone" id="resetZone"><button class="link-btn" data-act="reset">Начать игру заново</button></div>
-    <p class="note version">Клинок Сакуры · версия 3.7</p>`));
+    <p class="note version">Клинок Сакуры · версия 3.8</p>`));
 }
 
 /* --- 35_trials.js --- */
@@ -7268,7 +7296,7 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
-    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit,
   };
 }
 

@@ -96,15 +96,15 @@ const SKILLS = [
     desc: l => `Три ледяных шипа по ${pct(1.4 + .12 * (l - 1))} атаки.` },
   { id: 'thunder', name: 'Небесный гром', unlock: 28, cd: 15, mp: 38, el: 'wind', type: 'multi', prio: 7, icon: 'sk_thunder', mult: l => 1 + .08 * (l - 1),
     desc: l => `Три молнии по ${pct(1 + .08 * (l - 1))} атаки каждая.` },
-  { id: 'storm', name: 'Буря клинков', unlock: 55, cd: 22, mp: 60, el: 'wind', type: 'storm', prio: 8, icon: 'sk_storm', mult: l => .9 + .08 * (l - 1),
+  { id: 'storm', name: 'Буря клинков', unlock: 55, cd: 22, mp: 50, el: 'wind', type: 'storm', prio: 8, icon: 'sk_storm', mult: l => .9 + .08 * (l - 1),
     desc: l => `Шесть быстрых ударов по ${pct(.9 + .08 * (l - 1))} атаки случайным врагам.` },
-  { id: 'quake', name: 'Землетряс', unlock: 46, cd: 18, mp: 50, el: 'earth', type: 'aoe', prio: 9, icon: 'sk_quake', mult: l => 2.8 + .22 * (l - 1),
+  { id: 'quake', name: 'Землетряс', unlock: 46, cd: 18, mp: 45, el: 'earth', type: 'aoe', prio: 9, icon: 'sk_quake', mult: l => 2.8 + .22 * (l - 1),
     desc: l => `Земля дрожит: ${pct(2.8 + .22 * (l - 1))} атаки всем и сильная отдача.` },
-  { id: 'meteor', name: 'Метеор', unlock: 65, cd: 26, mp: 70, el: 'fire', type: 'meteor', prio: 10, icon: 'sk_meteor', mult: l => 6 + .5 * (l - 1),
+  { id: 'meteor', name: 'Метеор', unlock: 65, cd: 26, mp: 60, el: 'fire', type: 'meteor', prio: 10, icon: 'sk_meteor', mult: l => 6 + .5 * (l - 1),
     desc: l => `С неба падает метеор: ${pct(6 + .5 * (l - 1))} атаки по всем врагам.` },
   { id: 'spirit', name: 'Боевой дух', unlock: 18, cd: 24, mp: 34, el: 'fire', type: 'buff', prio: 1, icon: 'sk_spirit', mult: l => .25 + .03 * (l - 1),
     desc: l => `Атака +${pct(.25 + .03 * (l - 1))} на 8 секунд.` },
-  { id: 'bloom', name: 'Цветение', unlock: 40, cd: 20, mp: 44, el: 'earth', type: 'heal', prio: 2, icon: 'sk_bloom', mult: l => .25 + .02 * (l - 1),
+  { id: 'bloom', name: 'Цветение', unlock: 40, cd: 20, mp: 40, el: 'earth', type: 'heal', prio: 2, icon: 'sk_bloom', mult: l => .25 + .02 * (l - 1),
     desc: l => `Лечит ${pct(.25 + .02 * (l - 1))} здоровья и снижает урон на 30% на 5 секунд, когда здоровья меньше половины.` },
 ];
 const SKILL_ORDER = SKILLS.slice().sort((a, b) => a.prio - b.prio);
@@ -279,10 +279,10 @@ const battle = $('battle'), canvas = $('scene'), ctx = canvas.getContext('2d');
 const R = {
   W: 400, H: 300, dpr: 1, k: 1, gy: 240, heroX: 100, scroll: 0, t: 0,
   monsters: [], fx: [], amb: [], shake: 0, flash: 0, flashC: '#fff',
-  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0 },
+  hero: { hp: 100, atkT: 0, swing: -1, hit: false, hurt: 0, dead: 0, cast: 0, castType: '', phase: 0, run: 0, dashT: 0, lungeT: 0, combo: 0, comboT: 0, dodgeT: 0 },
   pet: { t: 0, atkT: 0, attack: 0 },
   boss: null, bossPending: false, warn: 0, slow: 0, cd: {}, castLock: 0, buffs: { spirit: 0, guard: 0 },
-  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0,
+  mp: 100, mpMax: 100, mpInit: false, hitStop: 0, heroOff: 0, cut: null, zoom: 0, dodge: .05, dodgeCount: 0, castLog: [],
   st: null, pb: null, look: null, aw: null, goldPos: { x: 300, y: 20 }, bagPos: { x: 120, y: 400 },
   imgs: new Map(), tab: 'hero', heroSeg: 'growth', petSeg: 'summon', trialSeg: 'tower', socialSeg: 'chat', mult: 1, shopTab: 'gear', shopGrade: 0, scrollGrade: 1,
   dirtyBank: false, paused: false, hadLocal: false, lastInter: 0, sessionStart: Date.now(),
@@ -393,6 +393,8 @@ function recalc() {
     aura: R.st.set && R.st.set.glow ? R.st.set.g : -1,
     cosmetic: S.shop.cosmetic,
   };
+  const bootsG = R.look.boots >= 0 ? R.look.boots : -1;
+  R.dodge = Math.min(.28, .04 + S.level * .0012 + (bootsG >= 0 ? .012 * (bootsG + 1) : 0));
 }
 const red = s => R.st.def / (R.st.def + B.defK(s));
 const spiritBonus = () => R.buffs.spirit > 0 ? SK.spirit.mult(S.skills.spirit) : 0;

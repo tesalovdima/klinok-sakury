@@ -310,6 +310,6 @@ if (/[?&]debug\b/.test(location.search)) {
   window.__KS = {
     get S() { return S; }, R, B, SKILLS, ZONES, zoneOf, recalc, applyState, saveLocal, renderPanel, setTab, grant, openModal, sheet, closeModal,
     addPet, summon, startBoss, bossWin, dailyReset, buyItem, openItem, openEnchant, autoEnchant, doEnchant,
-    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast,
+    addEventCoins, openEvent, eventClaim, eventBuy, ensureEvent, cast, monsterHit,
   };
 }
